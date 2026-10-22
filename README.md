@@ -5,6 +5,14 @@ taped home mark to named seats and back. Lidar-only odometry (no wheel encoders)
 RPLidar A1M8 + MPU6050 gyro, fused by `robot_localization`, mapped and localised by
 `slam_toolbox`, driven by Nav2 at 0.15 m/s.
 
+> **This repository is a rebuild skeleton (2026-10-22).**
+> Structure, configs, docs and `package.xml` files are complete, but every node,
+> every launch file and the URDF body has been emptied down to its docstring and
+> `NotImplementedError`. Write them yourself: each docstring states the contract
+> that file must satisfy, and `docs/` describes the system it belongs to. The
+> finished implementation is the tag `reference-v1` (`git checkout reference-v1`)
+> if you want to compare once yours runs.
+
 ## Hardware
 
 | Part | Detail |

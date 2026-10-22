@@ -14,46 +14,13 @@ Saving the map (run while this launch is up):
 
 slam_toolbox's serialize_map writes room.posegraph and room.data next to the
 given filename.
+
+Expected: include base.launch.py, then slam_toolbox/slam_toolbox.py with
+config/slam_mapping.yaml (online_async, map frame published by slam_toolbox).
 """
 
-import os
-
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
 
 
 def generate_launch_description() -> LaunchDescription:
-    bringup = get_package_share_directory("delivery_bot_bringup")
-    params_file = LaunchConfiguration("params_file")
-    dry_run = LaunchConfiguration("dry_run")
-
-    return LaunchDescription(
-        [
-            DeclareLaunchArgument(
-                "params_file",
-                default_value=os.path.join(bringup, "config", "slam_mapping.yaml"),
-            ),
-            DeclareLaunchArgument(
-                "dry_run",
-                default_value="true",
-                description="false only when the robot is on the floor and watched",
-            ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(bringup, "launch", "base.launch.py")
-                ),
-                launch_arguments={"dry_run": dry_run}.items(),
-            ),
-            Node(
-                package="slam_toolbox",
-                executable="async_slam_toolbox_node",
-                name="slam_toolbox",
-                output="screen",
-                parameters=[params_file],
-            ),
-        ]
-    )
+    return LaunchDescription([])
