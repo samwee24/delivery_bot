@@ -1,0 +1,67 @@
+name: CI
+
+# What this can and cannot prove:
+#   can:  the four packages build against Jazzy, the URDF is valid xacro, every
+#         YAML config parses, lint tests pass.
+#   cannot: lidar rate, IMU noise, motor direction, TF at runtime — those need
+#         the Pi and are recorded by hand in docs/test_log.md.
+#
+# Private repo: each run is ~4 GitHub Actions minutes against the 2000/month
+# free tier, so keep it to one job.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: jazzy
+
+      - name: Assemble workspace (repo + pinned deps.repos)
+        run: |
+          mkdir -p "$HOME/ws/src"
+          cp -r "$GITHUB_WORKSPACE" "$HOME/ws/src/delivery_bot"
+          cd "$HOME/ws/src"
+          vcs import . < delivery_bot/deps.repos
+
+      - name: Build
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          cd "$HOME/ws"
+          colcon build --symlink-install --event-handlers console_cohesion+
+
+      - name: Validate URDF and YAML
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source "$HOME/ws/install/setup.bash"
+          xacro "$HOME/ws/src/delivery_bot/delivery_bot_description/urdf/delivery_bot.urdf.xacro" > /tmp/robot.urdf
+          python3 - <<'PY'
+          import glob, os, sys, yaml
+          root = os.path.expanduser("~/ws/src/delivery_bot")
+          paths = glob.glob(os.path.join(root, "**", "*.yaml"), recursive=True)
+          if not paths:
+              sys.exit("no YAML found — glob is broken")
+          for path in paths:
+              with open(path) as handle:
+                  yaml.safe_load(handle)
+              print("ok", path)
+          PY
+
+      - name: Test
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          cd "$HOME/ws"
+          colcon test --event-handlers console_cohesion+
+          colcon test-result --verbose
