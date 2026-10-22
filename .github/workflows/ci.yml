@@ -44,6 +44,8 @@ jobs:
 
       - name: Validate URDF and YAML
         run: |
+          # setup-ros installs ros-base, which has neither xacro nor PyYAML.
+          sudo apt-get install -y ros-jazzy-xacro python3-yaml > /dev/null
           source /opt/ros/jazzy/setup.bash
           source "$HOME/ws/install/setup.bash"
           xacro "$HOME/ws/src/delivery_bot/delivery_bot_description/urdf/delivery_bot.urdf.xacro" > /tmp/robot.urdf
