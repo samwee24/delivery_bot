@@ -1,0 +1,15 @@
+# Named goals in the map frame.
+#
+# Do not hand-edit coordinates unless you have no choice: put the robot where it
+# should stand and save the pose instead:
+#
+#   ros2 run delivery_bot_mission save_goal --ros-args \
+#     -p goals_file:=$HOME/ros2_ws/src/delivery_bot/delivery_bot_mission/config/goals.yaml \
+#     seat_1
+#
+# home is the taped start mark and the return target of every delivery.
+
+home:
+  x: 0.0
+  y: 0.0
+  yaw: 0.0

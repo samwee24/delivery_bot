@@ -1,0 +1,36 @@
+# robot_localization EKF (2D).
+#
+# Fused inputs, deliberately minimal:
+#   * rf2o: forward speed (vx) + yaw rate only — its x/y position drifts and is
+#     not worth trusting; the EKF integrates the velocity itself.
+#   * MPU6050: yaw rate only. No accelerometer (too noisy on this cheap board)
+#     and no absolute yaw (no magnetometer, so there is nothing absolute to trust).
+#
+# The EKF is the only publisher of odom -> base_footprint; rf2o runs with
+# publish_tf: false.
+
+ekf_filter_node:
+  ros__parameters:
+    frequency: 30.0
+    two_d_mode: true
+    publish_tf: true
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_footprint
+    world_frame: odom
+
+    odom0: /odom_rf2o
+    # [x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az]
+    odom0_config: [false, false, false, false, false, false,
+                   true,  false, false, false, false, true,
+                   false, false, false]
+    odom0_differential: false
+    odom0_queue_size: 5
+
+    imu0: /imu/data
+    imu0_config: [false, false, false, false, false, false,
+                  false, false, false, false, false, true,
+                  false, false, false]
+    imu0_differential: false
+    imu0_remove_gravitational_acceleration: false
+    imu0_queue_size: 10

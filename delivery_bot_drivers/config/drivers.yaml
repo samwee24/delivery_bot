@@ -1,0 +1,39 @@
+# Driver parameters. Every value marked MEASURE or "calibrate" is a placeholder.
+#
+# Pins are flat parameters (ena_pin, in1_pin, ...) because nested YAML dicts are
+# awkward to declare in rclpy. BCM numbering, matching the wiring table.
+
+motor_node:
+  ros__parameters:
+    ena_pin: 12          # left PWM
+    in1_pin: 5           # left direction A
+    in2_pin: 6           # left direction B
+    enb_pin: 13          # right PWM
+    in3_pin: 20          # right direction A
+    in4_pin: 21          # right direction B
+    pwm_hz: 1000
+    wheel_base: 0.13     # MEASURE  left tyre centre -> right tyre centre
+    max_duty: 0.85       # never above this, whatever the controller asks
+    dead_zone_left: 0.35   # calibrate (phase 3)
+    dead_zone_right: 0.35  # calibrate (phase 3)
+    gain_left: 2.0       # duty per m/s, calibrate (phase 3)
+    gain_right: 2.0      # calibrate (phase 3)
+    min_wheel_speed: 0.01
+    watchdog_s: 0.5
+    # Nav2 Jazzy publishes TwistStamped; teleop needs -p stamped:=true
+    use_stamped: true
+    use_gyro_loop: false
+    kp_omega: 0.5
+    ki_omega: 1.0
+    dry_run: false       # the launch file overrides this to true by default
+
+imu_node:
+  ros__parameters:
+    bus: 1
+    address: 104         # 0x68, written decimal because rclpy ints are decimal
+    rate_hz: 100.0
+    calib_seconds: 3.0
+    calib_max_std: 0.01
+    gyro_scale_z: 1.0    # calibrate (phase 3, 5-spin test)
+    gyro_var: 0.0004
+    accel_var: 0.04
