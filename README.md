@@ -146,3 +146,15 @@ Recorded here because they change how you use the repo:
 - [`docs/wiring.md`](docs/wiring.md) — pins and power
 - [`docs/pi_setup.md`](docs/pi_setup.md) — Ubuntu/Jazzy setup, udev, groups, Ghostty
 - [`docs/test_log.md`](docs/test_log.md) — the test record table
+
+## Project log and coursework record (CA3)
+
+This repository is also the assessed CA3 project for MA4890. The record lives beside
+the code so it cannot drift from it:
+
+- [`docs/CA3.md`](docs/CA3.md) — target machine, decisions D1–D6, phase status, open issues OI-1…OI-5
+- [`notes/notes.md`](notes/notes.md) — dated lab notebook, newest first, append-only
+- [`docs/design-plan.md`](docs/design-plan.md) — the Oct 8 design plan (superseded in part by D5)
+- [`docs/system/`](docs/system/) — hardware, Pi setup, bring-up, architecture, config, troubleshooting, ROS stack
+- [`evidence/`](evidence/) — dated raw artefacts; [`report/`](report/) — the CA3 report draft
+- [`AGENTS.md`](AGENTS.md) — how to work here, including the sync rules between Mac, GitHub and the Pi

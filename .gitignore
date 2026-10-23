@@ -8,3 +8,6 @@ __pycache__/
 bags/
 .vscode/
 .DS_Store
+.venv/
+~$*
+*.docx

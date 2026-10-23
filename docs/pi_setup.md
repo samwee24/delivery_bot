@@ -2,6 +2,10 @@
 
 Assumes the ROS 2 Jazzy apt repository is configured. Run as `robot`.
 
+> This page is the **from-scratch install**. The measured state of the actual robot
+> (`sherm-raspi`, with every step verified or still failing) is
+> [`system/02_pi_setup.md`](system/02_pi_setup.md).
+
 ## 1. Clock first
 
 A wrong clock makes apt fail with signature/"not live until" errors, and every bag
