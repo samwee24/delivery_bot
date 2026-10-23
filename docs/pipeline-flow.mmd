@@ -1,0 +1,34 @@
+%% How the data moves: hardware -> drivers -> estimation -> decision -> actuation -> back to the room.
+flowchart TB
+  LID["RPLidar A1M8<br/>/dev/rplidar · 115200"]
+  IMU["MPU6050<br/>i2c-1 · 0x68"]
+  RPL["rplidar_node<br/>5–7 Hz"]
+  IMN["imu_node<br/>100 Hz"]
+  RFO["rf2o_laser_odometry<br/>10 Hz · publish_tf false"]
+  EKF["ekf_filter_node<br/>30 Hz · owns odom→base_footprint"]
+  SLAM["slam_toolbox<br/>map→odom"]
+  NAV["Nav2<br/>planner + controller<br/>0.15 m/s"]
+  MOT["motor_node<br/>20 Hz · watchdog 0.5 s"]
+  WHL["L298N → 2 × TT wheels"]
+  ROOM["room + walls"]
+
+  LID -- "/dev/rplidar" --> RPL
+  IMU -- "i2c-1" --> IMN
+  RPL -- "/scan" --> RFO
+  RPL -- "/scan" --> SLAM
+  IMN -- "/imu/data" --> EKF
+  RFO -- "vx, vyaw" --> EKF
+  EKF -- "tf odom→base_footprint" --> SLAM
+  EKF -- "/odometry/filtered" --> NAV
+  SLAM -- "/map · tf map→odom" --> NAV
+  NAV -- "/cmd_vel TwistStamped" --> MOT
+  MOT -- "PWM duty" --> WHL
+  WHL --> ROOM
+  ROOM -. "motion changes the next scan" .-> LID
+
+  classDef hw fill:#e8eef8,stroke:#7d93b8,color:#16181d
+  classDef node fill:#f1f2f5,stroke:#9aa0aa,color:#16181d
+  classDef inst fill:#f6efe2,stroke:#b99a63,color:#16181d
+  class LID,IMU,WHL,ROOM hw
+  class RPL,IMN,RFO,EKF,SLAM,NAV,MOT node
+  class NAV,MOT inst

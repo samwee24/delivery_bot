@@ -1,0 +1,25 @@
+flowchart TB
+  L["lidar<br/>5–7 Hz"]
+  I["IMU<br/>100 Hz"]
+  O["odometry<br/>rf2o + EKF"]
+  S["map<br/>slam_toolbox"]
+  N["navigation<br/>Nav2"]
+  M["motors<br/>watchdog 0.5 s"]
+  R["room"]
+
+  L -- "/scan" --> O
+  I -- "yaw rate" --> O
+  L -- "/scan" --> S
+  O -- "pose" --> S
+  O -- "pose" --> N
+  S -- "map" --> N
+  N -- "/cmd_vel" --> M
+  M -- "PWM" --> R
+  R -. "moves" .-> L
+
+  classDef n fill:#ffffff,stroke:#c4c9d4,color:#14161b,stroke-width:1.5px
+  classDef hot fill:#eaf0fb,stroke:#7d93b8,color:#14161b,stroke-width:1.5px
+  classDef phys fill:#f6f7f9,stroke:#c4c9d4,color:#5b6270,stroke-width:1.5px
+  class L,I,S,N,M n
+  class O hot
+  class R phys

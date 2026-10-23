@@ -1,0 +1,33 @@
+%% What each node is configured by: every edge is a parameter file, not a topic.
+flowchart LR
+  URDF["urdf.xacro<br/>frame tree · MEASURE values"]
+  DRVC["drivers.yaml<br/>pins · dead zone · gain · safe limits"]
+  EKFC["ekf.yaml<br/>what gets fused"]
+  SLAMC["slam_mapping.yaml<br/>slam_localization.yaml"]
+  NAVC["nav2_params.yaml<br/>costmaps · controller · robot_radius"]
+  GOALC["goals.yaml<br/>named poses in map frame"]
+  LAUNC["lidar.launch.py<br/>serial_port · scan_mode · frame_id"]
+
+  RSP["robot_state_publisher"]
+  RPL["rplidar_node"]
+  IMN["imu_node"]
+  MOT["motor_node"]
+  EKF["ekf_filter_node"]
+  SLAM["slam_toolbox"]
+  NAV["Nav2"]
+  DEL["deliver.py"]
+
+  URDF --> RSP
+  LAUNC --> RPL
+  DRVC --> IMN
+  DRVC --> MOT
+  EKFC --> EKF
+  SLAMC --> SLAM
+  NAVC --> NAV
+  GOALC --> DEL
+  DEL -- "NavigateToPose" --> NAV
+
+  classDef cfg fill:#eef4ea,stroke:#88a878,color:#16181d
+  classDef node fill:#f1f2f5,stroke:#9aa0aa,color:#16181d
+  class URDF,DRVC,EKFC,SLAMC,NAVC,GOALC,LAUNC cfg
+  class RSP,RPL,IMN,MOT,EKF,SLAM,NAV,DEL node

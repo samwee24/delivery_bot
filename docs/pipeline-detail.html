@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>delivery_bot · start to finish</title>
+<style>
+  :root {
+    --fg: var(--foreground, #1c1c1e);
+    --bg: var(--background, #ffffff);
+    --mut: var(--muted-foreground, #6b6b70);
+    --line: var(--border, #e3e3e6);
+    --card: color-mix(in srgb, var(--fg) 4%, transparent);
+    --card2: color-mix(in srgb, var(--fg) 7%, transparent);
+    --acc: var(--chart-1, #3b6ef5);
+    --ok: var(--success, #1f8a4c);
+    --warn: var(--warning, #a26a00);
+    --bad: var(--destructive, #c0392b);
+    --mono: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+    --sans: var(--font-sans, -apple-system, "Segoe UI", Roboto, sans-serif);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg: var(--foreground, #ececf0);
+      --bg: var(--background, #17171a);
+      --mut: var(--muted-foreground, #9a9aa2);
+      --line: var(--border, #2e2e34);
+      --acc: var(--chart-1, #6f9bff);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); }
+  body {
+    margin: 0 auto; max-width: 780px; padding: 40px 20px 80px;
+    font-family: var(--sans); color: var(--fg); font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  header { margin-bottom: 28px; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -.02em; }
+  .sub { color: var(--mut); font-size: 14px; max-width: 62ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .pill {
+    font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: var(--card2); color: var(--mut);
+  }
+  h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--mut);
+    margin: 34px 0 12px; font-weight: 650;
+  }
+  .modes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: -6px; }
+  .modes button {
+    font: inherit; font-size: 12.5px; padding: 5px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line); background: transparent; color: var(--mut);
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .modes button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .modes button:hover:not([aria-pressed="true"]) { background: var(--card); color: var(--fg); }
+
+  /* ---- the spine ---- */
+  .spine { position: relative; margin-top: 20px; }
+  .spine::before {
+    content: ""; position: absolute; left: 15px; top: 8px; bottom: 8px; width: 2px;
+    background: linear-gradient(var(--line), var(--line));
+  }
+  .stage { position: relative; padding: 0 0 18px 46px; }
+  .stage:last-child { padding-bottom: 0; }
+  .stage::before {
+    content: attr(data-n); position: absolute; left: 0; top: 0;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    background: var(--bg); color: var(--mut);
+    border: 2px solid var(--line);
+  }
+  .stage.live::before { border-color: var(--acc); color: var(--acc); }
+  .stage.gate::before { border-color: var(--warn); color: var(--warn); }
+  .card {
+    background: var(--card); border-radius: 10px; padding: 14px 16px;
+  }
+  .hd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 10px; }
+  .hd h3 { font-size: 15px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+  .rate { font-family: var(--mono); font-size: 11px; color: var(--acc); background: color-mix(in srgb, var(--acc) 12%, transparent); padding: 1px 7px; border-radius: 999px; }
+  .who { font-family: var(--mono); font-size: 11.5px; color: var(--mut); }
+  .card p { margin: 7px 0 0; font-size: 13.5px; color: var(--fg); }
+  .card p.note { color: var(--mut); font-size: 12.5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+  .chip {
+    font-family: var(--mono); font-size: 10.5px; padding: 1px 6px; border-radius: 4px;
+    background: var(--card2); color: var(--mut);
+  }
+  .fails {
+    margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line);
+    font-size: 12.5px; color: var(--mut);
+  }
+  .fails b { color: var(--bad); font-weight: 600; }
+  .loop {
+    position: relative; margin: 4px 0 22px 46px; padding: 9px 14px;
+    border-radius: 8px; font-size: 12.5px; color: var(--mut);
+    background: color-mix(in srgb, var(--acc) 9%, transparent);
+  }
+  .loop b { color: var(--fg); font-weight: 600; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--mut); font-weight: 650; padding: 7px 9px; border-bottom: 1px solid var(--line);
+  }
+  td { padding: 8px 9px; border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent); vertical-align: top; }
+  td.m { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+
+  .box { background: var(--card); border-radius: 10px; padding: 14px 16px; font-size: 13px; }
+  .box h4 { margin: 0 0 6px; font-size: 13px; }
+  ul { margin: 6px 0 0; padding-left: 18px; color: var(--mut); font-size: 13px; }
+  li { margin-bottom: 4px; }
+  li b { color: var(--fg); font-weight: 600; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--mut); font-size: 12px; }
+  code { font-family: var(--mono); font-size: 12px; background: var(--card2); padding: 1px 5px; border-radius: 4px; }
+  @media (max-width: 560px) { body { padding: 28px 14px 60px; } .two { grid-template-columns: 1fr; } }
+  @media print {
+    body { max-width: none; padding: 0; font-size: 11pt; }
+    .modes { display: none; }
+    .spine::before { background: #ccc; }
+    .card, .box, .loop { background: #f6f6f6 !important; }
+    .stage { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The delivery robot, start to finish</h1>
+  <div class="sub">
+    One revolution of the lidar to one turn of the wheels: every stage of the pipeline, the rate it
+    runs at, the file that controls it, and how it fails. Numbers marked <em>unverified</em> are
+    design values, not measurements — nothing has run on hardware yet.
+  </div>
+  <div class="meta">
+    <span class="pill">sherm-raspi · Pi 4B · Ubuntu 24.04</span>
+    <span class="pill">ROS 2 Jazzy</span>
+    <span class="pill">repo @ a407464</span>
+    <span class="pill">reference-v1</span>
+  </div>
+</header>
+
+<h2>Pick the mode</h2>
+<div class="modes" role="group" aria-label="Operating mode">
+  <button data-mode="mapping" aria-pressed="true">mapping</button>
+  <button data-mode="navigation" aria-pressed="false">navigation</button>
+  <button data-mode="teleop" aria-pressed="false">teleop</button>
+</div>
+
+<h2>The pipeline</h2>
+<div class="spine">
+
+  <div class="stage" data-n="0">
+    <div class="card">
+      <div class="hd"><h3>Power on, build, source</h3><span class="who">once per session</span></div>
+      <p>Pi boots, swap is mounted, then the workspace is sourced. <code>colcon build --symlink-install</code>
+        compiles four packages we own; <code>rf2o</code> is cloned from <code>deps.repos</code> and pinned at
+        <code>b38c68e</code>, so the build is reproducible rather than "whatever was on the SD card".</p>
+      <div class="chips"><span class="chip">deps.repos</span><span class="chip">.github/workflows/ci.yml</span><span class="chip">/swapfile</span></div>
+      <div class="fails"><b>Fails as:</b> a parallel build with no swap takes the machine off SSH — happened; build one job at a time.</div>
+    </div>
+  </div>
+
+  <div class="stage" data-n="1">
+    <div class="card">
+      <div class="hd"><h3>Launch the graph</h3><span class="who">base.launch.py</span></div>
+      <p>Seven nodes start at once: <code>robot_state_publisher</code> (URDF → <code>tf_static</code>), the lidar
+        driver, <code>rf2o</code>, <code>imu_node</code>, the EKF, <code>motor_node</code> and
+        <code>foxglove_bridge</code>. The launch file forces <code>dry_run: true</code>, so motors compute duty
+        cycles and log them but never touch a GPIO pin.</p>
+      <div class="chips"><span class="chip">bringup/launch/base.launch.py</span><span class="chip">urdf.xacro</span><span class="chip">:8765</span></div>
+      <div class="fails"><b>Fails as:</b> <code>/dev/rplidar</code> missing → driver exits and the whole graph has no <code>/scan</code>; a stale bridge left on 8765 blocks the new one.</div>
+    </div>
+  </div>
+
+  <div class="stage live" data-n="2">
+    <div class="card">
+      <div class="hd"><h3>Lidar: one revolution, one scan</h3><span class="rate">5–7 Hz</span></div>
+      <p>The A1M8 spins and streams range packets at 115200 baud; the driver assembles them into
+        <code>LaserScan</code> on <code>/scan</code> with <code>frame_id: laser</code> and angle compensation on.
+        Each revolution asks ~284 times; on this unit only 95–105 answers come back.</p>
+      <div class="chips"><span class="chip">rplidar_ros</span><span class="chip">config: serial_port, scan_mode</span><span class="chip">/scan</span></div>
+      <div class="fails"><b>Fails as:</b> the 33 % missing-return rate — a photonic or mounting problem, not a driver bug. Every stage below inherits it.</div>
+    </div>
+  </div>
+
+  <div class="stage live" data-n="3">
+    <div class="card">
+      <div class="hd"><h3>IMU: yaw rate only</h3><span class="rate">100 Hz</span></div>
+      <p>MPU6050 over I²C at <code>0x68</code>. Three seconds of still bias calibration, then gyro z in rad/s on
+        <code>/imu/data</code>. There is no magnetometer, so absolute heading is impossible — the node sets
+        <code>orientation_covariance[0] = -1</code> to tell every consumer the orientation field is invalid.</p>
+      <div class="chips"><span class="chip">drivers.yaml</span><span class="chip">calib_max_std 0.01</span><span class="chip">/imu/data</span></div>
+      <div class="fails"><b>Fails as:</b> <code>i2cdetect -y 1</code> is currently empty — no <code>0x68</code> on the bus, so this stage has provably never produced a sample. Also needs <code>robot</code> in the <code>i2c</code> group.</div>
+    </div>
+  </div>
+
+  <div class="stage live" data-n="4">
+    <div class="card">
+      <div class="hd"><h3>Lidar odometry: range flow</h3><span class="rate">10 Hz</span></div>
+      <p><code>rf2o</code> compares consecutive scans and solves for the motion that best explains the change in
+        ranges. It publishes <b>velocity</b> (<code>vx</code>, <code>vyaw</code>), not a pose —
+        which is why a drift-prone position is never trusted downstream.</p>
+      <div class="chips"><span class="chip">/scan → /odom_rf2o</span><span class="chip">publish_tf: false</span><span class="chip">base_frame_id: base_footprint</span></div>
+      <div class="fails"><b>Fails as:</b> with a third of the ranges missing, the flow field is thin in some sectors and the solution gets noisy exactly where the room is open.</div>
+    </div>
+  </div>
+
+  <div class="stage live" data-n="5">
+    <div class="card">
+      <div class="hd"><h3>Fusion: one owner of the odometry frame</h3><span class="rate">30 Hz</span></div>
+      <p><code>robot_localization</code> in 2D mode predicts forward at 30 Hz and corrects with rf2o's
+        <code>vx</code>/<code>vyaw</code> plus the IMU's <code>vyaw</code>. It is the <b>only</b> publisher of
+        <code>odom → base_footprint</code>. No accelerometer, no absolute position: x/y are integrals, so drift
+        is bounded only by how good the velocity estimates are.</p>
+      <div class="chips"><span class="chip">ekf.yaml</span><span class="chip">two_d_mode</span><span class="chip">world_frame: odom</span><span class="chip">/odometry/filtered</span></div>
+      <div class="fails"><b>Fails as:</b> a second publisher of <code>odom → base_footprint</code> makes the map rotate on the spot — which looks exactly like broken hardware.</div>
+    </div>
+  </div>
+
+  <div class="stage live" data-n="6">
+    <div class="card">
+      <div class="hd"><h3>Map, or remember the map</h3><span class="rate">per scan</span></div>
+      <p id="stage6"><code>slam_toolbox</code> matches each scan against what it already knows and publishes
+        <code>map → odom</code> plus <code>/map</code>. In mapping mode it grows a new map, which you save as
+        <code>maps/room.yaml</code> plus a serialised pose graph. In navigation mode it loads that graph and only
+        updates the correction.</p>
+      <div class="chips"><span class="chip">slam_mapping.yaml</span><span class="chip">slam_localization.yaml</span><span class="chip">maps/</span></div>
+      <div class="fails"><b>Fails as:</b> sparse scans produce walls that wobble; an unclosed loop makes the map jump when the robot returns to the start.</div>
+    </div>
+  </div>
+
+  <div class="stage" data-n="7">
+    <div class="card">
+      <div class="hd"><h3>Decide where to go</h3><span class="rate">on goal</span></div>
+      <p id="stage7">A goal arrives in the <code>map</code> frame — from <code>goals.yaml</code> via
+        <code>deliver</code>, or from a click in Foxglove. Nav2's planner finds a path over the costmap, and the
+        controller follows it at <b>0.15 m/s</b>, publishing <code>/cmd_vel</code> as
+        <code>TwistStamped</code> (Jazzy stamps everything).</p>
+      <div class="chips"><span class="chip">nav2_params.yaml</span><span class="chip">goals.yaml</span><span class="chip">/cmd_vel</span></div>
+      <div class="fails"><b>Fails as:</b> an unstamped <code>Twist</code> is silently ignored — the robot looks dead while every topic appears healthy.</div>
+    </div>
+  </div>
+
+  <div class="stage" data-n="8">
+    <div class="card">
+      <div class="hd"><h3>Turn velocity into volts</h3><span class="rate">20 Hz</span></div>
+      <p><code>motor_node</code> splits <code>vx</code>/<code>vyaw</code> into left and right wheel speeds, applies a
+        dead zone and a gain per side, clamps at <code>max_duty 0.85</code>, and drives L298N on GPIO
+        12/5/6/13/20/21. If no command arrives for <b>0.5 s</b> it zeroes PWM and pulls the direction pins low.</p>
+      <div class="chips"><span class="chip">drivers.yaml</span><span class="chip">dry_run</span><span class="chip">watchdog_s 0.5</span></div>
+      <div class="fails"><b>Fails as:</b> teleop and Nav2 both publish <code>/cmd_vel</code> with no arbiter — there is no safety node yet, so the watchdog is the only protection.</div>
+    </div>
+  </div>
+
+  <div class="stage" data-n="9">
+    <div class="card">
+      <div class="hd"><h3>Observe, record, judge</h3><span class="who">continuous</span></div>
+      <p>Foxglove on port 8765 shows scans, TF, costmaps and the filtered odometry; <code>ros2 bag -s mcap</code>
+        records the topics that matter. One row goes into <code>test_log.md</code> per run with the commit
+        hash and a number — a fail with a number is worth more than a pass with none.</p>
+      <div class="chips"><span class="chip">foxglove_bridge</span><span class="chip">ros2 bag</span><span class="chip">docs/test_log.md</span></div>
+      <div class="fails"><b>Fails as:</b> nothing recorded, nothing provable — the current state of every row in that table.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="loop">
+  <b>The loop closes here:</b> every wheel turn changes the next scan, which changes the next velocity estimate.
+  Everything above is one iteration of that loop — a control cycle that runs while the robot moves, not a
+  sequence you run once.
+</div>
+
+<h2>Budget: what happens per second</h2>
+<div class="scroll">
+<table>
+  <tr><th>signal</th><th>rate</th><th>produced by</th><th>worst-case age when used</th></tr>
+  <tr><td class="m">/scan</td><td class="m">5–7 Hz</td><td>rplidar_node</td><td class="m">~170 ms</td></tr>
+  <tr><td class="m">/imu/data</td><td class="m">100 Hz</td><td>imu_node</td><td class="m">10 ms</td></tr>
+  <tr><td class="m">/odom_rf2o</td><td class="m">10 Hz</td><td>rf2o_laser_odometry</td><td class="m">100 ms</td></tr>
+  <tr><td class="m">/odometry/filtered</td><td class="m">30 Hz</td><td>ekf_filter_node</td><td class="m">33 ms</td></tr>
+  <tr><td class="m">map → odom</td><td class="m">per scan</td><td>slam_toolbox</td><td class="m">~170 ms</td></tr>
+  <tr><td class="m">/cmd_vel</td><td class="m">20 Hz</td><td>Nav2 controller</td><td class="m">50 ms</td></tr>
+  <tr><td class="m">GPIO duty</td><td class="m">20 Hz</td><td>motor_node</td><td class="m">50 ms</td></tr>
+</table>
+</div>
+<p class="sub" style="margin-top:10px">
+  The lidar is the slowest link by an order of magnitude, so the whole pipeline's reaction time is set by it:
+  roughly <b>350 ms</b> from a wall appearing to a PWM change — about 5 cm of travel at 0.15 m/s.
+</p>
+
+<h2>Where it breaks, in the order it will</h2>
+<div class="two">
+  <div class="box">
+    <h4>Already broken</h4>
+    <ul>
+      <li><b>No IMU data</b> — I²C bus scans empty; <code>imu_node</code> has never published.</li>
+      <li><b>No code</b> — the repo is a skeleton; every node raises <code>NotImplementedError</code>.</li>
+      <li><b>No measurements</b> — <code>test_log.md</code> rows are all blank.</li>
+    </ul>
+  </div>
+  <div class="box">
+    <h4>Structurally fragile</h4>
+    <ul>
+      <li><b>Lidar dropouts</b> feed odometry, mapping and localisation at once.</li>
+      <li><b>No safety node</b> — two publishers on <code>/cmd_vel</code>, one actuator.</li>
+      <li><b>No absolute reference</b> — yaw comes from integration, so drift never self-corrects.</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  Files: <code>bringup/launch/*.py</code> · <code>bringup/config/{ekf,slam_*,nav2_params}.yaml</code> ·
+  <code>drivers/config/drivers.yaml</code> · <code>mission/config/goals.yaml</code> ·
+  <code>description/urdf/delivery_bot.urdf.xacro</code>.
+  Rates are design values until they appear in <code>docs/test_log.md</code> with a commit hash.
+</footer>
+
+<script>
+  // Swaps the two stages whose meaning depends on what is driving the robot.
+  const TEXT = {
+    mapping: {
+      s6: "<code>slam_toolbox</code> matches each scan against what it already knows and publishes <code>map → odom</code> plus <code>/map</code>. In mapping mode it grows a new map, which you save as <code>maps/room.yaml</code> plus a serialised pose graph.",
+      s7: "A goal arrives from teleoperation or a Foxglove click, in the <code>map</code> frame. Nav2's planner finds a path over the costmap, and the controller follows it at <b>0.15 m/s</b>, publishing <code>/cmd_vel</code> as <code>TwistStamped</code>. Drive slowly and cover the room: the map is the product here, not the goal."
+    },
+    navigation: {
+      s6: "<code>slam_toolbox</code> in localization mode loads the serialised graph from <code>maps/</code> and only maintains the correction between the saved map and live scans — <code>map → odom</code> gets smaller as the estimate improves.",
+      s7: "A goal arrives from <code>goals.yaml</code> via <code>deliver</code>, in the <code>map</code> frame. Nav2 plans over the saved map, and the controller follows at <b>0.15 m/s</b>, publishing <code>/cmd_vel</code> as <code>TwistStamped</code>."
+    },
+    teleop: {
+      s6: "No map and no <code>slam_toolbox</code> in this mode — only <code>odom → base_footprint</code> exists, so Foxglove shows the robot drifting in its own frame. That is the honest view while bringing up drivers.",
+      s7: "<code>teleop_twist_keyboard</code> publishes <code>/cmd_vel</code> directly, with <code>stamped:=true</code>. Nav2 is not running, so there is no planner, no costmap and no obstacle avoidance — you are the controller."
+    }
+  };
+  const buttons = document.querySelectorAll('.modes button');
+  function setMode(mode) {
+    buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    document.getElementById('stage6').innerHTML = TEXT[mode].s6;
+    document.getElementById('stage7').innerHTML = TEXT[mode].s7;
+  }
+  buttons.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+</script>
+
+</body>
+</html>
