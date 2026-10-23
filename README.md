@@ -35,6 +35,8 @@ Wiring and power details: [`docs/wiring.md`](docs/wiring.md).
 | Fusion | `robot_localization` EKF, 2D mode |
 | Mapping + localisation | `slam_toolbox` |
 | Navigation | Nav2 — Regulated Pure Pursuit, Collision Monitor |
+| Autonomous mapping | `explore_lite` — frontier exploration for one-shot mapping |
+| Evaluation (later) | `slam_toolbox` replay + `evo` offline |
 | Visualisation / logging | `foxglove_bridge`, `ros2 bag -s mcap` |
 | Keyboard driving | `teleop_twist_keyboard` |
 
@@ -47,9 +49,11 @@ URDF, and the delivery scripts.
 delivery_bot_description/   URDF (xacro), no code
 delivery_bot_drivers/       motor_node, imu_node, drivers.yaml
 delivery_bot_bringup/       launch/ + config/ (EKF, slam_toolbox, Nav2) + maps/
+delivery_bot_slam/          SLAM support: covariance relay, trajectory recorder,
+                            explore and replay launches
 delivery_bot_mission/       scan_stats, save_goal, deliver, goals.yaml
 docs/                       plan, wiring, Pi setup, test log
-deps.repos                  third-party source packages (rf2o), pinned
+deps.repos                  third-party source packages (rf2o, m-explore-ros2), pinned
 ```
 
 ## Quickstart (on the Pi)
@@ -60,7 +64,8 @@ git clone git@github.com:samwee24/delivery_bot.git
 vcs import . < delivery_bot/deps.repos
 cd ~/ros2_ws
 rosdep install --from-paths src --ignore-src -y
-colcon build --symlink-install
+# m-explore-ros2 also ships multirobot_map_merge, a multi-robot package this robot does not use
+colcon build --symlink-install --packages-skip multirobot_map_merge
 source install/setup.bash
 ```
 
@@ -82,6 +87,12 @@ ros2 launch delivery_bot_bringup mapping.launch.py dry_run:=false
 
 # navigation: base + slam_toolbox localization + Nav2
 ros2 launch delivery_bot_bringup navigation.launch.py map:=$HOME/ros2_ws/src/delivery_bot/delivery_bot_bringup/maps/room
+
+# autonomous mapping: frontier exploration, no human driving
+ros2 launch delivery_bot_slam explore.launch.py dry_run:=true   # skeleton: starts driving immediately
+
+# SLAM evaluation: replay a recorded bag, mapping or localization
+ros2 launch delivery_bot_slam slam_replay.launch.py slam_mode:=mapping   # offline, from a bag
 
 # keyboard driving (Motors: see safety below)
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true
@@ -139,10 +150,19 @@ Recorded here because they change how you use the repo:
   `python3-lgpio`, `python3-smbus2`); rosdep has no Ubuntu 24.04 keys for them.
 - **Map saving writes into the source tree** (`delivery_bot_bringup/maps`) so the map
   can be committed; `--symlink-install` makes that the installed share directory too.
+- **`slam_toolbox` 2.8.5 is a lifecycle node.** Both launches use
+  `launch_ros.actions.LifecycleNode` with configure then activate rather than a plain
+  `Node`; a plain `Node` looks healthy and publishes nothing. See
+  [`docs/slam.md`](docs/slam.md).
+- **rf2o publishes zero covariance**, so a relay rewrites the twist covariance before
+  the EKF; without it the EKF treats rf2o's yaw rate as perfect and the gyro barely
+  contributes. See [`docs/slam.md`](docs/slam.md).
 
 ## Docs
 
 - [`docs/plan.md`](docs/plan.md) — phases and what "done" means
+- [`docs/slam.md`](docs/slam.md) — SLAM plan, known issues, evaluation
+- [`docs/foxglove/README.md`](docs/foxglove/README.md) — the SLAM layout and its controls
 - [`docs/wiring.md`](docs/wiring.md) — pins and power
 - [`docs/pi_setup.md`](docs/pi_setup.md) — Ubuntu/Jazzy setup, udev, groups, Ghostty
 - [`docs/test_log.md`](docs/test_log.md) — the test record table

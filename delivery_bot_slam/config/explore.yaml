@@ -1,0 +1,14 @@
+explore_node:
+  ros__parameters:
+    robot_base_frame: base_footprint
+    costmap_topic: /global_costmap/costmap          # not /map: skips frontiers hugging walls
+    costmap_updates_topic: /global_costmap/costmap_updates
+    visualize: true                                  # publishes /explore/frontiers
+    planner_frequency: 0.3                           # TUNE
+    progress_timeout: 30.0
+    potential_scale: 3.0
+    orientation_scale: 0.0
+    gain_scale: 1.0
+    transform_tolerance: 0.3
+    min_frontier_size: 0.3                           # TUNE: small room
+    return_to_init: true                             # drive home at the end; gives return-to-start error

@@ -18,8 +18,17 @@
             └── imu_link    MPU6050, rigid to the body
 
   Rules:
-    * base_footprint is published by the EKF, not here — this file must only
-      describe base_link and below.
+    * The EKF publishes the *transform* odom -> base_footprint; it does not own the
+      frame. This file still defines the base_footprint link and the fixed joint
+      base_footprint -> base_link (floor level, between the wheels). It must never
+      publish or duplicate that transform: two publishers of one transform make the
+      map spin.
+    * laser_yaw from the earlier standalone Python test does not carry over. That
+      script used raw clockwise RPLidar angles, while rplidar_ros applies its own
+      convention, so the same number describes a different mounting angle here.
+      Redo the 50 cm box test by viewing /scan in Foxglove in the `laser` frame, then
+      set laser_yaw from what you see. A 180° error makes rf2o report reverse motion
+      and corrupts the map. See docs/slam.md §3.3.
     * xacro: a plain URDF will not expand; keep the xmlns:xacro attribute.
 
   TODO: xacro:property for wheel_base, wheel_radius, robot_radius, laser_xyz,

@@ -3,3 +3,9 @@ repositories:
     type: git
     url: https://github.com/MAPIRlab/rf2o_laser_odometry.git
     version: b38c68e46387b98845ecbfeb6660292f967a00d3   # ros2 branch head, 2026-10-22
+  # Also ships multirobot_map_merge, which this robot does not use (one robot,
+  # one map); CI skips that package so the unused dependency cannot fail the build.
+  m-explore-ros2:
+    type: git
+    url: https://github.com/robo-friends/m-explore-ros2.git
+    version: 326cf8a0b487c34246bb8f3326afbcd69576dc60

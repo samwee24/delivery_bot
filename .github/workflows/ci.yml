@@ -29,6 +29,14 @@ jobs:
         with:
           required-ros-distributions: jazzy
 
+      - name: Install build dependencies for vendored explore_lite
+        run: |
+          # explore_lite compiles against nav2_msgs, nav2_costmap_2d and map_msgs.
+          # setup-ros installs ros-base only, so without this the vendored package
+          # fails in the build step for a reason that has nothing to do with us.
+          sudo apt-get update
+          sudo apt-get install -y ros-jazzy-navigation2 ros-jazzy-nav2-bringup
+
       - name: Assemble workspace (repo + pinned deps.repos)
         run: |
           mkdir -p "$HOME/ws/src"
@@ -40,7 +48,9 @@ jobs:
         run: |
           source /opt/ros/jazzy/setup.bash
           cd "$HOME/ws"
-          colcon build --symlink-install --event-handlers console_cohesion+
+          # m-explore-ros2 also ships multirobot_map_merge, which we never run; skipping it keeps its unused deps out of the build.
+          colcon build --symlink-install --event-handlers console_cohesion+ \
+            --packages-skip multirobot_map_merge
 
       - name: Validate URDF and YAML
         run: |

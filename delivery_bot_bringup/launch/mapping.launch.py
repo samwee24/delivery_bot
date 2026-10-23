@@ -15,8 +15,15 @@ Saving the map (run while this launch is up):
 slam_toolbox's serialize_map writes room.posegraph and room.data next to the
 given filename.
 
-Expected: include base.launch.py, then slam_toolbox/slam_toolbox.py with
-config/slam_mapping.yaml (online_async, map frame published by slam_toolbox).
+Expected: include base.launch.py, then slam_toolbox's async node with
+config/slam_mapping.yaml (online_async; the map frame is published by slam_toolbox).
+That node must be a launch_ros.actions.LifecycleNode, not a plain Node: start it with
+ChangeState(TRANSITION_CONFIGURE) and, on reaching `inactive`,
+ChangeState(TRANSITION_ACTIVATE). slam_toolbox 2.8.5 stays `unconfigured` otherwise —
+a plain Node starts, looks healthy, and produces no /map, no map -> odom and no error
+to explain why. Pass `use_lifecycle_manager: false` (the launch file drives the
+transitions itself) and forward `use_sim_time` to the same node. Background:
+docs/slam.md §3.1.
 """
 
 from launch import LaunchDescription
