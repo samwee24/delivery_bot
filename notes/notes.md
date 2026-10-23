@@ -5,6 +5,46 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-10-23 · documentation moved into the repository; repo made private
+
+**Goal.** Stop the plan, notes and evidence from existing only on one MacBook.
+
+**Decided.** One repository, three copies (Mac, GitHub, Pi), GitHub as source of truth.
+`delivery_bot` becomes **private** — the notebook, report draft and assessment
+reasoning are not for publication. CA1/CA2 stay out of this repo.
+
+**What moved** (from the local-only `MA4890/CA3/`, 172 KB):
+
+| Was | Now |
+| --- | --- |
+| `CA3/README.md` | `docs/CA3.md` |
+| `CA3/CA3_plan.md` | `docs/design-plan.md` |
+| `CA3/docs/01…07` | `docs/system/01…07` |
+| `CA3/notes.md` | `notes/notes.md` |
+| `CA3/AGENTS.md` | `AGENTS.md` (repo root), with sync rules added |
+| `CA3/evidence/lidar/` | `evidence/lidar/` |
+| `CA3/report/` | `report/` |
+| `CA3/scripts/` | `tools/` |
+
+`config/` and `results/` were empty placeholders — the real configs already live in
+the package `config/` directories, so only `results/.gitkeep` was kept.
+
+**Also committed.** The six untracked pipeline diagrams (`docs/img/`, `docs/*.mmd`,
+`docs/pipeline*.html`) that had been sitting on the Mac since 2026-10-22.
+
+**Verification.** Relative links checked across every `.md` (0 dangling);
+`gh api` unauthenticated → 404, so the repo is genuinely private; backup tarball at
+`~/Desktop/CA3-backup-20261023.tar.gz` before any move.
+
+**Consequence.** `docs/pi_setup.md` (from-scratch install) and
+`docs/system/02_pi_setup.md` (measured state) both survive, each now pointing at the
+other. The Pi pulls; it does not author prose.
+
+**Next.** Delete the local `MA4890/CA3` once the repo copy is confirmed, so there is
+no second copy to diverge. Then the OI-4 echo-rate control run.
+
+---
+
 ## 2026-10-22 · D5 — standard ROS 2 stack adopted; own-maths v1 retired
 
 **Goal.** Decide the estimation / mapping / navigation stack before P1 bring-up work.
