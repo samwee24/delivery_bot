@@ -70,6 +70,8 @@ Acceptance test
     /odom_rf2o --field twist.covariance`` still shows zeros.
     robot_localization's diagnostics stop warning about zero covariance for
     odom0, and ``ros2 topic hz /odom_rf2o_cov`` matches the rf2o input rate.
+
+Build path: task 4.3 in docs/slam_build_path.md
 """
 
 from __future__ import annotations

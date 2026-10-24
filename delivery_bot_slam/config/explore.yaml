@@ -1,3 +1,4 @@
+# Build path: task 8.1 in docs/slam_build_path.md
 explore_node:
   ros__parameters:
     robot_base_frame: base_footprint

@@ -23,6 +23,8 @@ on reaching `inactive`, ChangeState(TRANSITION_ACTIVATE). A plain Node starts, l
 healthy, and publishes no /map, no map -> odom and no error. Pass
 `use_lifecycle_manager: false` and forward `use_sim_time` to the slam_toolbox node.
 Background: docs/slam.md §3.1.
+
+Build path: task 6.2 in docs/slam_build_path.md
 """
 
 from launch import LaunchDescription

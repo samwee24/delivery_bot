@@ -5,6 +5,8 @@
   Geometry only: no inertials, no wheel joint states (wheel joints are fixed
   until encoders or real joint control exist).
 
+  Build path: task 2.2 in docs/slam_build_path.md
+
   Every length is in metres and every MEASURE value is a PLACEHOLDER.
   Replace the placeholder, delete the MEASURE marker only once it has been
   measured with a tape measure on the actual robot.

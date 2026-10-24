@@ -85,6 +85,8 @@ Acceptance test
     /slam_toolbox`` reports ``active``. After the bag ends, ``ros2 topic echo
     /map --once`` shows the room. Playing the same bag twice produces the same
     map; if it does not, something is publishing /tf twice.
+
+Build path: task 5.5 in docs/slam_build_path.md
 """
 
 from launch import LaunchDescription

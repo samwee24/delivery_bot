@@ -98,6 +98,8 @@ Acceptance test
     ``evo_traj tum <dir>/slam_*.tum --ref <dir>/odom_*.tum --plot``
     opens with both starting at the origin and the odometry drifting away from
     the SLAM path. Replaying the same bag twice gives identical timestamps.
+
+Build path: task 7.1 in docs/slam_build_path.md
 """
 
 from __future__ import annotations

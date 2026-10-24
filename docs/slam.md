@@ -9,6 +9,8 @@ Nothing here is a result yet: every value that has not been measured on the robo
 carries `# MEASURE`, `# CALIBRATE` or `# TUNE`, and [§9](#9-open-items-and-measure-list)
 lists all of them in one place.
 
+Work through this in order with [slam_build_path.md](slam_build_path.md); record answers in [slam_journal.md](slam_journal.md).
+
 The dependencies this section assumes and does not own: the lidar driver and its echo
 rate (OI-4), rf2o and the EKF tuning, Nav2's controller and costmaps, and the Foxglove
 bridge. Where this file needs a change in one of those, it is an interface request in
@@ -364,6 +366,8 @@ delivery_bot_slam/
 
 ### 4.1 `delivery_bot_slam/odom_covariance_relay.py`
 
+**Build path:** task 4.3 in [slam_build_path.md](slam_build_path.md).
+
 **Contract.** Subscribe `nav_msgs/msg/Odometry` on `/odom_rf2o`; republish a copy on
 `/odom_rf2o_cov` with configured twist variances; change nothing else. No filtering, no
 smoothing, no timestamp rewriting — the message must be the same message the EKF
@@ -412,6 +416,8 @@ ros2 topic echo /odom_rf2o_cov --once --field header # identical stamp to /odom_
 ```
 
 ### 4.2 `delivery_bot_slam/trajectory_recorder.py`
+
+**Build path:** task 7.1 in [slam_build_path.md](slam_build_path.md).
 
 **Contract.** Publish two `nav_msgs/msg/Path` trajectories and, optionally, write both
 to disk as TUM files for `evo`. It reads transforms; it never publishes one and never
@@ -491,6 +497,8 @@ sign is wrong, not that the filter is mistuned).
 
 ### 4.3 `delivery_bot_slam/launch/explore.launch.py`
 
+**Build path:** task 8.3 in [slam_build_path.md](slam_build_path.md).
+
 **Contract.** Bring up autonomous mapping: the mapping stack, Nav2 for motion, and
 `explore_lite` as the goal source. Exploration is the only thing that uses this file;
 delivery runs use `navigation.launch.py`.
@@ -548,6 +556,8 @@ back to the start pose within 0.15 m.
 
 ### 4.4 `delivery_bot_slam/launch/slam_replay.launch.py`
 
+**Build path:** task 5.5 in [slam_build_path.md](slam_build_path.md).
+
 **Contract.** Re-run SLAM and odometry on a recorded bag, with no hardware. It starts
 every node that consumes the bag and *nothing that publishes to it*, and it must run
 entirely on bag time.
@@ -598,6 +608,8 @@ run differently).
 
 ### 4.5 `delivery_bot_bringup/launch/mapping.launch.py`
 
+**Build path:** task 5.3 in [slam_build_path.md](slam_build_path.md).
+
 **Contract.** Manual mapping: the base stack plus `slam_toolbox` in mapping mode. The
 file's docstring already states the save procedure; the implementation only has to put
 the node up and make the lifecycle work.
@@ -642,6 +654,8 @@ disagree and the map is being written from both — check §1.1 before touching
 `correlation_search_space_dimension`.
 
 ### 4.6 `delivery_bot_bringup/launch/navigation.launch.py`
+
+**Build path:** task 6.2 in [slam_build_path.md](slam_build_path.md).
 
 **Contract.** Delivery mode: base stack, `slam_toolbox` in localisation mode with the
 saved posegraph, Nav2, and the collision monitor between controller and motors. No
@@ -693,6 +707,8 @@ that slides relative to the walls while the robot is stationary means `map → o
 being fought over by two publishers.
 
 ### 4.7 `delivery_bot_description/urdf/delivery_bot.urdf.xacro`
+
+**Build path:** task 2.2 in [slam_build_path.md](slam_build_path.md).
 
 **Contract.** The frame tree: `base_footprint` on the floor between the wheels,
 `base_link` one wheel radius above it, `laser` and `imu_link` rigid to the body. The

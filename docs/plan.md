@@ -24,6 +24,23 @@ evaluation, and the full reference list — [R25], [K26], [M26] are cited from t
 phases), [`foxglove/README.md`](foxglove/README.md) (the SLAM layout and its controls)
 and [`system/04_architecture.md`](system/04_architecture.md) (pipeline and contracts).
 
+### SLAM section
+
+The SLAM work is done in the order of [`slam_build_path.md`](slam_build_path.md), not
+straight down this table: the path splits each phase into the small tasks that actually
+teach it, keeps its own Progress list, and records answers and numbers in
+[`slam_journal.md`](slam_journal.md). The two plans line up as follows.
+
+| Plan phase | Build-path stages |
+| --- | --- |
+| 1. Lidar + Foxglove | 0, 1 |
+| 2. Drivers + teleop | 2 (URDF only; drivers belong to another section) |
+| 4. Odometry | 3, 4 |
+| 5. Mapping | 5, 7 |
+| 6. Localisation + Nav2 | 6 |
+| 5b. Autonomous mapping | 8 |
+| 8. SLAM evaluation | 9 |
+
 ## Ground rules
 
 - **A value is not a result until it was measured on the robot.** Placeholders are

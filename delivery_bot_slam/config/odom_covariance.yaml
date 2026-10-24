@@ -1,3 +1,4 @@
+# Build path: task 4.4 in docs/slam_build_path.md
 # odom_covariance_relay: rewrite rf2o's empty twist covariance so the EKF can
 # use it. rf2o (b38c68e) leaves twist.covariance at zero, and
 # robot_localization turns a zero measurement variance into 1e-9, which makes

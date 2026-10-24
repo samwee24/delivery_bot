@@ -24,6 +24,8 @@ a plain Node starts, looks healthy, and produces no /map, no map -> odom and no 
 to explain why. Pass `use_lifecycle_manager: false` (the launch file drives the
 transitions itself) and forward `use_sim_time` to the same node. Background:
 docs/slam.md §3.1.
+
+Build path: task 5.3 in docs/slam_build_path.md
 """
 
 from launch import LaunchDescription

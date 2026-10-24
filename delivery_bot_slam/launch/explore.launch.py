@@ -67,6 +67,8 @@ Acceptance test
     ``ros2 topic echo /explore/frontiers --once`` shows markers once the
     costmap has grown. With the robot on the floor the wheels start turning
     within a few seconds -- which is exactly why the warning is first.
+
+Build path: task 8.3 in docs/slam_build_path.md
 """
 
 from launch import LaunchDescription

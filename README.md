@@ -161,6 +161,8 @@ Recorded here because they change how you use the repo:
 ## Docs
 
 - [`docs/plan.md`](docs/plan.md) — phases and what "done" means
+- [`docs/slam_build_path.md`](docs/slam_build_path.md) — the SLAM section as 45 ordered tasks, with a Progress list
+- [`docs/slam_journal.md`](docs/slam_journal.md) — answers, numbers and commit hashes per build-path task
 - [`docs/slam.md`](docs/slam.md) — SLAM plan, known issues, evaluation
 - [`docs/foxglove/README.md`](docs/foxglove/README.md) — the SLAM layout and its controls
 - [`docs/wiring.md`](docs/wiring.md) — pins and power
