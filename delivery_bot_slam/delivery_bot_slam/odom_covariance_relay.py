@@ -85,14 +85,55 @@ class OdomCovarianceRelay(Node):
     """Rewrites rf2o's twist covariance and republishes under a new topic."""
 
     def __init__(self) -> None:
-        raise NotImplementedError
+        super().__init__('odom_covariance_relay')
+        self.declare_parameter('input_topic', '/odom_rf2o')
+        self.declare_parameter('output_topic', '/odom_rf2o_cov')
+        self.declare_parameter('vx_variance', 1.0e-3)
+        self.declare_parameter('vyaw_variance', 4.0e-3)
+        self.declare_parameter('unused_variance', 1.0e3)
+        self._cov = self._build_covariance()
+        self._warned = False
+        self._pub = self.create_publisher(
+            Odometry, self.get_parameter('output_topic').value, 10)
+        self.create_subscription(
+            Odometry, self.get_parameter('input_topic').value, self._on_odom, 10)
 
     def _build_covariance(self) -> list[float]:
-        raise NotImplementedError
+        cov = [0.0] * 36
+        unused = float(self.get_parameter('unused_variance').value)
+        for i in range(6):
+            cov[7 * i] = unused
+        cov[0] = float(self.get_parameter('vx_variance').value)
+        cov[35] = float(self.get_parameter('vyaw_variance').value)
+        return cov
 
     def _on_odom(self, msg: Odometry) -> None:
-        raise NotImplementedError
+        if not self._warned:
+            self._warned = True
+            topic = self.get_parameter('input_topic').value
+            if not any(msg.twist.covariance):
+                self.get_logger().warn(
+                    f'{topic} twist.covariance is all zero; replacing it')
+            else:
+                self.get_logger().info(
+                    f'{topic} twist.covariance is non-zero; overwriting anyway')
+        out = Odometry()
+        out.header = msg.header
+        out.child_frame_id = msg.child_frame_id
+        out.pose = msg.pose
+        out.twist.twist = msg.twist.twist
+        out.twist.covariance = self._cov
+        self._pub.publish(out)
 
 
 def main(args=None) -> None:
-    raise NotImplementedError
+    rclpy.init(args=args)
+    node = OdomCovarianceRelay()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
