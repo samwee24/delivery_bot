@@ -74,7 +74,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 **Stage 8: Autonomous mapping**
 
 - [ ] [8.1 How frontier exploration works](#81-how-frontier-exploration-works)
-- [ ] [8.2 Build explore_lite](#82-build-explore_lite)
+- [x] [8.2 Build explore_lite](#82-build-explore_lite)
 - [ ] [8.3 Write explore.launch.py](#83-write-explorelaunchpy)
 - [ ] [8.4 First supervised run](#84-first-supervised-run)
 - [ ] [8.5 Compare with manual mapping](#85-compare-with-manual-mapping)

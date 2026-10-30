@@ -1,0 +1,100 @@
+{
+  "configById": {
+    "3D!slam3d": {
+      "followTf": "map",
+      "followMode": "follow-pose",
+      "layers": {
+        "grid": {
+          "layerId": "foxglove.Grid",
+          "visible": true
+        }
+      },
+      "topics": {
+        "/map": {
+          "visible": true
+        },
+        "/scan": {
+          "visible": true
+        },
+        "/slam/path": {
+          "visible": true
+        },
+        "/odom/path": {
+          "visible": true
+        },
+        "/slam_toolbox/graph_visualization": {
+          "visible": true
+        }
+      },
+      "transforms": {},
+      "scene": {
+        "enableStats": false
+      },
+      "cameraState": {
+        "distance": 8,
+        "perspective": false,
+        "phi": 0,
+        "thetaOffset": 0,
+        "targetOffset": [
+          0,
+          0,
+          0
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      }
+    },
+    "Plot!yawrate": {
+      "paths": [
+        {
+          "value": "/odom_rf2o.twist.twist.angular.z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/imu/data.angular_velocity.z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/odometry/filtered.twist.twist.angular.z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showLegend": true,
+      "isSynced": true
+    },
+    "RawMessages!log": {
+      "topicPath": "/rosout"
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "first": "3D!slam3d",
+    "second": {
+      "first": "Plot!yawrate",
+      "second": "RawMessages!log",
+      "direction": "column",
+      "splitPercentage": 60
+    },
+    "direction": "row",
+    "splitPercentage": 65
+  }
+}
