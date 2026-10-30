@@ -19,3 +19,5 @@ adjectives; a fail with a number is more useful than a pass with none.
 | | 5 | room map saved | | | |
 | | 6 | 5 goals (15 cm, no contact) | | | |
 | | 7 | home → seat → home ×5 | | | |
+| 2026-10-30 | 44f11a3 | 3 | 3.4 startup race, `bash tools/startup_race.sh 10 2.0` | pass | 10/10 launches, no transform error; rf2o ran with URDF tf | rf2o delayed 2 s after robot_state_publisher; lidar first scan arrives ~13 s after launch |
+| 2026-10-30 | 44f11a3 | 3 | 3.4 control, `bash tools/startup_race.sh 3 0.0` | no repro | 0/3 errors | delay 0 does not reproduce the race here: rsp is up long before the first scan, so the guard is cheap insurance, not shown necessary |

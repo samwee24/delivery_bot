@@ -5,6 +5,20 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-10-30 (evening) · 3.4 startup race, near-return ring is the room
+
+**Ran.** `tools/startup_race.sh 10 2.0` on the Pi: 10/10 clean (rf2o_alone.launch.py,
+rf2o delayed 2 s). Delay 0, 3 launches: also clean; first scan arrives ~13 s after
+launch, so the race needs a slow URDF. Keep the delay in `base.launch.py` anyway
+(request to the bringup owner).
+**Near-return ring (OI-4).** Fraction of returns <0.30 m per 30 deg bin
+(`/tmp/near.py` over `still_`, `still2_`, `rot90_` bags): the bins move between bags
+(0..60 deg, then 30..120, then 90..180), so it follows the scene, not the lidar. No
+`mask_deg` needed on this evidence; recheck once mounted on the robot.
+`/dev/rplidar` symlink now exists on the Pi.
+
+---
+
 ## 2026-10-30 (later) · 1.4 box test: on +x, coarse only
 
 **Ran.** `bash /tmp/box_check.sh` on the Pi, then ranges within +-40 deg of the same
