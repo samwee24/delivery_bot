@@ -54,7 +54,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 - [ ] [5.1 Pose graphs and loop closure](#51-pose-graphs-and-loop-closure)
 - [ ] [5.2 Lifecycle nodes, learned by breaking them](#52-lifecycle-nodes-learned-by-breaking-them)
-- [ ] [5.3 Write mapping.launch.py](#53-write-mappinglaunchpy)
+- [x] [5.3 Write mapping.launch.py](#53-write-mappinglaunchpy)
 - [ ] [5.4 Map the room](#54-map-the-room)
 - [ ] [5.5 Tune on replays, then freeze](#55-tune-on-replays-then-freeze)
 
