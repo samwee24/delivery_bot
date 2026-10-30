@@ -67,7 +67,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 **Stage 7: Your Foxglove SLAM workspace**
 
-- [ ] [7.1 Write the trajectory recorder](#71-write-the-trajectory-recorder)
+- [x] [7.1 Write the trajectory recorder](#71-write-the-trajectory-recorder)
 - [ ] [7.2 Build and commit the layout](#72-build-and-commit-the-layout)
 - [ ] [7.3 Control SLAM from Foxglove](#73-control-slam-from-foxglove)
 
