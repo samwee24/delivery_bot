@@ -18,7 +18,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 **Stage 0: Foundations**
 
-- [ ] [0.1 ROS 2 in one picture: nodes, topics, QoS](#01-ros-2-in-one-picture-nodes-topics-qos)
+- [x] [0.1 ROS 2 in one picture: nodes, topics, QoS](#01-ros-2-in-one-picture-nodes-topics-qos)
 - [ ] [0.2 Frames and transforms](#02-frames-and-transforms)
 - [ ] [0.3 What SLAM is, and which kind you're using](#03-what-slam-is-and-which-kind-youre-using)
 
@@ -181,7 +181,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 **Do:**
 
-1. Connect Foxglove on your Mac to `ws://100.73.7.24:8765`.
+1. Connect Foxglove on your Mac to `ws://sherm-raspi.local:8765`.
 2. Open a 3D panel, set the display frame to `laser`, and enable `/scan`.
 3. Walk around the robot and watch yourself appear.
 
