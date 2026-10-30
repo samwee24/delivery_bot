@@ -21,3 +21,4 @@ adjectives; a fail with a number is more useful than a pass with none.
 | | 7 | home → seat → home ×5 | | | |
 | 2026-10-30 | 44f11a3 | 3 | 3.4 startup race, `bash tools/startup_race.sh 10 2.0` | pass | 10/10 launches, no transform error; rf2o ran with URDF tf | rf2o delayed 2 s after robot_state_publisher; lidar first scan arrives ~13 s after launch |
 | 2026-10-30 | 44f11a3 | 3 | 3.4 control, `bash tools/startup_race.sh 3 0.0` | no repro | 0/3 errors | delay 0 does not reproduce the race here: rsp is up long before the first scan, so the guard is cheap insurance, not shown necessary |
+| 2026-10-30 | d8f46bf | 4 | 4.3 relay on bag replay (still2), `ros2 topic echo /odom_rf2o_cov --once --field twist.covariance` | pass | idx0 1e-3, idx35 4e-3, other diagonals 1e3, input stays all zero; 7.06 Hz out = rf2o rate | variances are CALIBRATE placeholders (4.4); EKF diagnostics not yet checked |
