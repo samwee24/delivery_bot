@@ -28,8 +28,57 @@ docs/slam.md §3.1.
 Build path: task 5.3 in docs/slam_build_path.md
 """
 
+import os
+
+import launch
+import lifecycle_msgs.msg
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import (DeclareLaunchArgument, EmitEvent,
+                            IncludeLaunchDescription, RegisterEventHandler)
+from launch.conditions import IfCondition
+from launch.event_handlers import OnStateTransition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import LifecycleNode
+from launch_ros.events.lifecycle import ChangeState
 
 
 def generate_launch_description() -> LaunchDescription:
-    return LaunchDescription([])
+    bringup = get_package_share_directory('delivery_bot_bringup')
+    use_sim_time = LaunchConfiguration('use_sim_time')
+
+    slam = LifecycleNode(
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',
+        name='slam_toolbox',
+        namespace='',
+        output='screen',
+        parameters=[
+            os.path.join(bringup, 'config', 'slam_mapping.yaml'),
+            {'use_lifecycle_manager': False, 'use_sim_time': use_sim_time},
+        ],
+    )
+    configure = EmitEvent(event=ChangeState(
+        lifecycle_node_matcher=launch.events.matches_action(slam),
+        transition_id=lifecycle_msgs.msg.Transition.TRANSITION_CONFIGURE))
+    activate = RegisterEventHandler(OnStateTransition(
+        target_lifecycle_node=slam,
+        start_state='configuring', goal_state='inactive',
+        entities=[EmitEvent(event=ChangeState(
+            lifecycle_node_matcher=launch.events.matches_action(slam),
+            transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVATE))]))
+
+    return LaunchDescription([
+        DeclareLaunchArgument('use_sim_time', default_value='false'),
+        # false lets a bag replay supply its own tf and sensors (build path 5.3).
+        DeclareLaunchArgument('include_base', default_value='true'),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(bringup, 'launch', 'base.launch.py')),
+            launch_arguments={'use_sim_time': use_sim_time}.items(),
+            condition=IfCondition(LaunchConfiguration('include_base'))),
+        slam,
+        activate,
+        configure,
+    ])
