@@ -18,7 +18,6 @@ What this file starts
                             unconfigured in 2.8.5 and never publishes /map
     trajectory_recorder     /slam/path and /odom/path, optional TUM output
     foxglove_bridge         so the replay can be watched from the Mac
-    (trajectory_recorder is added in build path 7.1)
 
 No ``robot_state_publisher`` by default (``use_rsp:=false``; set it true only for a bag with no ``/tf_static``). The static tree comes from ``/tf_static`` in the
 bag, which is the geometry that was current when the bag was recorded. A live
@@ -145,6 +144,7 @@ def generate_launch_description() -> LaunchDescription:
         # recorded without it needs this on; never both (two publishers).
         DeclareLaunchArgument('use_rsp', default_value='false'),
         DeclareLaunchArgument('foxglove', default_value='true'),
+        DeclareLaunchArgument('tum_output_dir', default_value=''),
         Node(package='robot_state_publisher', executable='robot_state_publisher',
              condition=IfCondition(LaunchConfiguration('use_rsp')),
              parameters=[{'use_sim_time': sim, 'robot_description': ParameterValue(
@@ -171,5 +171,8 @@ def generate_launch_description() -> LaunchDescription:
         Node(package='foxglove_bridge', executable='foxglove_bridge',
              condition=IfCondition(LaunchConfiguration('foxglove')),
              parameters=[{'use_sim_time': sim}]),
-        # trajectory_recorder joins here in build path 7.1.
+        Node(package='delivery_bot_slam', executable='trajectory_recorder',
+             name='trajectory_recorder', output='screen',
+             parameters=[{'use_sim_time': sim,
+                          'tum_output_dir': LaunchConfiguration('tum_output_dir')}]),
     ])

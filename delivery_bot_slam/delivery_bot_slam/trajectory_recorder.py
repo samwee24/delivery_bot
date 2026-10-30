@@ -104,32 +104,150 @@ Build path: task 7.1 in docs/slam_build_path.md
 
 from __future__ import annotations
 
+import math
+import os
+from datetime import datetime
+
 import rclpy
-from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry, Path
 from rclpy.node import Node
+from rclpy.time import Time
+from tf2_ros import Buffer, TransformException, TransformListener
+
+# A pose is (t_sec, x, y, z, qx, qy, qz, qw) with a unit quaternion.
+
+
+def _yaw(p) -> float:
+    qx, qy, qz, qw = p[4:8]
+    return math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz))
+
+
+def normalise(q):
+    """Unit quaternion, or None if the norm says the message is broken."""
+    n = math.sqrt(sum(c * c for c in q))
+    return None if n < 1e-9 else tuple(c / n for c in q)
+
+
+def accept(pose, last_pose, min_translation_m: float, min_rotation_deg: float) -> bool:
+    """First pose always; then 2 cm in the plane OR 2 degrees since the last kept."""
+    if last_pose is None:
+        return True
+    if math.hypot(pose[1] - last_pose[1], pose[2] - last_pose[2]) >= min_translation_m:
+        return True
+    dyaw = math.atan2(math.sin(_yaw(pose) - _yaw(last_pose)),
+                      math.cos(_yaw(pose) - _yaw(last_pose)))
+    return abs(math.degrees(dyaw)) >= min_rotation_deg
 
 
 class TrajectoryRecorder(Node):
     """Publishes map and odom trajectories, optionally writing TUM files."""
 
     def __init__(self) -> None:
-        raise NotImplementedError
+        super().__init__('trajectory_recorder')
+        self.declare_parameter('tum_output_dir', '')
+        self.declare_parameter('map_frame', 'map')
+        self.declare_parameter('base_frame', 'base_footprint')
+        self.declare_parameter('odom_topic', '/odometry/filtered')
+        self.declare_parameter('min_translation_m', 0.02)
+        self.declare_parameter('min_rotation_deg', 2.0)
+        self.declare_parameter('sample_rate_hz', 20.0)  # TUNE
+        self.declare_parameter('publish_rate_hz', 1.0)  # TUNE
+        g = lambda n: self.get_parameter(n).value  # noqa: E731
+        self._map = g('map_frame')
+        self._base = g('base_frame')
+        self._dt = float(g('min_translation_m'))
+        self._dr = float(g('min_rotation_deg'))
+        self._tum_dir = g('tum_output_dir')
+        self._slam: list = []
+        self._odom: list = []
+        self._odom_frame = 'odom'
+        self._written = False
+        self._tf_buffer = Buffer()
+        self._tf_listener = TransformListener(self._tf_buffer, self)
+        self._slam_pub = self.create_publisher(Path, '/slam/path', 10)
+        self._odom_pub = self.create_publisher(Path, '/odom/path', 10)
+        self.create_subscription(Odometry, g('odom_topic'), self._on_odom, 10)
+        self.create_timer(1.0 / float(g('sample_rate_hz')), self._on_tf_timer)
+        self.create_timer(1.0 / float(g('publish_rate_hz')), self._publish_all)
+
+    def _add(self, store: list, pose) -> None:
+        if self._accept(pose, store[-1] if store else None):
+            store.append(pose)
 
     def _on_tf_timer(self) -> None:
-        raise NotImplementedError
+        try:
+            t = self._tf_buffer.lookup_transform(self._map, self._base, Time())
+        except TransformException:
+            self.get_logger().debug(f'{self._map} -> {self._base} not available yet')
+            return
+        tr, r = t.transform.translation, t.transform.rotation
+        q = normalise((r.x, r.y, r.z, r.w))
+        if q is None:
+            self.get_logger().warn('zero-norm quaternion in TF, pose skipped')
+            return
+        st = t.header.stamp
+        self._add(self._slam, (st.sec + st.nanosec * 1e-9, tr.x, tr.y, tr.z, *q))
 
     def _on_odom(self, msg: Odometry) -> None:
-        raise NotImplementedError
+        o = msg.pose.pose.orientation
+        q = normalise((o.x, o.y, o.z, o.w))
+        if q is None:
+            self.get_logger().warn('zero-norm quaternion in odometry, pose skipped')
+            return
+        self._odom_frame = msg.header.frame_id or 'odom'
+        p, st = msg.pose.pose.position, msg.header.stamp
+        self._add(self._odom, (st.sec + st.nanosec * 1e-9, p.x, p.y, p.z, *q))
 
     def _accept(self, pose, last_pose) -> bool:
-        raise NotImplementedError
+        return accept(pose, last_pose, self._dt, self._dr)
+
+    def _publish_all(self) -> None:
+        self._publish_path('/slam/path', self._map, self._slam)
+        self._publish_path('/odom/path', self._odom_frame, self._odom)
 
     def _publish_path(self, topic: str, frame_id: str, poses: list) -> None:
-        raise NotImplementedError
+        path = Path()
+        path.header.frame_id = frame_id
+        path.header.stamp = self.get_clock().now().to_msg()
+        for t, x, y, z, qx, qy, qz, qw in poses:
+            ps = PoseStamped()
+            ps.header.frame_id = frame_id
+            ps.header.stamp = Time(seconds=t).to_msg()
+            ps.pose.position.x, ps.pose.position.y, ps.pose.position.z = x, y, z
+            (ps.pose.orientation.x, ps.pose.orientation.y,
+             ps.pose.orientation.z, ps.pose.orientation.w) = qx, qy, qz, qw
+            path.poses.append(ps)
+        (self._slam_pub if topic == '/slam/path' else self._odom_pub).publish(path)
 
     def _write_tum_files(self) -> None:
-        raise NotImplementedError
+        if not self._tum_dir or self._written:
+            return
+        self._written = True
+        if not self._slam and not self._odom:
+            self.get_logger().info('no poses recorded (no TF map -> base and no odometry); '
+                                   'no TUM files written')
+            return
+        os.makedirs(self._tum_dir, exist_ok=True)
+        stamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+        for name, poses in (('slam', self._slam), ('odom', self._odom)):
+            if not poses:
+                continue
+            with open(os.path.join(self._tum_dir, f'{name}_{stamp}.tum'), 'w') as f:
+                for t, *rest in poses:
+                    f.write(f'{t:.9f} ' + ' '.join(f'{v:.9g}' for v in rest) + '\n')
+        self.get_logger().info(f'wrote TUM files to {self._tum_dir}')
 
 
 def main(args=None) -> None:
-    raise NotImplementedError
+    rclpy.init(args=args)
+    node = TrajectoryRecorder()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node._write_tum_files()
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
