@@ -5,6 +5,24 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-10-30 · SLAM build path: stage 1 done, 1.4 redo not yet clean
+
+**Goal.** Redo the 50 cm box test (1.4) cleanly; push on to stage 3.
+
+**Ran.** `bash /tmp/box_check.sh` on the Pi (one `/scan`, nearest returns and close
+returns per 30 deg bin). Scene still cluttered: nearest returns at 85-90 deg, 0.18 m
+(something on the lidar's left side, probably the desk or the robot itself); nothing
+at 0.50 m near 0 deg (min 0.318 m in -30..30). Not a valid box test.
+
+**Result.** `laser_yaw = 0` stays *provisional* (brief default, not measured).
+Earlier findings (rf2o still baseline: x -2.4 mm, y -0.6 mm, yaw +0.26 deg over ~28 s,
+`bags/still2_2026-10-30`) are in the session record.
+
+**Next.** Clear 1 m around the lidar, one box at 0.50 m on +x, rerun `box_check.sh`.
+Stage 3 hardware tests (3.2, 3.3) and 2.1 need the robot built.
+
+---
+
 ## 2026-10-23 · documentation moved into the repository; repo made private
 
 **Goal.** Stop the plan, notes and evidence from existing only on one MacBook.
