@@ -5,6 +5,31 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-10-30 (night) · SLAM software without the robot
+
+**Goal.** Finish everything that does not need the built robot.
+
+**Done** (commands and numbers in `docs/test_log.md`):
+- 4.3 `odom_covariance_relay`, replay-checked; 5.3 `mapping.launch.py` (lifecycle driven);
+  5.5 launch half `slam_replay.launch.py`; 7.1 `trajectory_recorder` + TUM output, paths
+  seen in Foxglove; 8.2 `explore_lite` built at pinned 326cf8a (11 min 54 s on the Pi).
+- `imu_node` written (was a skeleton) and run at rest: 100.04 Hz, gyro bias z -0.0279
+  rad/s removed at startup, z std 0.00175 rad/s, accel z reads 11.16 m/s2 (14 % high,
+  unused by the EKF). `gyro_var` stays at the 4e-4 brief default until 4.4.
+- `tools/startup_race.sh`, `delivery_bot_slam/launch/rf2o_alone.launch.py` for 3.4.
+- Foxglove layout `docs/foxglove/slam_layout.json` hand-written, **import not yet
+  confirmed**, so 7.2 is not ticked.
+
+**Not done / needs robot.** 2.1, 3.2, 3.3, 4.2, 4.4, 4.5, 5.4, 5.5 sweep and freeze, 6.x, 7.3,
+8.3-8.5, 9.x; repeat the 1.4 box test within +-2 deg once the lidar is mounted. `evo` is not
+installed anywhere, so 9.3 and the `evo_traj` part of 7.1 are untested.
+
+**Lessons.** `pkill -f` and `timeout`-less `ros2 topic echo --once` on a sim-time topic
+both hang the session; use script files and `timeout`. A replayed bag stops publishing
+sim-time topics when it ends.
+
+---
+
 ## 2026-10-30 (evening) · 3.4 startup race, near-return ring is the room
 
 **Ran.** `tools/startup_race.sh 10 2.0` on the Pi: 10/10 clean (rf2o_alone.launch.py,

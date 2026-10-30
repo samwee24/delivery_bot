@@ -36,7 +36,7 @@ What this costs: no venv exists yet, `pip` is not installed, `robot` is not in
 | Phase | What it proves | Status |
 | --- | --- | --- |
 | **P0 Setup** | Python env, serial access, I2C, GPIO | **In progress** — see [docs/02_pi_setup.md](system/02_pi_setup.md) |
-| **P1 Bring-up** | Motors both ways, gyro calibrated, lidar plot | **Partial** — lidar verified on the old Pi, echo rate only 33 % (see OI-4); motors and IMU untouched |
+| **P1 Bring-up** | Motors both ways, gyro calibrated, lidar plot | **Partial** — lidar verified on this Pi (7.05 Hz, 26–29 % no-echo, follows the room: OI-4 not a driver fault, mask not needed on this evidence); IMU checked at rest (2026-10-30); motors untouched |
 | **P2 Teleop + logging** | 2-minute drive replays on the laptop | Not started |
 | **P3 Lidar odometry** | `rf2o`: 1 m square closes within 10 cm | Not started |
 | **P4 EKF fusion** | `robot_localization` (2D): 3 spins, heading error under 10° | Not started |
