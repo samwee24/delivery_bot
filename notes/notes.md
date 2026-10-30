@@ -5,6 +5,21 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-10-30 (later) · 1.4 box test: on +x, coarse only
+
+**Ran.** `bash /tmp/box_check.sh` on the Pi, then ranges within +-40 deg of the same
+`/scan`. Box arc spans -13..+30 deg at 0.23-0.25 m (centre ~+9 deg, ~43 deg wide).
+
+**Result.** Box is on +x, not +-90 or 180: the convention check passes, `laser_yaw = 0`
+holds coarsely (+-10 deg). Not the spec test: box was at 0.23 m not 0.50 m and off-centre,
+so the 0 +- 2 deg tolerance in `docs/slam.md` is **not** shown. Still *brief default*,
+not *measured*. Returns at 0.18-0.25 m around the other directions persist (the OI-4 ring).
+
+**Next.** Re-verify the +-2 deg after the URDF is live: box centred at 0.50 m, view in
+`base_link`.
+
+---
+
 ## 2026-10-30 · SLAM build path: stage 1 done, 1.4 redo not yet clean
 
 **Goal.** Redo the 50 cm box test (1.4) cleanly; push on to stage 3.
