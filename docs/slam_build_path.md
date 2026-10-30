@@ -20,7 +20,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 - [x] [0.1 ROS 2 in one picture: nodes, topics, QoS](#01-ros-2-in-one-picture-nodes-topics-qos)
 - [ ] [0.2 Frames and transforms](#02-frames-and-transforms)
-- [ ] [0.3 What SLAM is, and which kind you're using](#03-what-slam-is-and-which-kind-youre-using)
+- [x] [0.3 What SLAM is, and which kind you're using](#03-what-slam-is-and-which-kind-youre-using)
 
 **Stage 1: The sensor: /scan**
 
