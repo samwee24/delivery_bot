@@ -27,7 +27,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 - [x] [1.1 Read a LaserScan by hand](#11-read-a-laserscan-by-hand)
 - [x] [1.2 See the scan in Foxglove](#12-see-the-scan-in-foxglove)
 - [x] [1.3 Diagnose the missing points](#13-diagnose-the-missing-points)
-- [ ] [1.4 Find which way the lidar faces](#14-find-which-way-the-lidar-faces)
+- [x] [1.4 Find which way the lidar faces](#14-find-which-way-the-lidar-faces)
 - [ ] [1.5 Record and replay your first bag](#15-record-and-replay-your-first-bag)
 
 **Stage 2: The robot's frames**
