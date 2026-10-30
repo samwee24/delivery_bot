@@ -32,11 +32,57 @@
       set laser_yaw from what you see. A 180° error makes rf2o report reverse motion
       and corrupts the map. See docs/slam.md §3.3.
     * xacro: a plain URDF will not expand; keep the xmlns:xacro attribute.
-
-  TODO: xacro:property for wheel_base, wheel_radius, robot_radius, laser_xyz,
-  laser_yaw, imu_xyz; then the two fixed joints and the three visuals.
-  `xacro delivery_bot.urdf.xacro` must exit 0 and mention base_link, laser and
-  imu_link when it is done.
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="delivery_bot">
+
+  <!-- All MEASURE values are placeholders until measured on the robot. -->
+  <xacro:property name="wheel_base"   value="0.20"/>   <!-- MEASURE -->
+  <xacro:property name="wheel_radius" value="0.033"/>  <!-- MEASURE -->
+  <xacro:property name="robot_radius" value="0.12"/>   <!-- MEASURE -->
+  <xacro:property name="laser_x"      value="0.0"/>    <!-- MEASURE -->
+  <xacro:property name="laser_y"      value="0.0"/>    <!-- MEASURE -->
+  <xacro:property name="laser_z"      value="0.10"/>   <!-- MEASURE -->
+  <xacro:property name="laser_yaw"    value="0.0"/>    <!-- MEASURE: box test 1.4 (2026-10-30), provisional, lidar not mounted -->
+  <xacro:property name="imu_x"        value="0.0"/>    <!-- MEASURE -->
+  <xacro:property name="imu_y"        value="0.0"/>    <!-- MEASURE -->
+  <xacro:property name="imu_z"        value="0.05"/>   <!-- MEASURE -->
+
+  <link name="base_footprint"/>
+
+  <link name="base_link">
+    <visual>
+      <geometry><cylinder radius="${robot_radius}" length="0.05"/></geometry>
+    </visual>
+  </link>
+
+  <link name="laser">
+    <visual>
+      <geometry><cylinder radius="0.035" length="0.04"/></geometry>
+    </visual>
+  </link>
+
+  <link name="imu_link">
+    <visual>
+      <geometry><box size="0.02 0.02 0.005"/></geometry>
+    </visual>
+  </link>
+
+  <joint name="base_footprint_to_base_link" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="base_link_to_laser" type="fixed">
+    <parent link="base_link"/>
+    <child link="laser"/>
+    <origin xyz="${laser_x} ${laser_y} ${laser_z}" rpy="0 0 ${laser_yaw}"/>
+  </joint>
+
+  <joint name="base_link_to_imu" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="${imu_x} ${imu_y} ${imu_z}" rpy="0 0 0"/>
+  </joint>
+
 </robot>
