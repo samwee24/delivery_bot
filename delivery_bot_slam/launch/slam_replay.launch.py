@@ -112,10 +112,13 @@ def generate_launch_description() -> LaunchDescription:
     mode = LaunchConfiguration('slam_mode')
 
     # mapping and localisation have separate configs; pick by slam_mode
+    # slam_params_file replaces the pick below; it is how the 5.5 sweep swaps one
+    # parameter at a time without editing the frozen config.
     slam_params = PythonExpression([
-        "'", os.path.join(bringup, 'config', 'slam_mapping.yaml'),
+        "'", LaunchConfiguration('slam_params_file'), "' or ('",
+        os.path.join(bringup, 'config', 'slam_mapping.yaml'),
         "' if '", mode, "' == 'mapping' else '",
-        os.path.join(bringup, 'config', 'slam_localization.yaml'), "'"])
+        os.path.join(bringup, 'config', 'slam_localization.yaml'), "')"])
 
     slam = LifecycleNode(
         package='slam_toolbox', executable='async_slam_toolbox_node',
@@ -139,6 +142,7 @@ def generate_launch_description() -> LaunchDescription:
         DeclareLaunchArgument('ekf_params_file', default_value=os.path.join(
             bringup, 'config', 'ekf.yaml')),
         DeclareLaunchArgument('map', default_value=''),
+        DeclareLaunchArgument('slam_params_file', default_value=''),
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         # The static tree normally comes from /tf_static in the bag. A bag
         # recorded without it needs this on; never both (two publishers).
