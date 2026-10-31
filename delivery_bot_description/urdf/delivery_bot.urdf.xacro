@@ -36,16 +36,16 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="delivery_bot">
 
   <!-- All MEASURE values are placeholders until measured on the robot. -->
-  <xacro:property name="wheel_base"   value="0.20"/>   <!-- MEASURE -->
-  <xacro:property name="wheel_radius" value="0.033"/>  <!-- MEASURE -->
-  <xacro:property name="robot_radius" value="0.12"/>   <!-- MEASURE -->
-  <xacro:property name="laser_x"      value="0.0"/>    <!-- MEASURE -->
-  <xacro:property name="laser_y"      value="0.0"/>    <!-- MEASURE -->
-  <xacro:property name="laser_z"      value="0.10"/>   <!-- MEASURE -->
+  <xacro:property name="wheel_base"   value="0.156"/>  <!-- measured 2026-10-31, left-right wheel centres; front-back spacing 0.113 -->
+  <xacro:property name="wheel_radius" value="0.0325"/> <!-- brief default: standard TT wheel, 65 mm diameter; not measured -->
+  <xacro:property name="robot_radius" value="0.12"/>   <!-- measured 2026-10-31, approx (user estimate) -->
+  <xacro:property name="laser_x"      value="0.02"/>   <!-- measured 2026-10-31, tape, forward of axle centre -->
+  <xacro:property name="laser_y"      value="0.0"/>    <!-- measured 2026-10-31, centred -->
+  <xacro:property name="laser_z"      value="0.12"/>   <!-- measured 2026-10-31, approx 12 cm above axle height -->
   <xacro:property name="laser_yaw"    value="0.0"/>    <!-- MEASURE: box test 1.4 (2026-10-30), provisional, lidar not mounted -->
-  <xacro:property name="imu_x"        value="0.0"/>    <!-- MEASURE -->
-  <xacro:property name="imu_y"        value="0.0"/>    <!-- MEASURE -->
-  <xacro:property name="imu_z"        value="0.05"/>   <!-- MEASURE -->
+  <xacro:property name="imu_x"        value="0.023"/>  <!-- measured 2026-10-31, tape, forward of axle centre -->
+  <xacro:property name="imu_y"        value="-0.055"/> <!-- measured 2026-10-31, tape, 5.5 cm right of axle centre (ROS y is left) -->
+  <xacro:property name="imu_z"        value="0.07"/>   <!-- measured 2026-10-31, approx 7 cm above axle height -->
 
   <link name="base_footprint"/>
 
