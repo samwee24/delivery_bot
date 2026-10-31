@@ -38,7 +38,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 **Stage 3: Odometry from scans: rf2o**
 
 - [ ] [3.1 How rf2o works](#31-how-rf2o-works)
-- [ ] [3.2 Run rf2o alone and push the robot by hand](#32-run-rf2o-alone-and-push-the-robot-by-hand)
+- [x] [3.2 Run rf2o alone and push the robot by hand](#32-run-rf2o-alone-and-push-the-robot-by-hand)
 - [ ] [3.3 Break it on purpose](#33-break-it-on-purpose)
 - [x] [3.4 Understand the startup race](#34-understand-the-startup-race)
 
