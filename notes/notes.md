@@ -5,6 +5,28 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-10-31 (late) · 5.5 sweep done, config frozen, camera stream started
+
+**5.5.** Five replays of the 5.4 bag (numbers and commands in `docs/test_log.md`). Loop closing
+is the only change that matters: first-to-last pose distance 0.658 m with it off, 0.109 m on.
+`min_laser_range` 0, `minimum_travel_distance` 0.05 and 0.2 land within about 1-8 cm of the
+baseline on one run each, which is not a difference. `slam_mapping.yaml` kept as it was and
+frozen (commit 6484678); 5.5 ticked.
+**Correction.** The scattered dots on the map floor are not the person pushing the robot, as
+first guessed: they sit in a regular grid and have a star shape, which fits office chair
+bases and table legs. They are real, and Nav2 should treat them as obstacles.
+**Camera.** UGREEN camera 2K (USB 1bcf:2284) on `/dev/video0`; `ros-jazzy-usb-cam` and
+`v4l-utils` installed with sudo by the user; `robot` added to `video`. `camera.launch.py` and
+`camera.yaml` in `delivery_bot_bringup`, 640x480 at 15 fps MJPEG, 15.8 Hz measured, ~20 % of
+one core. Starting it with the sweep and a full Foxglove bridge pushed the Pi to load average
+18.8 and a 10 s Foxglove lag (ping 250 ms); stopped until the sweep ended. The brightness
+setting in the yaml did not take effect (camera still reported 50): to debug. Layout
+`docs/foxglove/camera_layout.json` written, import not confirmed.
+**Next.** Fix the camera brightness; stage 6 localisation; the map reading for the 5.4 distance
+check; person-free repeat of the room run if the chair dots need confirming.
+
+---
+
 ## 2026-10-31 · robot built: mounting, rf2o hand tests, variances, first room map
 
 **Goal.** Use the built robot (pushed by hand, no motors) to close the SLAM steps that
