@@ -50,6 +50,7 @@ text of the error, so it is searchable later.
 | **hit** `imu_node`: `gyro z std 0.0211 rad/s during calibration exceeds calib_max_std; keep the robot still and restart` | robot was moving during the 3 s start-up calibration | hold still, restart `imu_node` |
 | **hit** ssh to the Pi exits 255 mid-command | `pkill -f <pattern>` matched the ssh command line itself | put the `pkill` in a script file and run that |
 | **hit** `ros2 bag record` left running, no `metadata.yaml`, `Could not open ... with 'mcap'` | SIGINT ignored by a backgrounded process in a non-interactive shell | `kill -TERM <pid>`, wait for `metadata.yaml` |
+| **hit** Foxglove camera stream lags 10 s or more, Pi ping 250 ms, bridge RSS near 900 MB | the Image panel subscribed to raw `/image_raw` (about 920 KB per frame, 14 MB/s at 15 fps) instead of `/image_raw/compressed` (70 KB); also the Pi was at load 18 with the SLAM sweep running | pick `/image_raw/compressed`; start the bridge with `-p topic_whitelist:='["^(?!/image_raw$)(?!/image_raw/(zstd\|theora\|compressedDepth)).*"]'` to hide the raw topic; do not stream the camera while a replay or mapping run is using the CPU |
 | **hit** `/odom_rf2o` shows `twist.linear.y` exactly 0 | rf2o is non-holonomic and never reports vy | not a fault; do not read sideways drift from the twist |
 
 ## Reporting a problem
