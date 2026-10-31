@@ -1,3 +1,6 @@
+# FROZEN 2026-10-31 after the 5.5 sweep (results in docs/test_log.md): none of the five
+# variants beat these values, so they stay as they are (values unchanged since commit 923d415).
+# Do not change them between evaluation runs; a change needs a new sweep and a new date here.
 # Copied from slam_toolbox (Jazzy) config/mapper_params_online_async.yaml,
 # then edited for this robot. Provenance of each edit is in the comment.
 # Source package version on the Pi: 2.8.5.

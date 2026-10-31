@@ -56,7 +56,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 - [ ] [5.2 Lifecycle nodes, learned by breaking them](#52-lifecycle-nodes-learned-by-breaking-them)
 - [x] [5.3 Write mapping.launch.py](#53-write-mappinglaunchpy)
 - [ ] [5.4 Map the room](#54-map-the-room)
-- [ ] [5.5 Tune on replays, then freeze](#55-tune-on-replays-then-freeze)
+- [x] [5.5 Tune on replays, then freeze](#55-tune-on-replays-then-freeze)
 
 **Stage 6: Localisation on the saved map**
 
