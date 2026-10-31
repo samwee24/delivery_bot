@@ -7,6 +7,8 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ## 2026-10-31 (night) · camera quality raised to 1280x720 at 10 fps
 
+**Under SLAM load.** Same camera settings with `slam_replay` running on the room bag (commands and numbers in `docs/test_log.md`). slam_toolbox kept up in every run (0 dropped scans) but the camera falls short of its rate and the EKF starts missing its update deadline (0 late updates in 65 s without the camera, 8 to 26 with it). Delivered: 1280x720 @10 gives 8.3 Hz, 1024x768 @15 gives 9.9 Hz, 640x480 @30 gives 21 Hz, 1280x720 @5 gives its full 5.0 Hz. One run each, so the EKF counts are not a ranking. Map quality was not compared. Left at 1280x720 @10 for viewing; while mapping or replaying, either switch the camera off or use 1024x768 @15.
+
 Swept the camera from 640x480 up to 1920x1080 (numbers and commands in `docs/test_log.md`). The Pi decodes the camera's MJPEG in software on one core and re-encodes it for the compressed topic, so the delivered rate falls as the pixel count rises: about 11.6 Mpixel/s whatever the setting. 1280x720 at 10 fps is the sharpest setting that still delivers its full rate (10.000 Hz, std dev 4.8 ms, 1.9 MB/s). 1920x1080 only reaches 4.5 to 5.7 Hz, which looks like lag. Lower JPEG quality did not help; the passthrough `raw_mjpeg` mode gave no usable topic. `camera.yaml` now 1280x720 at 10 fps (commit c6beb1b). The node takes a full core, so keep it off during a mapping run. For smoother motion at lower detail, 640x480 at 30 fps gives 28 Hz.
 
 ---
