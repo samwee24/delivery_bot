@@ -42,7 +42,7 @@
   <xacro:property name="laser_x"      value="0.02"/>   <!-- measured 2026-10-31, tape, forward of axle centre -->
   <xacro:property name="laser_y"      value="0.0"/>    <!-- measured 2026-10-31, centred -->
   <xacro:property name="laser_z"      value="0.12"/>   <!-- measured 2026-10-31, approx 12 cm above axle height -->
-  <xacro:property name="laser_yaw"    value="0.0"/>    <!-- MEASURE: box test 1.4 (2026-10-30), provisional, lidar not mounted -->
+  <xacro:property name="laser_yaw"    value="0.0"/>    <!-- box test 1.4 (2026-10-31): face centred at +2.6 deg (box at 0.39 m, placed by eye, 2 reps: +6, +2.6 deg), inside placement error, so 0 -->
   <xacro:property name="imu_x"        value="0.023"/>  <!-- measured 2026-10-31, tape, forward of axle centre -->
   <xacro:property name="imu_y"        value="-0.055"/> <!-- measured 2026-10-31, tape, 5.5 cm right of axle centre (ROS y is left) -->
   <xacro:property name="imu_z"        value="0.07"/>   <!-- measured 2026-10-31, approx 7 cm above axle height -->
