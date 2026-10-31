@@ -13,3 +13,6 @@ camera:
     frame_id: camera          # not in the URDF yet: the Image panel does not need a transform
     camera_name: ugreen_2k
     io_method: mmap
+    # usb_cam was setting brightness 50 (camera default is 120) and gain 0: a dim room read near-black.
+    brightness: 130
+    gain: 64
