@@ -12,6 +12,7 @@
   <exec_depend>delivery_bot_description</exec_depend>
   <exec_depend>delivery_bot_drivers</exec_depend>
   <exec_depend>rplidar_ros</exec_depend>
+  <exec_depend>usb_cam</exec_depend>
   <exec_depend>robot_localization</exec_depend>
   <exec_depend>slam_toolbox</exec_depend>
   <exec_depend>nav2_bringup</exec_depend>
