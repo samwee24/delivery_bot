@@ -9,6 +9,8 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 Swept the camera from 640x480 up to 1920x1080 (numbers and commands in `docs/test_log.md`). The Pi decodes the camera's MJPEG in software on one core and re-encodes it for the compressed topic, so the delivered rate falls as the pixel count rises: about 11.6 Mpixel/s whatever the setting. 1280x720 at 10 fps is the sharpest setting that still delivers its full rate (10.000 Hz, std dev 4.8 ms, 1.9 MB/s). 1920x1080 only reaches 4.5 to 5.7 Hz, which looks like lag. Lower JPEG quality did not help; the passthrough `raw_mjpeg` mode gave no usable topic. `camera.yaml` now 1280x720 at 10 fps (commit c6beb1b). The node takes a full core, so keep it off during a mapping run. For smoother motion at lower detail, 640x480 at 30 fps gives 28 Hz.
 
+---
+
 ## 2026-10-31 (late) · 5.5 sweep done, config frozen, camera stream started
 
 **5.5.** Five replays of the 5.4 bag (numbers and commands in `docs/test_log.md`). Loop closing
