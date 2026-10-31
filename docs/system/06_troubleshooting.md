@@ -45,6 +45,12 @@ text of the error, so it is searchable later.
 | no topics in Foxglove | bridge and client on different networks | the bridge binds 0.0.0.0:8765; connect by Tailscale IP `100.83.14.99` |
 | `ros2 bag record` produces huge files | recording `/scan` at high rate uncompressed | MCAP + zstd is installed; keep `/scan`, `/imu/data`, `/odom`, `/cmd_vel`, `/plan` only |
 | `.bashrc` sources ROS but the venv is lost | sourcing order | ROS first, `source ~/botenv/bin/activate` second |
+| **hit** `LaserRangeScan contains 1041 range readings, expected 931` (slam_toolbox, repeated) | rplidar_ros sends a varying beam count per scan when `angle_compensate` is off, and slam_toolbox drops every scan that differs from the first | `angle_compensate: True` in `delivery_bot_bringup/launch/lidar.launch.py` (fixed 720 beams); symptom is a map that stops growing |
+| **hit** lidar prints `RPLIDAR running on ROS 2 package` and nothing more, no `/scan`, or `Failed to set scan mode` | the unit was killed mid-scan | stop everything, wait about 6 s, relaunch the lidar alone |
+| **hit** `imu_node`: `gyro z std 0.0211 rad/s during calibration exceeds calib_max_std; keep the robot still and restart` | robot was moving during the 3 s start-up calibration | hold still, restart `imu_node` |
+| **hit** ssh to the Pi exits 255 mid-command | `pkill -f <pattern>` matched the ssh command line itself | put the `pkill` in a script file and run that |
+| **hit** `ros2 bag record` left running, no `metadata.yaml`, `Could not open ... with 'mcap'` | SIGINT ignored by a backgrounded process in a non-interactive shell | `kill -TERM <pid>`, wait for `metadata.yaml` |
+| **hit** `/odom_rf2o` shows `twist.linear.y` exactly 0 | rf2o is non-holonomic and never reports vy | not a fault; do not read sideways drift from the twist |
 
 ## Reporting a problem
 

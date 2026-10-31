@@ -36,11 +36,11 @@ What this costs: no venv exists yet, `pip` is not installed, `robot` is not in
 | Phase | What it proves | Status |
 | --- | --- | --- |
 | **P0 Setup** | Python env, serial access, I2C, GPIO | **In progress** — see [docs/02_pi_setup.md](system/02_pi_setup.md) |
-| **P1 Bring-up** | Motors both ways, gyro calibrated, lidar plot | **Partial** — lidar verified on this Pi (7.05 Hz, 26–29 % no-echo, follows the room: OI-4 not a driver fault, mask not needed on this evidence); IMU checked at rest (2026-10-30); motors untouched |
+| **P1 Bring-up** | Motors both ways, gyro calibrated, lidar plot | **Partial** — lidar verified on this Pi (7.05 Hz, 26–29 % no-echo, follows the room: OI-4 not a driver fault, mask not needed on this evidence); IMU checked at rest (2026-10-30) and on the built robot (2026-10-31, gyro 360.2° for a true 360°); robot built, mounting measured into the URDF (2026-10-31); motors untouched by us |
 | **P2 Teleop + logging** | 2-minute drive replays on the laptop | Not started |
-| **P3 Lidar odometry** | `rf2o`: 1 m square closes within 10 cm | Not started |
-| **P4 EKF fusion** | `robot_localization` (2D): 3 spins, heading error under 10° | Not started |
-| **P5 Mapping** | `slam_toolbox` occupancy grid with recognisable walls | Not started |
+| **P3 Lidar odometry** | `rf2o`: 1 m square closes within 10 cm | **Partial** (2026-10-31, by hand) — full turn read 352.9° for a true 360° (−2 %), 1 m push read 0.962 m (−3.8 %); no square yet |
+| **P4 EKF fusion** | `robot_localization` (2D): 3 spins, heading error under 10° | **Partial** — variances fitted 2026-10-31 (vx 1e-4, vyaw 5e-3, gyro 1e-4); no fusion-vs-no-fusion spins yet (4.5) |
+| **P5 Mapping** | `slam_toolbox` occupancy grid with recognisable walls | **First map done** (2026-10-31, pushed by hand): 317×233 cells, 65.5 m² free, `results/maps/2026-10-31_room2.png`; scale vs tape +3.5 / +1.4 cm on the raw scan, map −5 cm on one gap; tuning sweep (5.5) pending |
 | **P6 Motion calibration** | 1 m straight within 10 cm and 10° | Not started |
 | **P7 Navigation** | Nav2: 5 goals, 15 cm, no collisions | Not started |
 | **P8 Delivery loop** | Home → seat → home ×5 | Not started |

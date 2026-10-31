@@ -5,6 +5,60 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-10-31 · robot built: mounting, rf2o hand tests, variances, first room map
+
+**Goal.** Use the built robot (pushed by hand, no motors) to close the SLAM steps that
+needed hardware. Commands and every number are in `docs/test_log.md`.
+
+**Done.**
+- **Mounting (2.1)**, tape, from the midpoint of the four wheels: lidar 2 cm forward, centred, 12 cm
+  up; IMU 2.3 cm forward, 5.5 cm right (`imu_y` -0.055), 7 cm up; `wheel_base` 0.156 m, front-to-back
+  wheel spacing 0.113 m, `robot_radius` ~0.12 m, `wheel_radius` 0.0325 m (TT default, not
+  measured). Four wheels, skid-steer: 0.156 m is a first guess for the effective track width.
+- **Box test (1.4)** repeated twice: face at +6 deg, then +2.6 deg; the spread is hand placement,
+  so `laser_yaw` stays 0.
+- **3.2 rf2o by hand.** Full turn: rf2o -352.9 deg, gyro -360.2 deg, true 360 (clockwise). 1 m
+  push: rf2o 0.962 m (-3.8 %). Both sensors agree on sign: no 180 deg mount error. rf2o holds
+  within 1 deg for 90 s at rest.
+- **4.4 variances** fitted from those two bags: `vx_variance` 1e-4, `vyaw_variance` 5e-3,
+  `gyro_var` 1e-4 (at rest 1.7e-6, x60 margin), `gyro_scale_z` 1.0. The hand motion was far
+  faster than the robot will drive (gyro rms 0.74 rad/s) and rf2o read 9-15 % low there, so
+  the motion term was scaled to 0.4 rad/s rather than fitted raw. Recheck with motors running.
+- **5.4 first room map.** 317 x 233 cells at 0.05 m, 65.5 m2 free. Raw `/scan` against tape:
+  1.085 vs 1.05 m (+3.5 cm) and 1.494 vs 1.48 m (+1.4 cm); the map read 1.00 m on the first gap
+  (-5 cm, the cell size). 5.4 not ticked: map reading for the second gap is missing.
+- 3.2, 4.4, 2.1 ticked in `docs/slam_build_path.md`.
+
+**Found.**
+- **Lidar beam count.** The first live map was a 184 x 112 fan. slam_toolbox rejected 223 scans:
+  `LaserRangeScan contains 1041 range readings, expected 931`. rplidar_ros sends a varying
+  count with `angle_compensate` off (its default). Fix `lidar.launch.py` `angle_compensate:
+  True`, 720 beams per scan, 0 rejections after (commit 4a16fe8). This is the one to remember.
+- **Person behind the robot** shows as a co-moving blob (about 20 deg of beams at 1 m) and
+  leaves scattered dots on the map floor. rf2o still closed a 27 m loop within 0.5 m.
+- **rf2o never reports `vy`** (always exactly 0), so sideways drift cannot be read from its twist.
+  The 1 m push path pointed 18 deg off rf2o's own heading; unexplained, not claimed as a mount error.
+- **Lidar stalls after being killed mid-scan**: no health line, no `/scan`. Stop everything, wait
+  about 6 s, relaunch the lidar alone.
+- A wall 0.46 m behind the robot was absent from scan and map (nothing nearer than 5.4 m); at
+  the next pose the scan matched the tape. Cause unknown, likely a measurement mix-up.
+
+**5.5 sweep.** Five replays of `~/bags/2026-10-31_map_200956` (baseline, `min_laser_range` 0,
+loop closing off, `minimum_travel_distance` 0.05 and 0.2), driver `/tmp/sweep.sh`, analysis
+`/tmp/sweep_an.py`, copies in `~/sweep_partial_2026-10-31/scripts`. Aborted once for a power
+switch (portable charger to cable) and restarted at 20:35; about 45 min.
+
+**Not done / next.** 5.5 table and frozen config; stage 6 localisation (also gives the map
+reading for 5.4); clean person-dots out of the map before Nav2; 3.3 failure modes; 4.5 fusion vs
+no fusion; recheck `gyro_var` and fit the track width with motors running (teammate's node).
+
+**Lessons.** `pkill -f` with a pattern that appears in the ssh command line kills the ssh
+session (exit 255): put it in a script file. A backgrounded `ros2 bag record` ignores SIGINT
+from a non-interactive shell: use SIGTERM, then wait for `metadata.yaml`. A Pi reboot clears
+`/tmp`: keep scripts in `~/`. `imu_node` refuses to start while the robot moves.
+
+---
+
 ## 2026-10-30 (night) · SLAM software without the robot
 
 **Goal.** Finish everything that does not need the built robot.
