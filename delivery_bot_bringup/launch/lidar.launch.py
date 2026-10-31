@@ -35,6 +35,9 @@ def generate_launch_description() -> LaunchDescription:
                 'serial_baudrate': ParameterValue(
                     LaunchConfiguration('serial_baudrate'), value_type=int),
                 'frame_id': LaunchConfiguration('frame_id'),
+                # Fixed beam count per scan: slam_toolbox drops every scan whose
+                # count differs from the first one (seen 2026-10-31: 1032-1046 vs 931).
+                'angle_compensate': True,
             }],
         ),
     ])
