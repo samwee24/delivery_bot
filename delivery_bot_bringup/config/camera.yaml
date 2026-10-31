@@ -1,14 +1,19 @@
 # UGREEN camera 2K (USB 1bcf:2284), /dev/video0 is the capture node (video1 is metadata).
-# Starting point for the first stream: 640x480 at 15 fps from the camera's MJPEG mode, so a
-# stream does not take CPU from rf2o and slam_toolbox on the Pi. Raise once the load is known.
-# Provenance: brief default (nothing measured yet). The camera supports 640x480, 1280x720 and
-# 1920x1080 in both MJPG and YUYV (v4l2-ctl --list-formats-ext, 2026-10-31).
+# Resolution/rate: measured 2026-10-31 on the Pi, /image_raw/compressed with
+# `ros2 topic hz`, one core saturated by the software MJPEG decode (~11.6 Mpixel/s ceiling):
+#   640x480 @30 -> 28.2 Hz | 1024x768 @15 -> 11.5 | 1280x720 @30 -> 13.0, @15 -> 12.5, @10 -> 10.1
+#   1600x896 @7.5 -> 6.8 | 1920x1080 @30 -> 4.5, @15 -> 5.7  (jpeg_quality 50-95 did not change the rate)
+# 1280x720 @10 is the sharpest setting that still delivers its full rate (1.9 MB/s at quality 95).
+# For smoother motion at lower detail use 640x480 @30. Raise the rate only if the CPU is free:
+# this node takes a whole core, so do not run it during a mapping run.
+# The camera supports 640x480, 1280x720 and 1920x1080 in both MJPG and YUYV
+# (v4l2-ctl --list-formats-ext, 2026-10-31); pixel_format raw_mjpeg publishes nothing usable.
 camera:
   ros__parameters:
     video_device: /dev/video0
-    image_width: 640
-    image_height: 480
-    framerate: 15.0
+    image_width: 1280
+    image_height: 720
+    framerate: 10.0
     pixel_format: mjpeg2rgb   # decode the camera's MJPEG; 'yuyv' avoids decoding but needs more USB bandwidth
     frame_id: camera          # not in the URDF yet: the Image panel does not need a transform
     camera_name: ugreen_2k
