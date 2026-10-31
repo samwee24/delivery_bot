@@ -47,7 +47,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 - [ ] [4.1 Kalman filter intuition](#41-kalman-filter-intuition)
 - [ ] [4.2 See the zero-covariance bug](#42-see-the-zero-covariance-bug)
 - [x] [4.3 Write the covariance relay](#43-write-the-covariance-relay)
-- [ ] [4.4 Calibrate the variances](#44-calibrate-the-variances)
+- [x] [4.4 Calibrate the variances](#44-calibrate-the-variances)
 - [ ] [4.5 Show that fusion helps](#45-show-that-fusion-helps)
 
 **Stage 5: Mapping with slam_toolbox**
