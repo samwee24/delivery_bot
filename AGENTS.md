@@ -61,12 +61,13 @@ The CA3 brief's other machine, `robot` @ `100.73.7.24` (Debian 13), has been
 7. Don't touch the motor battery until the wiring checklist in
    `docs/design-plan.md` §4 is ticked. Kill switch is the motor switch, not software.
 
-## Current state (2026-10-31)
+## Current state (2026-11-01)
 
 | Phase | State |
 | --- | --- |
 | P0 Setup | **essentially done** (2026-10-22): apt stack, 2 GB swapfile (persisted in `/etc/fstab`), `dialout`, udev rule written, D5 stack installed, `rf2o` built and verified. **Resolved 2026-10-30:** `/dev/rplidar` symlink exists, `i2c-tools` installed, MPU6050 answers at 0x68. **Still open:** no venv |
 | P1 Bring-up | lidar verified on this Pi (A1M8, 7.05 Hz, 26–29 % no-echo, gaps follow the room not the lidar); IMU node written and checked at rest (100 Hz, gyro z std 0.00175 rad/s); motors never driven by us; **robot built 2026-10-31**, lidar and IMU mounting measured into the URDF; gyro reads a hand-turned 360° as 360.2° |
+| P6 localisation | **done by hand** (2026-11-01): `navigation.launch.py` = base + `localization_slam_toolbox_node` on the room graph (no Nav2 yet); a 30 cm / 20° wrong start recovers after a push, 31° does not; Foxglove pose estimate works. `base.launch.py` and `mapping.launch.py` run live from one command |
 | P3–P5 (SLAM side) | rf2o hand tests done (−2 % turn, −3.8 % push); variances fitted; **first room map saved** (`results/maps/2026-10-31_room2.png`); 5.5 sweep done and `slam_mapping.yaml` frozen; USB camera streams to Foxglove (1280x720 at 10 fps) |
 | P2, P6–P8 | not started (motors are the teammate's) |
 
@@ -81,13 +82,11 @@ Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplida
 `slam_mapping.yaml` frozen. Build path progress (stages 0–9) is in
 `docs/slam_build_path.md`.
 
-1. **Stage 6 localisation** on `~/maps/2026-10-31_room2_graph`. Check first that
-   `slam_replay` localisation mode runs `localization_slam_toolbox_node`; with
-   `async_slam_toolbox_node` and `mode: localization` it keeps building the map.
+1. Stage 6 is done by hand (6.2 to 6.4, 2026-11-01). Left from it: the second tape gap on the map (5.4); the new home mark is taped at the old position (the original tape was lost), so `goals.yaml` home stays 0, 0, 0.
 2. Redo the 3.2 one-metre push: one straight push from rest (the first was preceded by
    a −83° reposition, and an 18° heading offset is unexplained).
 3. Keep the camera off while mapping, or accept EKF `Failed to meet update rate`
-   (`frequency` is now 20).
+   (`frequency` is now 20). The 20 Hz late-update count is still unconfirmed on a quiet Pi (closure 0.115 m against 0.109 m); rerun the check with nothing else running.
 4. Still waiting on the robot: 3.3 failure tests, 4.5 fusion comparison, stages 8.4
    and 9. Motor-driven work (P2, P6–P8) waits on the teammate.
 5. Analysis scripts that produced the logged numbers are in `tools/analysis/`; bags
@@ -109,7 +108,7 @@ Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplida
 
 ## Syncing (Mac ↔ GitHub ↔ Pi)
 
-One repo, three copies. The GitHub repo is private; it is the source of truth.
+One repo, three copies. The GitHub repo (public as of 2026-11-01, see OI-7) is the source of truth.
 
 - **`git pull` at the start of every session, `git push` at the end.** No long-lived
   divergence, no merge conflicts to resolve by hand.

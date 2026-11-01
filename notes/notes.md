@@ -13,7 +13,7 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 **Housekeeping.** Pi bags (115 MB) and maps (26 MB) backed up to `bags/` on the Mac. `main` protected: `build-and-test` required. EKF 20 Hz: loop closure 0.115 m against 0.109 m, late-update count confounded (log). Orphan `ros2 launch` children survive SIGINT from a non-interactive script and give double lidar/IMU nodes: stop with SIGTERM and pkill the children. The repo is public, not private as AGENTS.md says.
 
-**Next.** 6.3 (pose estimate) and 6.4 (wrong-start test), then `base.launch.py` `dry_run` once `motor_node` exists. The 5.3 bag half was not shown (rig failed twice; `slam_replay` covers bag mapping).
+**Next.** 6.3 (pose estimate) and 6.4 (wrong-start test), then `base.launch.py` `dry_run` once `motor_node` exists. The 5.3 bag half was not shown on 2026-11-01 (rig failed twice), but it had already been shown on 2026-10-30 (`mapping.launch.py include_base:=false use_sim_time:=true` over the `still2` bag: `/slam_toolbox` active, `/map` 102x65; commit 25403ba, `docs/test_log.md`); I missed that row on 2026-11-01. 6.4 result: 30 cm / 20° converged, 30 cm / 31° did not, 60 cm / 30° read at rest and inconclusive. Journal drafted by Claude from the logs (`docs/slam_journal.md`), to be rewritten in the author's words.
 
 ---
 
