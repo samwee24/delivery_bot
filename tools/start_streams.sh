@@ -1,10 +1,19 @@
 #!/bin/bash
-# Start the camera, the Foxglove bridge and the microphone stream on the Pi. Safe to rerun:
-# anything already running is left alone. Stop one with: pkill -f <name>.
-#   video  Foxglove ws://100.83.14.99:8765, Image panel on /image_raw/compressed
-#   audio  http://100.83.14.99:8090/audio.mp3 (browser or VLC)
+# Start streams on the Pi. Safe to rerun: anything already running is left alone.
+#   bash tools/start_streams.sh        ROS camera + Foxglove bridge + audio only
+#       video  Foxglove ws://100.83.14.99:8765, Image panel on /image_raw/compressed
+#       audio  http://100.83.14.99:8090/audio.mp3 (browser or VLC)
+#   bash tools/start_streams.sh av     one combined picture+sound stream, no ROS camera
+#       vlc http://100.83.14.99:8090/stream.mkv
+# The two modes share the camera and the mic, so switching stops the other one's processes.
 source /opt/ros/jazzy/setup.bash; source ~/ros2_ws/install/setup.bash
 R=~/ros2_ws/src/delivery_bot
+if [ "$1" = av ]; then
+  pkill -f "[u]sb_cam_node_exe"; pkill -f "[a]udio_stream.py$"; sleep 2
+  pgrep -f "[a]udio_stream.py --video" > /dev/null || setsid nohup python3 $R/tools/audio_stream.py --video > /tmp/audio.log 2>&1 < /dev/null &
+  sleep 8; echo "av stream $(pgrep -fc '[a]udio_stream.py --video')"; exit
+fi
+pkill -f "[a]udio_stream.py --video"
 pgrep -f "[u]sb_cam_node_exe" > /dev/null || setsid nohup ros2 launch delivery_bot_bringup camera.launch.py > /tmp/cam.log 2>&1 < /dev/null &
 pgrep -f "[f]oxglove_bridge" > /dev/null || setsid nohup ros2 run foxglove_bridge foxglove_bridge --ros-args -p 'topic_whitelist:=["^(?!/image_raw$)(?!/image_raw/(zstd|theora|compressedDepth)).*"]' > /tmp/fox.log 2>&1 < /dev/null &
 pgrep -f "[a]udio_stream.py" > /dev/null || setsid nohup python3 $R/tools/audio_stream.py > /tmp/audio.log 2>&1 < /dev/null &
