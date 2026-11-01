@@ -29,9 +29,12 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription([
         DeclareLaunchArgument('rf2o_delay', default_value='2.0'),
         DeclareLaunchArgument('serial_port', default_value='/dev/rplidar'),
+        DeclareLaunchArgument('angle_compensate', default_value='true'),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(lidar),
-            launch_arguments={'serial_port': LaunchConfiguration('serial_port')}.items()),
+            launch_arguments={
+                'serial_port': LaunchConfiguration('serial_port'),
+                'angle_compensate': LaunchConfiguration('angle_compensate')}.items()),
         Node(package='robot_state_publisher', executable='robot_state_publisher',
              parameters=[{'robot_description': ParameterValue(
                  Command(['xacro ', urdf]), value_type=str)}]),

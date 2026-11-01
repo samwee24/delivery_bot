@@ -24,6 +24,8 @@ def generate_launch_description() -> LaunchDescription:
         DeclareLaunchArgument('serial_port', default_value='/dev/rplidar'),
         DeclareLaunchArgument('serial_baudrate', default_value='115200'),
         DeclareLaunchArgument('frame_id', default_value='laser'),
+        # false restores the driver's varying beam count (about 1045); only for the rf2o scale test
+        DeclareLaunchArgument('angle_compensate', default_value='true'),
         Node(
             package='rplidar_ros',
             executable='rplidar_composition',
@@ -37,7 +39,8 @@ def generate_launch_description() -> LaunchDescription:
                 'frame_id': LaunchConfiguration('frame_id'),
                 # Fixed beam count per scan: slam_toolbox drops every scan whose
                 # count differs from the first one (seen 2026-10-31: 1032-1046 vs 931).
-                'angle_compensate': True,
+                'angle_compensate': ParameterValue(
+                    LaunchConfiguration('angle_compensate'), value_type=bool),
             }],
         ),
     ])
