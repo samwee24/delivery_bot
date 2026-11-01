@@ -104,14 +104,15 @@ class ImuNode(Node):
         return mean
 
     def _recalibrate(self, _req, res):
-        """Re-measure the gyro bias; publishing pauses for calib_seconds. Keeps the old bias if noisy."""
+        """Re-measure the gyro bias (publishing pauses); a noisy board keeps the old one."""
         try:
             self._bias = self._calibrate()
         except RuntimeError as e:
             res.success, res.message = False, str(e)
             return res
         res.success = True
-        res.message = f'gyro bias rad/s x={self._bias[0]:.5f} y={self._bias[1]:.5f} z={self._bias[2]:.5f}'
+        b = self._bias
+        res.message = f'gyro bias rad/s x={b[0]:.5f} y={b[1]:.5f} z={b[2]:.5f}'
         return res
 
     def _publish(self) -> None:

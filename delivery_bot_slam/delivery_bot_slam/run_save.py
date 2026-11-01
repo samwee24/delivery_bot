@@ -17,8 +17,8 @@ import shutil
 from ament_index_python.packages import get_package_share_directory
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
 from slam_toolbox.srv import SaveMap, SerializePoseGraph
+from std_msgs.msg import String
 from std_srvs.srv import Trigger
 
 # (package, subdir) whose *.yaml are copied beside each saved run

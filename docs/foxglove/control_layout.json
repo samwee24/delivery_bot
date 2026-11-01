@@ -1,0 +1,253 @@
+{
+  "configById": {
+    "CallService!stack_base": {
+      "serviceName": "/stack/base",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Base stack",
+      "buttonTooltip": "/stack/base",
+      "buttonColor": "#2e7d32",
+      "foxglovePanelTitle": "Base stack"
+    },
+    "CallService!stack_mapping": {
+      "serviceName": "/stack/mapping",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Mapping stack",
+      "buttonTooltip": "/stack/mapping",
+      "buttonColor": "#2e7d32",
+      "foxglovePanelTitle": "Mapping stack"
+    },
+    "CallService!stack_localisation": {
+      "serviceName": "/stack/localisation",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Localise stack",
+      "buttonTooltip": "/stack/localisation",
+      "buttonColor": "#2e7d32",
+      "foxglovePanelTitle": "Localise stack"
+    },
+    "CallService!stack_stop": {
+      "serviceName": "/stack/stop",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Stop stack",
+      "buttonTooltip": "/stack/stop",
+      "buttonColor": "#c62828",
+      "foxglovePanelTitle": "Stop stack"
+    },
+    "CallService!camera_start": {
+      "serviceName": "/camera/start",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Camera on",
+      "buttonTooltip": "/camera/start",
+      "buttonColor": "#2e7d32",
+      "foxglovePanelTitle": "Camera on"
+    },
+    "CallService!camera_stop": {
+      "serviceName": "/camera/stop",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Camera off",
+      "buttonTooltip": "/camera/stop",
+      "buttonColor": "#c62828",
+      "foxglovePanelTitle": "Camera off"
+    },
+    "CallService!stream_start": {
+      "serviceName": "/stream/start",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Stream on",
+      "buttonTooltip": "/stream/start",
+      "buttonColor": "#2e7d32",
+      "foxglovePanelTitle": "Stream on"
+    },
+    "CallService!stream_stop": {
+      "serviceName": "/stream/stop",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Stream off",
+      "buttonTooltip": "/stream/stop",
+      "buttonColor": "#c62828",
+      "foxglovePanelTitle": "Stream off"
+    },
+    "CallService!bag_start": {
+      "serviceName": "/bag/start",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Bag start",
+      "buttonTooltip": "/bag/start",
+      "buttonColor": "#2e7d32",
+      "foxglovePanelTitle": "Bag start"
+    },
+    "CallService!bag_stop": {
+      "serviceName": "/bag/stop",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Bag stop",
+      "buttonTooltip": "/bag/stop",
+      "buttonColor": "#c62828",
+      "foxglovePanelTitle": "Bag stop"
+    },
+    "CallService!run_save": {
+      "serviceName": "/run/save",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Save map",
+      "buttonTooltip": "/run/save",
+      "buttonColor": "#1565c0",
+      "foxglovePanelTitle": "Save map"
+    },
+    "CallService!imu_node_recalibrate": {
+      "serviceName": "/imu_node/recalibrate",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Recalibrate IMU",
+      "buttonTooltip": "/imu_node/recalibrate",
+      "buttonColor": "#f9a825",
+      "foxglovePanelTitle": "Recalibrate IMU"
+    },
+    "CallService!control_status": {
+      "serviceName": "/control/status",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Status",
+      "buttonTooltip": "/control/status",
+      "buttonColor": "#1565c0",
+      "foxglovePanelTitle": "Status"
+    },
+    "RawMessages!resp": {
+      "topicPath": "/rosout"
+    },
+    "CallService!start_motor": {
+      "serviceName": "/start_motor",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Lidar spin on",
+      "buttonTooltip": "/start_motor",
+      "buttonColor": "#2e7d32",
+      "foxglovePanelTitle": "Lidar spin on"
+    },
+    "CallService!stop_motor": {
+      "serviceName": "/stop_motor",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Lidar spin off",
+      "buttonTooltip": "/stop_motor",
+      "buttonColor": "#c62828",
+      "foxglovePanelTitle": "Lidar spin off"
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "first": {
+      "first": {
+        "first": {
+          "first": "CallService!stack_base",
+          "second": {
+            "first": "CallService!stack_mapping",
+            "second": {
+              "first": "CallService!stack_localisation",
+              "second": "CallService!stack_stop",
+              "direction": "row",
+              "splitPercentage": 50.0
+            },
+            "direction": "row",
+            "splitPercentage": 33.333333333333336
+          },
+          "direction": "row",
+          "splitPercentage": 25.0
+        },
+        "second": {
+          "first": {
+            "first": "CallService!camera_start",
+            "second": {
+              "first": "CallService!camera_stop",
+              "second": {
+                "first": "CallService!stream_start",
+                "second": "CallService!stream_stop",
+                "direction": "row",
+                "splitPercentage": 50.0
+              },
+              "direction": "row",
+              "splitPercentage": 33.333333333333336
+            },
+            "direction": "row",
+            "splitPercentage": 25.0
+          },
+          "second": {
+            "first": {
+              "first": "CallService!bag_start",
+              "second": {
+                "first": "CallService!bag_stop",
+                "second": {
+                  "first": "CallService!run_save",
+                  "second": "CallService!imu_node_recalibrate",
+                  "direction": "row",
+                  "splitPercentage": 50.0
+                },
+                "direction": "row",
+                "splitPercentage": 33.333333333333336
+              },
+              "direction": "row",
+              "splitPercentage": 25.0
+            },
+            "second": "CallService!control_status",
+            "direction": "column",
+            "splitPercentage": 50.0
+          },
+          "direction": "column",
+          "splitPercentage": 33.333333333333336
+        },
+        "direction": "column",
+        "splitPercentage": 25.0
+      },
+      "second": {
+        "first": "CallService!start_motor",
+        "second": "CallService!stop_motor",
+        "direction": "row",
+        "splitPercentage": 50
+      },
+      "direction": "column",
+      "splitPercentage": 85
+    },
+    "second": "RawMessages!resp",
+    "direction": "column",
+    "splitPercentage": 70
+  }
+}
