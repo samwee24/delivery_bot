@@ -25,6 +25,7 @@ setup(
         'console_scripts': [
             'odom_covariance_relay = delivery_bot_slam.odom_covariance_relay:main',
             'trajectory_recorder = delivery_bot_slam.trajectory_recorder:main',
+            'run_save = delivery_bot_slam.run_save:main',
         ],
     },
 )

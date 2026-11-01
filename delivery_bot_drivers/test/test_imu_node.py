@@ -124,3 +124,15 @@ def test_i2c_error_publishes_nothing(make_node) -> None:
     node.state.fail = True
     node._publish()
     assert node.sent == []
+
+
+def test_recalibrate_updates_bias_and_keeps_old_on_noise(make_node) -> None:
+    node = make_node(gyro=lambda n: (0, 0, 0))
+    node.state.gyro = lambda n: (0, 0, 131)
+    res = node._recalibrate(None, SimpleNamespace(success=None, message=''))
+    assert res.success and 'z=0.01745' in res.message
+    assert publish_once(node).angular_velocity.z == pytest.approx(0.0, abs=1e-12)
+    node.state.gyro = lambda n: (0, 0, 200 if n % 2 else -200)
+    res = node._recalibrate(None, SimpleNamespace(success=None, message=''))
+    assert not res.success and 'std' in res.message
+    assert node._bias[2] == pytest.approx(radians(1))

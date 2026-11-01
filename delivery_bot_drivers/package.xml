@@ -11,6 +11,7 @@
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
   <!-- GPIO and I2C libraries come from apt on the Pi:
        python3-smbus2, python3-gpiozero, python3-lgpio.
        rosdep has no keys for them on Ubuntu 24.04, so they are listed in

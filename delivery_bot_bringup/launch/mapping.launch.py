@@ -40,7 +40,7 @@ from launch.actions import (DeclareLaunchArgument, EmitEvent,
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import LifecycleNode
+from launch_ros.actions import LifecycleNode, Node
 from launch_ros.event_handlers import OnStateTransition
 from launch_ros.events.lifecycle import ChangeState
 
@@ -81,6 +81,8 @@ def generate_launch_description() -> LaunchDescription:
             condition=IfCondition(LaunchConfiguration('include_base'))),
         slam,
         activate,
+        # /run/save: map + pose graph + configs under one dated name
+        Node(package='delivery_bot_slam', executable='run_save', output='screen'),
         # configure fails (and is never retried) if sent before the node's lifecycle
         # services exist; with include_base:=false slam is the only process, so wait.
         TimerAction(period=5.0, actions=[configure]),

@@ -127,6 +127,9 @@ The lidar, camera and bridge do not restart after a reboot, and the camera takes
 **Side extras for watching the robot** (not part of the SLAM stack; `tools/`):
 - `bash tools/streams/start_streams.sh` starts the camera, the bridge, the microphone stream and the control node; `bash tools/streams/start_streams.sh av` starts one combined picture-and-sound stream instead (`vlc http://100.83.14.99:8090/stream.mkv`, 1280x720 at 30 fps). The streams do not restart after a reboot. Needs `robot` in the `audio` group.
 - Foxglove Call Service panel: `/stream/start` and `/stream/stop` (`tools/streams/stream_control.py`) switch the combined stream on and off; `/start_motor` and `/stop_motor` (the lidar driver's own services) spin the lidar motor up and down. With no driver running, `python3 tools/streams/lidar_off.py` holds the motor off.
+- Foxglove Call Service panel, mapping (`mapping.launch.py`): `/run/save` (`Trigger`) saves the map, the pose graph and a copy of the config YAMLs to `~/maps/<date>_<HHMM>*` in one press; `/slam_toolbox/pause_new_measurements` pauses mapping while you carry the robot; `/slam_toolbox/clear_queue` drops a scan backlog.
+- Foxglove Call Service panel, sensors: `/imu_node/recalibrate` (`Trigger`) re-measures the gyro bias with the robot still and returns it; `/set_capture` (`SetBool`) turns the USB camera off while mapping; `/set_pose` (EKF, zero pose, `header.frame_id: odom`) zeroes odometry before a push test; `/toggle` (`{on: false}`) pauses EKF fusion while you carry the robot.
+- Foxglove Publish panel: `std_msgs/String` on `/event` ("push start") puts a marker in the bag.
 - Speech or voice commands could read the same stream later (see `tools/streams/audio_stream.py`); not built.
 
 ## Safety

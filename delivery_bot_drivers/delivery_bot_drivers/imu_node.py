@@ -17,10 +17,12 @@ from __future__ import annotations
 
 import math
 import struct
+import time
 
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Imu
+from std_srvs.srv import Trigger
 
 # MPU6050 registers
 _PWR_MGMT_1 = 0x6B
@@ -61,6 +63,7 @@ class ImuNode(Node):
         self._bias = self._calibrate()
         self._pub = self.create_publisher(Imu, '/imu/data', 10)
         self.create_timer(1.0 / self.get_parameter('rate_hz').value, self._publish)
+        self.create_service(Trigger, '~/recalibrate', self._recalibrate)
 
     def _configure(self) -> None:
         who = self._bus.read_byte_data(self._addr, _WHO_AM_I)
@@ -88,7 +91,7 @@ class ImuNode(Node):
         samples = []
         for _ in range(n):
             samples.append(self._read()[1])
-            rclpy.spin_once(self, timeout_sec=0.01)
+            time.sleep(0.01)   # not spin_once: this also runs inside a service callback
         mean = tuple(sum(s[k] for s in samples) / n for k in range(3))
         std_z = math.sqrt(sum((s[2] - mean[2]) ** 2 for s in samples) / n)
         if std_z > self.get_parameter('calib_max_std').value:
@@ -99,6 +102,17 @@ class ImuNode(Node):
             f'gyro bias rad/s x={mean[0]:.5f} y={mean[1]:.5f} z={mean[2]:.5f}, '
             f'z std {std_z:.5f} over {n} samples')
         return mean
+
+    def _recalibrate(self, _req, res):
+        """Re-measure the gyro bias; publishing pauses for calib_seconds. Keeps the old bias if noisy."""
+        try:
+            self._bias = self._calibrate()
+        except RuntimeError as e:
+            res.success, res.message = False, str(e)
+            return res
+        res.success = True
+        res.message = f'gyro bias rad/s x={self._bias[0]:.5f} y={self._bias[1]:.5f} z={self._bias[2]:.5f}'
+        return res
 
     def _publish(self) -> None:
         try:
