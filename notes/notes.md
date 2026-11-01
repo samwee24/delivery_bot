@@ -5,6 +5,18 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-01 (night) · rf2o reads 24 % of a hand push
+
+**Finding.** Two pushes (1.00 m and 1.20 m, two places) read 0.243 m and 0.289 m on rf2o (-76 % both), while the lidar's own front-wall range confirmed the real travel (0.996 m and 1.222 m). On 2026-10-31 the same stack read -3.8 % and -2 %. The two candidate causes: the scan format (those older bags have 1045 beams at 0.34 deg; every bag since `angle_compensate: True` has 720 beams at 0.50 deg) and a person's legs moving with the robot (about 150 scan points within 1.2 m behind it during the pushes). Not separated yet. The EKF has probably been fed a velocity about 4 times too small since the map run; the map itself is not affected (scan matching in slam_toolbox, loop closure 0.115 m).
+
+**What was added.** `angle_compensate` launch argument on `lidar.launch.py` and `rf2o_alone.launch.py` (default true, mapping unchanged); scripts in `tools/analysis/` (`scanchk.py`, `scanfmt.py`, `rear_points.py`, `resample_scan.py`, `rf2o_fmt.sh`, `push_start.sh`, `push_stop.sh`). The offline rig (`rf2o_fmt.sh`) gave 0 rf2o updates on its control run and needs fixing.
+
+**What went wrong.** The portable battery went flat in the middle of a recording; the bag directory was lost, and `/tmp` was wiped by the reboot (scripts there are gone: copies are in `tools/analysis/`). The Pi on wall power cannot be moved. The lidar hung at start on most restarts (OI-6).
+
+**Next.** (1) Fix the offline rig so its control reproduces -3.8 %, then run `resampled`: if rf2o drops to about 24 %, the format is the cause. (2) Otherwise repeat the push with `angle_compensate:=false` on a charged battery, and once with a stick or string so the person is not in the scan. (3) If the format is the cause, rf2o needs a fixed beam count that keeps its scale (slam_toolbox needs a fixed count too). (4) 4.5 fusion and 3.3 break tests after that. Charge the portable battery first.
+
+---
+
 ## 2026-11-01 · base/mapping/localisation launch files, 6.2 localisation on the room graph
 
 **Launch files.** `base.launch.py` now starts the whole base stack (robot_state_publisher, lidar, rf2o with `publish_tf: false` 2 s late, covariance relay, `imu_node`, EKF, foxglove_bridge); `mapping.launch.py` ran live from one command (slam_toolbox active, `map -> odom`, a 241 x 112 map saved) and a bug turned up and was fixed: configure is now sent 5 s after start, otherwise it fails when `include_base:=false`. `navigation.launch.py` is base + `localization_slam_toolbox_node` on `~/maps/2026-10-31_room2_graph`, no Nav2 yet. The start pose is `map_start_pose: [0, 0, 0]`: `map_start_at_dock` is rejected in localisation mode.

@@ -56,6 +56,7 @@ What this cost at the start, all resolved since: no `dialout` (fixed), no udev r
 | OI-4 | Lidar returns a distance for only **33–35 %** of pings | **Mitigated**: 26–29 % no-echo on this Pi, gaps follow the room not the lidar (not a driver fault); the first map was made despite it. The echo rate itself is unexplained | [system/03_bringup.md](system/03_bringup.md) |
 | OI-5 | ~~Unit is 0.23 m from the robot's own structure at raw 230–250°~~ **Resolved 2026-10-31**: robot built, lidar re-mounted and measured into the URDF; mask not needed on this evidence | — | — |
 | OI-6 | `rplidar_composition` sometimes hangs at start (`RPLIDAR running` and no S/N), more often right after a restart | A launch that looks up produces no `/scan`; cost several retries on 2026-11-01 | wait 20 s after stopping the lidar; see [system/06_troubleshooting.md](system/06_troubleshooting.md); cause unknown, possibly USB power on the portable battery |
+| OI-8 | rf2o reads about 24 % of real travel on two 2026-11-01 pushes (-76 %), against -3.8 % on 2026-10-31 | The EKF gets a velocity about 4 times too small; fusion, drift and any driven run would be off. The map is not affected | Scan format (720 beams, `angle_compensate: True`) or a person behind the robot: see `docs/test_log.md` and `notes/notes.md` 2026-11-01 night |
 | OI-7 | GitHub repo is public (checked 2026-11-01), `AGENTS.md` said private | Anyone can read the repo; `main` is protected with `build-and-test` | decide whether to make it private |
 
 ## Layout

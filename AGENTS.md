@@ -83,8 +83,7 @@ Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplida
 `docs/slam_build_path.md`.
 
 1. Stage 6 is done by hand (6.2 to 6.4, 2026-11-01). Left from it: the second tape gap on the map (5.4); the new home mark is taped at the old position (the original tape was lost), so `goals.yaml` home stays 0, 0, 0.
-2. Redo the 3.2 one-metre push: one straight push from rest (the first was preceded by
-   a −83° reposition, and an 18° heading offset is unexplained).
+2. **rf2o under-reads a hand push by 76 % (OI-8).** Two straight pushes on 2026-11-01 read 24 % of the true distance, against −3.8 % on 2026-10-31. Leads: scan format (`angle_compensate: True`, 720 beams) or a person behind the robot. Next: fix `tools/analysis/rf2o_fmt.sh` (offline rig, control gave 0 updates), then repeat the live push with `angle_compensate:=false` on a charged battery. Charge the portable battery first.
 3. Keep the camera off while mapping, or accept EKF `Failed to meet update rate`
    (`frequency` is now 20). The 20 Hz late-update count is still unconfirmed on a quiet Pi (closure 0.115 m against 0.109 m); rerun the check with nothing else running.
 4. Still waiting on the robot: 3.3 failure tests, 4.5 fusion comparison, stages 8.4
