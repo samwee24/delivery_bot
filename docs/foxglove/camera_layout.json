@@ -1,0 +1,70 @@
+{
+  "configById": {
+    "Image!cam": {
+      "cameraTopic": "/image_raw/compressed",
+      "enabledMarkerTopics": [],
+      "synchronize": false,
+      "mode": "fit",
+      "smooth": false,
+      "flipHorizontal": false,
+      "flipVertical": false,
+      "rotation": 0
+    },
+    "3D!live": {
+      "followTf": "laser",
+      "followMode": "follow-pose",
+      "layers": {
+        "grid": {
+          "layerId": "foxglove.Grid",
+          "visible": true
+        }
+      },
+      "topics": {
+        "/scan": {
+          "visible": true
+        },
+        "/map": {
+          "visible": true
+        },
+        "/slam/path": {
+          "visible": true
+        }
+      },
+      "transforms": {},
+      "scene": {
+        "enableStats": false
+      },
+      "cameraState": {
+        "distance": 6,
+        "perspective": false,
+        "phi": 0,
+        "thetaOffset": 0,
+        "targetOffset": [0, 0, 0],
+        "target": [0, 0, 0],
+        "targetOrientation": [0, 0, 0, 1],
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      }
+    },
+    "Log!rosout": {
+      "topicToRender": "/rosout"
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "first": "Image!cam",
+    "second": {
+      "first": "3D!live",
+      "second": "Log!rosout",
+      "direction": "column",
+      "splitPercentage": 70
+    },
+    "direction": "row",
+    "splitPercentage": 55
+  }
+}

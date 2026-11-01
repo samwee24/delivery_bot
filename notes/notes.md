@@ -5,6 +5,162 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-10-31 (night) · camera quality raised to 1280x720 at 10 fps
+
+**Under SLAM load.** Same camera settings with `slam_replay` running on the room bag (commands and numbers in `docs/test_log.md`). slam_toolbox kept up in every run (0 dropped scans) but the camera falls short of its rate and the EKF starts missing its update deadline (0 late updates in 65 s without the camera, 8 to 26 with it). Delivered: 1280x720 @10 gives 8.3 Hz, 1024x768 @15 gives 9.9 Hz, 640x480 @30 gives 21 Hz, 1280x720 @5 gives its full 5.0 Hz. One run each, so the EKF counts are not a ranking. Map quality was not compared. Left at 1280x720 @10 for viewing; while mapping or replaying, either switch the camera off or use 1024x768 @15.
+
+Swept the camera from 640x480 up to 1920x1080 (numbers and commands in `docs/test_log.md`). The Pi decodes the camera's MJPEG in software on one core and re-encodes it for the compressed topic, so the delivered rate falls as the pixel count rises: about 11.6 Mpixel/s whatever the setting. 1280x720 at 10 fps is the sharpest setting that still delivers its full rate (10.000 Hz, std dev 4.8 ms, 1.9 MB/s). 1920x1080 only reaches 4.5 to 5.7 Hz, which looks like lag. Lower JPEG quality did not help; the passthrough `raw_mjpeg` mode gave no usable topic. `camera.yaml` now 1280x720 at 10 fps (commit c6beb1b). The node takes a full core, so keep it off during a mapping run. For smoother motion at lower detail, 640x480 at 30 fps gives 28 Hz.
+
+---
+
+## 2026-10-31 (late) · 5.5 sweep done, config frozen, camera stream started
+
+**5.5.** Five replays of the 5.4 bag (numbers and commands in `docs/test_log.md`). Loop closing
+is the only change that matters: first-to-last pose distance 0.658 m with it off, 0.109 m on.
+`min_laser_range` 0, `minimum_travel_distance` 0.05 and 0.2 land within about 1-8 cm of the
+baseline on one run each, which is not a difference. `slam_mapping.yaml` kept as it was and
+frozen (commit 6484678); 5.5 ticked.
+**Correction.** The scattered dots on the map floor are not the person pushing the robot, as
+first guessed: they sit in a regular grid and have a star shape, which fits office chair
+bases and table legs. They are real, and Nav2 should treat them as obstacles.
+**Camera.** UGREEN camera 2K (USB 1bcf:2284) on `/dev/video0`; `ros-jazzy-usb-cam` and
+`v4l-utils` installed with sudo by the user; `robot` added to `video`. `camera.launch.py` and
+`camera.yaml` in `delivery_bot_bringup`, 640x480 at 15 fps MJPEG, 15.8 Hz measured, ~20 % of
+one core. Starting it with the sweep and a full Foxglove bridge pushed the Pi to load average
+18.8 and a 10 s Foxglove lag (ping 250 ms); stopped until the sweep ended. The brightness
+setting in the yaml did not take effect (camera still reported 50): to debug. Layout
+`docs/foxglove/camera_layout.json` written, import not confirmed.
+**Next.** Fix the camera brightness; stage 6 localisation; the map reading for the 5.4 distance
+check; person-free repeat of the room run if the chair dots need confirming.
+
+---
+
+## 2026-10-31 · robot built: mounting, rf2o hand tests, variances, first room map
+
+**Goal.** Use the built robot (pushed by hand, no motors) to close the SLAM steps that
+needed hardware. Commands and every number are in `docs/test_log.md`.
+
+**Done.**
+- **Mounting (2.1)**, tape, from the midpoint of the four wheels: lidar 2 cm forward, centred, 12 cm
+  up; IMU 2.3 cm forward, 5.5 cm right (`imu_y` -0.055), 7 cm up; `wheel_base` 0.156 m, front-to-back
+  wheel spacing 0.113 m, `robot_radius` ~0.12 m, `wheel_radius` 0.0325 m (TT default, not
+  measured). Four wheels, skid-steer: 0.156 m is a first guess for the effective track width.
+- **Box test (1.4)** repeated twice: face at +6 deg, then +2.6 deg; the spread is hand placement,
+  so `laser_yaw` stays 0.
+- **3.2 rf2o by hand.** Full turn: rf2o -352.9 deg, gyro -360.2 deg, true 360 (clockwise). 1 m
+  push: rf2o 0.962 m (-3.8 %). Both sensors agree on sign: no 180 deg mount error. rf2o holds
+  within 1 deg for 90 s at rest.
+- **4.4 variances** fitted from those two bags: `vx_variance` 1e-4, `vyaw_variance` 5e-3,
+  `gyro_var` 1e-4 (at rest 1.7e-6, x60 margin), `gyro_scale_z` 1.0. The hand motion was far
+  faster than the robot will drive (gyro rms 0.74 rad/s) and rf2o read 9-15 % low there, so
+  the motion term was scaled to 0.4 rad/s rather than fitted raw. Recheck with motors running.
+- **5.4 first room map.** 317 x 233 cells at 0.05 m, 65.5 m2 free. Raw `/scan` against tape:
+  1.085 vs 1.05 m (+3.5 cm) and 1.494 vs 1.48 m (+1.4 cm); the map read 1.00 m on the first gap
+  (-5 cm, the cell size). 5.4 not ticked: map reading for the second gap is missing.
+- 3.2, 4.4, 2.1 ticked in `docs/slam_build_path.md`.
+
+**Found.**
+- **Lidar beam count.** The first live map was a 184 x 112 fan. slam_toolbox rejected 223 scans:
+  `LaserRangeScan contains 1041 range readings, expected 931`. rplidar_ros sends a varying
+  count with `angle_compensate` off (its default). Fix `lidar.launch.py` `angle_compensate:
+  True`, 720 beams per scan, 0 rejections after (commit 4a16fe8). This is the one to remember.
+- **Person behind the robot** shows as a co-moving blob (about 20 deg of beams at 1 m) and
+  leaves scattered dots on the map floor. rf2o still closed a 27 m loop within 0.5 m.
+- **rf2o never reports `vy`** (always exactly 0), so sideways drift cannot be read from its twist.
+  The 1 m push path pointed 18 deg off rf2o's own heading; unexplained, not claimed as a mount error.
+- **Lidar stalls after being killed mid-scan**: no health line, no `/scan`. Stop everything, wait
+  about 6 s, relaunch the lidar alone.
+- A wall 0.46 m behind the robot was absent from scan and map (nothing nearer than 5.4 m); at
+  the next pose the scan matched the tape. Cause unknown, likely a measurement mix-up.
+
+**5.5 sweep.** Five replays of `~/bags/2026-10-31_map_200956` (baseline, `min_laser_range` 0,
+loop closing off, `minimum_travel_distance` 0.05 and 0.2), driver `/tmp/sweep.sh`, analysis
+`/tmp/sweep_an.py`, copies in `~/sweep_partial_2026-10-31/scripts`. Aborted once for a power
+switch (portable charger to cable) and restarted at 20:35; about 45 min.
+
+**Not done / next.** 5.5 table and frozen config; stage 6 localisation (also gives the map
+reading for 5.4); clean person-dots out of the map before Nav2; 3.3 failure modes; 4.5 fusion vs
+no fusion; recheck `gyro_var` and fit the track width with motors running (teammate's node).
+
+**Lessons.** `pkill -f` with a pattern that appears in the ssh command line kills the ssh
+session (exit 255): put it in a script file. A backgrounded `ros2 bag record` ignores SIGINT
+from a non-interactive shell: use SIGTERM, then wait for `metadata.yaml`. A Pi reboot clears
+`/tmp`: keep scripts in `~/`. `imu_node` refuses to start while the robot moves.
+
+---
+
+## 2026-10-30 (night) · SLAM software without the robot
+
+**Goal.** Finish everything that does not need the built robot.
+
+**Done** (commands and numbers in `docs/test_log.md`):
+- 4.3 `odom_covariance_relay`, replay-checked; 5.3 `mapping.launch.py` (lifecycle driven);
+  5.5 launch half `slam_replay.launch.py`; 7.1 `trajectory_recorder` + TUM output, paths
+  seen in Foxglove; 8.2 `explore_lite` built at pinned 326cf8a (11 min 54 s on the Pi).
+- `imu_node` written (was a skeleton) and run at rest: 100.04 Hz, gyro bias z -0.0279
+  rad/s removed at startup, z std 0.00175 rad/s, accel z reads 11.16 m/s2 (14 % high,
+  unused by the EKF). `gyro_var` stays at the 4e-4 brief default until 4.4.
+- `tools/startup_race.sh`, `delivery_bot_slam/launch/rf2o_alone.launch.py` for 3.4.
+- Foxglove layout `docs/foxglove/slam_layout.json` hand-written, **import not yet
+  confirmed**, so 7.2 is not ticked.
+
+**Not done / needs robot.** 2.1, 3.2, 3.3, 4.2, 4.4, 4.5, 5.4, 5.5 sweep and freeze, 6.x, 7.3,
+8.3-8.5, 9.x; repeat the 1.4 box test within +-2 deg once the lidar is mounted. `evo` is not
+installed anywhere, so 9.3 and the `evo_traj` part of 7.1 are untested.
+
+**Lessons.** `pkill -f` and `timeout`-less `ros2 topic echo --once` on a sim-time topic
+both hang the session; use script files and `timeout`. A replayed bag stops publishing
+sim-time topics when it ends.
+
+---
+
+## 2026-10-30 (evening) · 3.4 startup race, near-return ring is the room
+
+**Ran.** `tools/startup_race.sh 10 2.0` on the Pi: 10/10 clean (rf2o_alone.launch.py,
+rf2o delayed 2 s). Delay 0, 3 launches: also clean; first scan arrives ~13 s after
+launch, so the race needs a slow URDF. Keep the delay in `base.launch.py` anyway
+(request to the bringup owner).
+**Near-return ring (OI-4).** Fraction of returns <0.30 m per 30 deg bin
+(`/tmp/near.py` over `still_`, `still2_`, `rot90_` bags): the bins move between bags
+(0..60 deg, then 30..120, then 90..180), so it follows the scene, not the lidar. No
+`mask_deg` needed on this evidence; recheck once mounted on the robot.
+`/dev/rplidar` symlink now exists on the Pi.
+
+---
+
+## 2026-10-30 (later) · 1.4 box test: on +x, coarse only
+
+**Ran.** `bash /tmp/box_check.sh` on the Pi, then ranges within +-40 deg of the same
+`/scan`. Box arc spans -13..+30 deg at 0.23-0.25 m (centre ~+9 deg, ~43 deg wide).
+
+**Result.** Box is on +x, not +-90 or 180: the convention check passes, `laser_yaw = 0`
+holds coarsely (+-10 deg). Not the spec test: box was at 0.23 m not 0.50 m and off-centre,
+so the 0 +- 2 deg tolerance in `docs/slam.md` is **not** shown. Still *brief default*,
+not *measured*. Returns at 0.18-0.25 m around the other directions persist (the OI-4 ring).
+
+**Next.** Re-verify the +-2 deg after the URDF is live: box centred at 0.50 m, view in
+`base_link`.
+
+---
+
+## 2026-10-30 · SLAM build path: stage 1 done, 1.4 redo not yet clean
+
+**Goal.** Redo the 50 cm box test (1.4) cleanly; push on to stage 3.
+
+**Ran.** `bash /tmp/box_check.sh` on the Pi (one `/scan`, nearest returns and close
+returns per 30 deg bin). Scene still cluttered: nearest returns at 85-90 deg, 0.18 m
+(something on the lidar's left side, probably the desk or the robot itself); nothing
+at 0.50 m near 0 deg (min 0.318 m in -30..30). Not a valid box test.
+
+**Result.** `laser_yaw = 0` stays *provisional* (brief default, not measured).
+Earlier findings (rf2o still baseline: x -2.4 mm, y -0.6 mm, yaw +0.26 deg over ~28 s,
+`bags/still2_2026-10-30`) are in the session record.
+
+**Next.** Clear 1 m around the lidar, one box at 0.50 m on +x, rerun `box_check.sh`.
+Stage 3 hardware tests (3.2, 3.3) and 2.1 need the robot built.
+
+---
+
 ## 2026-10-23 · documentation moved into the repository; repo made private
 
 **Goal.** Stop the plan, notes and evidence from existing only on one MacBook.

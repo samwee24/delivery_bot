@@ -12,7 +12,7 @@ motor_node:
     in3_pin: 20          # right direction A
     in4_pin: 21          # right direction B
     pwm_hz: 1000
-    wheel_base: 0.13     # MEASURE  left tyre centre -> right tyre centre
+    wheel_base: 0.156    # measured 2026-10-31, left-right wheel centres (URDF)
     max_duty: 0.85       # never above this, whatever the controller asks
     dead_zone_left: 0.35   # calibrate (phase 3)
     dead_zone_right: 0.35  # calibrate (phase 3)
@@ -34,6 +34,6 @@ imu_node:
     rate_hz: 100.0
     calib_seconds: 3.0
     calib_max_std: 0.01
-    gyro_scale_z: 1.0    # calibrate (phase 3, 5-spin test)
-    gyro_var: 0.0004
+    gyro_scale_z: 1.0    # measured 2026-10-31: one 360 deg hand turn, gyro integrated -360.2 deg (0.06 %), docs/test_log.md
+    gyro_var: 0.0001     # fitted 2026-10-31, provisional: at rest 1.7e-6 (2 bags, bias removed), x60 margin for motor vibration; recheck with motors running (4.5)
     accel_var: 0.04

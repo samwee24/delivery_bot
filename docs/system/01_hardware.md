@@ -14,7 +14,7 @@ short form plus everything we have **measured** on the real robot.
 | L298N motor driver | 2 ch, ENA/IN1/IN2 left, ENB/IN3/IN4 right | PWM from GPIO |
 | 2WD chassis, TT motors, 65 mm wheels | ~1:48 gearing | differential drive |
 | Separate motor battery | 2×18650 (7.4 V) + switch, ground shared with the Pi | keeps motor noise off the Pi |
-| USB webcam | UVC | unused in v1 |
+| UGREEN camera 2K | USB `1bcf:2284`, `/dev/video0`, MJPG up to 2592x1520, `robot` in `video` | live view in Foxglove only, not used by SLAM; config in `camera.yaml` |
 
 ## Power
 
@@ -53,9 +53,9 @@ measure before P6; until then P3–P8 numbers are not comparable to the plan's.
 
 | Parameter | Symbol | Value | How measured |
 | --- | --- | --- | --- |
-| Wheel base | `wheel_base_m` | MEASURE | left tyre centre → right tyre centre |
+| Wheel base | `wheel_base_m` | 0.156, measured 2026-10-31 | left tyre centre → right tyre centre |
 | Wheel diameter | `wheel_diameter_m` | MEASURE | nominal 65 mm |
-| Robot radius | `robot_radius_m` | MEASURE | centre → farthest point |
+| Robot radius | `robot_radius_m` | ~0.12, measured 2026-10-31 (approx) | centre → farthest point |
 | Lidar offset | `lidar.offset_xy_m` | MEASURE | lidar centre → wheel midpoint, x forward / y left |
 | Lidar yaw offset | `lidar.yaw_offset_deg` | MEASURE | box at 50 cm test |
 | Self-occlusion | `lidar.mask_deg` | candidate `[[230, 250]]` | 0.23 m returns at raw 230–250° on the old Pi |

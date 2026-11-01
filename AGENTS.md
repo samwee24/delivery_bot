@@ -16,7 +16,7 @@ is [`docs/CA3.md`](docs/CA3.md).
 
 | | |
 | --- | --- |
-| SSH | `robot@sherm-raspi.local` (also `192.168.31.109`, Tailscale `100.83.14.99`) |
+| SSH | `robot@100.83.14.99` (Tailscale, works from anywhere); LAN fallback `robot@192.168.31.109` or `sherm-raspi.local` |
 | Password | `robot`; Mac key already authorised, so key auth works from here |
 | OS / ROS | Ubuntu 24.04.5 LTS, **ROS 2 Jazzy**, Foxglove bridge + rosbag2 MCAP |
 | Project dir on Pi | `~/ros2_ws/src/delivery_bot/` — this repo, cloned on the Pi (D6). `~/delivery-bot/` is the older pre-ROS layout, scripts only |
@@ -61,38 +61,38 @@ The CA3 brief's other machine, `robot` @ `100.73.7.24` (Debian 13), has been
 7. Don't touch the motor battery until the wiring checklist in
    `docs/design-plan.md` §4 is ticked. Kill switch is the motor switch, not software.
 
-## Current state (2026-10-22)
+## Current state (2026-10-31)
 
 | Phase | State |
 | --- | --- |
-| P0 Setup | **essentially done** (2026-10-22): apt stack, 2 GB swapfile (persisted in `/etc/fstab`), `dialout`, udev rule written, D5 stack installed, `rf2o` built and verified. **Still open:** `/dev/rplidar` symlink not materialising, `i2c-tools` not installed, no venv |
-| P1 Bring-up | lidar verified on the *old* Pi (A1M8, health Good, 5–7 Hz) but **only 33–35 % of pings return a distance**; sensors wired into ROS but not yet validated on this box; motors never driven |
-| P2–P8 | not started |
+| P0 Setup | **essentially done** (2026-10-22): apt stack, 2 GB swapfile (persisted in `/etc/fstab`), `dialout`, udev rule written, D5 stack installed, `rf2o` built and verified. **Resolved 2026-10-30:** `/dev/rplidar` symlink exists, `i2c-tools` installed, MPU6050 answers at 0x68. **Still open:** no venv |
+| P1 Bring-up | lidar verified on this Pi (A1M8, 7.05 Hz, 26–29 % no-echo, gaps follow the room not the lidar); IMU node written and checked at rest (100 Hz, gyro z std 0.00175 rad/s); motors never driven by us; **robot built 2026-10-31**, lidar and IMU mounting measured into the URDF; gyro reads a hand-turned 360° as 360.2° |
+| P3–P5 (SLAM side) | rf2o hand tests done (−2 % turn, −3.8 % push); variances fitted; **first room map saved** (`results/maps/2026-10-31_room2.png`); 5.5 sweep done and `slam_mapping.yaml` frozen; USB camera streams to Foxglove (1280x720 at 10 fps) |
+| P2, P6–P8 | not started (motors are the teammate's) |
 
-Known blockers live in [`docs/CA3.md`](docs/CA3.md) as OI-1…OI-5. The live one is
-**OI-4, the 33 % echo rate** — resolve it before any mapping work, because sparse
-scans degrade `slam_toolbox` and rf2o alike.
+Known blockers live in [`docs/CA3.md`](docs/CA3.md) as OI-1…OI-5. OI-3 and OI-5 are
+resolved and OI-4 (the 33 % echo rate) is mitigated: the first map is made and gaps
+follow the room, not the lidar. The open risks now are in the next-actions list.
 
 ## Next actions, in order
 
-0. ~~P0 install + rf2o build~~ — **done 2026-10-22**: apt stack in, 2 GB swapfile
-   (persisted in `/etc/fstab`), D5 packages installed, `rf2o_laser_odometry` built
-   from source and verified with `ros2 pkg prefix`; full `colcon build
-   --symlink-install` = 5 packages in 3 min 43 s. GPIO route settled: **gpiozero +
-   `LGPIOFactory`** (`lgpio` is in `/usr/lib/python3/dist-packages`), so
-   `python3-gpiozero python3-lgpio python3-smbus2` are the apt dependencies.
-1. Make `/dev/rplidar` appear: `sudo udevadm trigger -c add -s tty`, else unplug and
-   replug the CP210x. `dialout` is now active for `robot`, so until the symlink lands
-   the driver can run on `/dev/ttyUSB0` as a stopgap.
-2. `sudo apt install i2c-tools`, then `i2cdetect -y 1` must show `68`.
-3. Run [`tools/probe_echo_rate.py`](tools/probe_echo_rate.py) **on this box** — its own
-   CP210x lidar is a control experiment: ~90 % echoes means the old mounting was at
-   fault, ~35 % means the unit or the series is.
-4. 50 cm white-box test; record the box angle → `yaw_offset_deg`, and any consistent
-   short returns → `mask_deg`.
-5. First live check of the stack: `ros2 launch delivery_bot_bringup base.launch.py`
-   with `dry_run:=true`, confirm `/scan` in Foxglove and that `/odometry/filtered`
-   stays sane while the robot is pushed by hand.
+Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplidar`,
+`i2c-tools`, echo-rate probe, hand-push rf2o/SLAM runs (3.2, 4.4, 5.4), 5.5 sweep with
+`slam_mapping.yaml` frozen. Build path progress (stages 0–9) is in
+`docs/slam_build_path.md`.
+
+1. **Stage 6 localisation** on `~/maps/2026-10-31_room2_graph`. Check first that
+   `slam_replay` localisation mode runs `localization_slam_toolbox_node`; with
+   `async_slam_toolbox_node` and `mode: localization` it keeps building the map.
+2. Redo the 3.2 one-metre push: one straight push from rest (the first was preceded by
+   a −83° reposition, and an 18° heading offset is unexplained).
+3. Keep the camera off while mapping, or accept EKF `Failed to meet update rate`
+   (`frequency` is now 20).
+4. Still waiting on the robot: 3.3 failure tests, 4.5 fusion comparison, stages 8.4
+   and 9. Motor-driven work (P2, P6–P8) waits on the teammate.
+5. Analysis scripts that produced the logged numbers are in `tools/analysis/`; bags
+   and maps live only on the Pi (`~/bags`, `~/maps`), backed up by hand to
+   `../delivery_bot_pi_backup/` on the Mac.
 
 ## Conventions
 
@@ -100,8 +100,9 @@ scans degrade `slam_toolbox` and rf2o alike.
 - Write remote paths as `~/ros2_ws/src/delivery_bot/...`; write local paths relative to
   the repo root.
 - The Pi is headless: verify with Foxglove or a saved PNG, never "it should print".
-- SSH sessions are non-interactive — `source ~/botenv/bin/activate` explicitly, since
-  `.bashrc` is not sourced. Use `cat > f << 'EOF'` for file writes over SSH.
+- SSH sessions are non-interactive, so `.bashrc` is not sourced: `source
+  /opt/ros/jazzy/setup.bash` and `~/ros2_ws/install/setup.bash` explicitly. There is no
+  venv. Use `cat > f << 'EOF'` for file writes over SSH.
 - Errors we have actually hit live in
   [`docs/system/06_troubleshooting.md`](docs/system/06_troubleshooting.md) with their
   exact text. Add to it when you hit something new.

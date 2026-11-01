@@ -1,0 +1,33 @@
+# Build path: task 4.4 in docs/slam_build_path.md
+# odom_covariance_relay: rewrite rf2o's empty twist covariance so the EKF can
+# use it. rf2o (b38c68e) leaves twist.covariance at zero, and
+# robot_localization turns a zero measurement variance into 1e-9, which makes
+# the scan-matching yaw rate look perfect and drowns the IMU's 1e-4 (fitted; 4e-4 was the brief default).
+#
+# twist.covariance is row-major 6x6: index 0 is vx, index 35 is vyaw.
+# Everything else is 1e3, meaning "unknown, do not fuse".
+
+odom_covariance_relay:
+  ros__parameters:
+    input_topic: /odom_rf2o
+    output_topic: /odom_rf2o_cov
+
+    # fitted 2026-10-31 (m^2/s^2): rf2o vx variance at rest 1.1e-5 and 4.7e-6
+    # (2 bags, 14 s and 55 s still), plus the 3.8 % distance under-read of the
+    # 1 m push at v_max 0.15 m/s -> (0.038*0.15)^2 = 3.2e-5; rounded up to 1e-4
+    # (sd 0.01 m/s). Method and bags in docs/test_log.md, 4.4.
+    vx_variance: 1.0e-4
+
+    # fitted 2026-10-31 (rad/s)^2: rf2o yaw-rate variance at rest 8.5e-4 and
+    # 1.8e-3; hand motion was far faster than the robot will drive (gyro rms
+    # 0.74 rad/s) and rf2o read 9-15 % low, so the motion term is scaled to a
+    # driving rate of 0.4 rad/s: (0.15*0.4)^2 = 3.6e-3. Sum 5.4e-3, rounded to
+    # 5e-3 (sd 0.07 rad/s), ~3000x the gyro's at-rest variance so the gyro leads.
+    vyaw_variance: 5.0e-3
+
+    # Not measured: 1e3 means "no information". ekf.yaml's two_d_mode already
+    # skips vy, vz, roll and pitch.
+    unused_variance: 1.0e3
+
+    # Never fit either variance on an evaluation run: the number would then
+    # describe that run, not the sensor.

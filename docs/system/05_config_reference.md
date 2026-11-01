@@ -22,9 +22,9 @@ it is actually measured.
 ## `robot.yaml`
 
 ```yaml
-wheel_base_m: 0.13          # MEASURE  left→right tyre centre
+wheel_base_m: 0.156         # measured 2026-10-31  left→right wheel centre
 wheel_diameter_m: 0.065     # MEASURE  nominal 65 mm
-robot_radius_m: 0.10        # MEASURE  centre→farthest point; sets map inflation
+robot_radius_m: 0.12        # measured 2026-10-31 (approx)  centre→farthest point; sets map inflation
 lidar:
   port: /dev/rplidar        # udev alias, not the raw /dev/ttyUSB0
   model: A1M8
@@ -81,6 +81,25 @@ values**; they are mapped into the package config files at run time:
 | `control.goal_tol_m` | Nav2 goal checker |
 | `safety.stop_dist_m`, `stop_half_angle_deg` | Collision Monitor polygon; motor-node watchdog follows `watchdog_s` |
 | `map.resolution_m`, `size_m` | `slam_toolbox` `resolution` / map bounds, occupancy grid |
+
+## `camera.yaml` (`delivery_bot_bringup/config/`)
+
+`usb_cam` node `camera`, started by `ros2 launch delivery_bot_bringup camera.launch.py`.
+
+| Key | Value | Provenance |
+| --- | --- | --- |
+| `video_device` | `/dev/video0` (`video1` is metadata) | measured, `v4l2-ctl --list-formats-ext` |
+| `image_width`, `image_height` | 1280, 720 | measured, see below |
+| `framerate` | 10.0 (must be a float: `10` crashes the node) | measured, see below |
+| `pixel_format` | `mjpeg2rgb` (`raw_mjpeg` publishes nothing usable) | measured |
+| `brightness`, `gain` | 130, 64 (usb_cam's own 50 and 0 read near-black indoors) | measured by eye, 2026-10-31 |
+| `frame_id`, `camera_name` | `camera`, `ugreen_2k` | brief default |
+
+Rate cap, measured 2026-10-31 with `ros2 topic hz /image_raw/compressed`: the Pi decodes the MJPEG on one core,
+about 11.6 Mpixel/s whatever the setting. Delivered: 640x480 @30 28 Hz, 1024x768 @15 11.5, 1280x720 @10 10.1,
+1920x1080 @15 5.7. With SLAM replay running: 1024x768 @15 9.9, 1280x720 @10 8.3, 1280x720 @5 5.0 (EKF then
+misses its update deadline, 8 to 26 times in 65 s against 0). Commands and numbers: `docs/test_log.md`.
+Foxglove must use `/image_raw/compressed`, not `/image_raw`.
 
 ## `goals.yaml` (P8)
 

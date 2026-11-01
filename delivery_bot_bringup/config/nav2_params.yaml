@@ -1,7 +1,7 @@
 # Derived from the ROS 2 Jazzy nav2_bringup default nav2_params.yaml
 # (downloaded 2026-10-22), then edited for this robot:
 #   * robot_base_frame -> base_footprint, odom -> /odometry/filtered
-#   * robot_radius 0.10 (MEASURE placeholder), inflation 0.25
+#   * robot_radius 0.12 (measured 2026-10-31, approx), inflation 0.25
 #   * controller 10 Hz, RPP replacing MPPI, 0.15 m/s cap, 10 cm goal tolerance
 #   * velocity smoother clamped to the same envelope
 #   * Collision Monitor: 0.20 m x +-35 deg stop wedge on /scan
@@ -97,7 +97,7 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
-      robot_radius: 0.10
+      robot_radius: 0.12
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
@@ -135,7 +135,7 @@ global_costmap:
       publish_frequency: 1.0
       global_frame: map
       robot_base_frame: base_footprint
-      robot_radius: 0.10
+      robot_radius: 0.12
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
