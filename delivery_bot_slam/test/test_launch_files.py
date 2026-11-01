@@ -12,7 +12,7 @@ import pytest
 LAUNCH_DIRS = [Path(get_package_share_directory(p)) / 'launch'
                for p in ('delivery_bot_bringup', 'delivery_bot_slam')]
 LAUNCH_FILES = sorted(f for d in LAUNCH_DIRS for f in d.glob('*.launch.py'))
-STUBS = {'navigation.launch.py', 'explore.launch.py'}
+STUBS = {'explore.launch.py'}
 REPLAY = LAUNCH_DIRS[1] / 'slam_replay.launch.py'
 
 
@@ -44,7 +44,7 @@ def test_launch_file_loads(path) -> None:
     assert isinstance(generate(path), launch.LaunchDescription)
 
 
-@pytest.mark.xfail(strict=True, reason='stub, build path 6.2/8.3')
+@pytest.mark.xfail(strict=True, reason='stub, build path 8.3')
 @pytest.mark.parametrize('name', sorted(STUBS))
 def test_stub_launch_files_are_filled_in(name) -> None:
     # Fails while the file is empty. When someone fills one in this XPASSes, which

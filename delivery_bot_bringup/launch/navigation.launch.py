@@ -24,11 +24,63 @@ healthy, and publishes no /map, no map -> odom and no error. Pass
 `use_lifecycle_manager: false` and forward `use_sim_time` to the slam_toolbox node.
 Background: docs/slam.md §3.1.
 
+Status: base + slam_toolbox localisation only (build path 6.2); Nav2 is added in
+stage 7/8 when motor_node exists.
+
 Build path: task 6.2 in docs/slam_build_path.md
 """
 
+import os
+
+import launch
+import lifecycle_msgs.msg
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import (DeclareLaunchArgument, EmitEvent,
+                            IncludeLaunchDescription, RegisterEventHandler,
+                            TimerAction)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import LifecycleNode
+from launch_ros.event_handlers import OnStateTransition
+from launch_ros.events.lifecycle import ChangeState
 
 
 def generate_launch_description() -> LaunchDescription:
-    return LaunchDescription([])
+    bringup = get_package_share_directory('delivery_bot_bringup')
+    use_sim_time = LaunchConfiguration('use_sim_time')
+
+    slam = LifecycleNode(
+        package='slam_toolbox', executable='localization_slam_toolbox_node',
+        name='slam_toolbox', namespace='', output='screen',
+        parameters=[
+            os.path.join(bringup, 'config', 'slam_localization.yaml'),
+            {'use_lifecycle_manager': False, 'use_sim_time': use_sim_time,
+             'map_file_name': LaunchConfiguration('map'),
+             # the graph's first pose is the taped home mark
+             'map_start_at_dock': True}])
+    configure = EmitEvent(event=ChangeState(
+        lifecycle_node_matcher=launch.events.matches_action(slam),
+        transition_id=lifecycle_msgs.msg.Transition.TRANSITION_CONFIGURE))
+    activate = RegisterEventHandler(OnStateTransition(
+        target_lifecycle_node=slam, start_state='configuring',
+        goal_state='inactive',
+        entities=[EmitEvent(event=ChangeState(
+            lifecycle_node_matcher=launch.events.matches_action(slam),
+            transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVATE))]))
+
+    return LaunchDescription([
+        DeclareLaunchArgument('use_sim_time', default_value='false'),
+        DeclareLaunchArgument('include_base', default_value='true'),
+        DeclareLaunchArgument('map', default_value=os.path.expanduser(
+            '~/maps/2026-10-31_room2_graph')),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(bringup, 'launch', 'base.launch.py')),
+            launch_arguments={'use_sim_time': use_sim_time}.items(),
+            condition=launch.conditions.IfCondition(
+                LaunchConfiguration('include_base'))),
+        slam, activate,
+        # configure is not retried if sent before the lifecycle services exist
+        TimerAction(period=5.0, actions=[configure]),
+    ])
