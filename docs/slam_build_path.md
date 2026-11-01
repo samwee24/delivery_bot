@@ -61,7 +61,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 **Stage 6: Localisation on the saved map**
 
 - [ ] [6.1 Mapping versus localisation](#61-mapping-versus-localisation)
-- [ ] [6.2 Run localisation](#62-run-localisation)
+- [x] [6.2 Run localisation](#62-run-localisation)
 - [ ] [6.3 Set the start pose from Foxglove](#63-set-the-start-pose-from-foxglove)
 - [ ] [6.4 Wrong-start test](#64-wrong-start-test)
 

@@ -5,6 +5,18 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-01 · base/mapping/localisation launch files, 6.2 localisation on the room graph
+
+**Launch files.** `base.launch.py` now starts the whole base stack (robot_state_publisher, lidar, rf2o with `publish_tf: false` 2 s late, covariance relay, `imu_node`, EKF, foxglove_bridge); `mapping.launch.py` ran live from one command (slam_toolbox active, `map -> odom`, a 241 x 112 map saved) and a bug turned up and was fixed: configure is now sent 5 s after start, otherwise it fails when `include_base:=false`. `navigation.launch.py` is base + `localization_slam_toolbox_node` on `~/maps/2026-10-31_room2_graph`, no Nav2 yet. The start pose is `map_start_pose: [0, 0, 0]`: `map_start_at_dock` is rejected in localisation mode.
+
+**6.2 localisation.** With the robot placed by eye near the lost home mark, live `/scan` points sit on the walls and furniture of the saved map in Foxglove (display frame `map`). `tf2_echo map base_footprint` read x 0.01, y 0.03, yaw -0.034 rad after turning the robot by hand to about 0 deg: the old home pose (0, 0, 0 in `goals.yaml`) is still right. The original tape had been removed; a new mark is taped at that spot, so the map and `goals.yaml` do not change.
+
+**Housekeeping.** Pi bags (115 MB) and maps (26 MB) backed up to `bags/` on the Mac. `main` protected: `build-and-test` required. EKF 20 Hz: loop closure 0.115 m against 0.109 m, late-update count confounded (log). Orphan `ros2 launch` children survive SIGINT from a non-interactive script and give double lidar/IMU nodes: stop with SIGTERM and pkill the children. The repo is public, not private as AGENTS.md says.
+
+**Next.** 6.3 (pose estimate) and 6.4 (wrong-start test), then `base.launch.py` `dry_run` once `motor_node` exists. The 5.3 bag half was not shown (rig failed twice; `slam_replay` covers bag mapping).
+
+---
+
 ## 2026-10-31 (night) · camera quality raised to 1280x720 at 10 fps
 
 **Under SLAM load.** Same camera settings with `slam_replay` running on the room bag (commands and numbers in `docs/test_log.md`). slam_toolbox kept up in every run (0 dropped scans) but the camera falls short of its rate and the EKF starts missing its update deadline (0 late updates in 65 s without the camera, 8 to 26 with it). Delivered: 1280x720 @10 gives 8.3 Hz, 1024x768 @15 gives 9.9 Hz, 640x480 @30 gives 21 Hz, 1280x720 @5 gives its full 5.0 Hz. One run each, so the EKF counts are not a ranking. Map quality was not compared. Left at 1280x720 @10 for viewing; while mapping or replaying, either switch the camera off or use 1024x768 @15.
