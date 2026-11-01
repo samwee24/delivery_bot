@@ -12,7 +12,7 @@ import pytest
 LAUNCH_DIRS = [Path(get_package_share_directory(p)) / 'launch'
                for p in ('delivery_bot_bringup', 'delivery_bot_slam')]
 LAUNCH_FILES = sorted(f for d in LAUNCH_DIRS for f in d.glob('*.launch.py'))
-STUBS = {'base.launch.py', 'navigation.launch.py', 'explore.launch.py'}
+STUBS = {'navigation.launch.py', 'explore.launch.py'}
 REPLAY = LAUNCH_DIRS[1] / 'slam_replay.launch.py'
 
 
@@ -44,7 +44,7 @@ def test_launch_file_loads(path) -> None:
     assert isinstance(generate(path), launch.LaunchDescription)
 
 
-@pytest.mark.xfail(strict=True, reason='stub, build path 5.3/6.2/8.3')
+@pytest.mark.xfail(strict=True, reason='stub, build path 6.2/8.3')
 @pytest.mark.parametrize('name', sorted(STUBS))
 def test_stub_launch_files_are_filled_in(name) -> None:
     # Fails while the file is empty. When someone fills one in this XPASSes, which
@@ -72,3 +72,10 @@ def test_replay_rf2o_does_not_publish_tf() -> None:
     m = re.search(r"executable='rf2o_laser_odometry_node'.*?'publish_tf':\s*(\w+)",
                   REPLAY.read_text(), re.S)
     assert m and m.group(1) == 'False'
+
+
+def test_base_owns_odom_tf_once_and_rf2o_does_not() -> None:
+    found = nodes(generate(LAUNCH_DIRS[0] / 'base.launch.py'))
+    assert sum(n.node_package == 'robot_localization' for n in found) == 1
+    assert {'robot_state_publisher', 'imu_node', 'odom_covariance_relay',
+            'foxglove_bridge'} <= {n.node_executable for n in found}

@@ -33,7 +33,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 **Stage 2: The robot's frames**
 
 - [x] [2.1 Measure the robot](#21-measure-the-robot)
-- [ ] [2.2 Write the URDF](#22-write-the-urdf)
+- [x] [2.2 Write the URDF](#22-write-the-urdf)
 
 **Stage 3: Odometry from scans: rf2o**
 
