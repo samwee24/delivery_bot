@@ -63,7 +63,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 - [ ] [6.1 Mapping versus localisation](#61-mapping-versus-localisation)
 - [x] [6.2 Run localisation](#62-run-localisation)
 - [x] [6.3 Set the start pose from Foxglove](#63-set-the-start-pose-from-foxglove)
-- [ ] [6.4 Wrong-start test](#64-wrong-start-test)
+- [x] [6.4 Wrong-start test](#64-wrong-start-test)
 
 **Stage 7: Your Foxglove SLAM workspace**
 
