@@ -67,7 +67,7 @@ The CA3 brief's other machine, `robot` @ `100.73.7.24` (Debian 13), has been
 | --- | --- |
 | P0 Setup | **essentially done** (2026-10-22): apt stack, 2 GB swapfile (persisted in `/etc/fstab`), `dialout`, udev rule written, D5 stack installed, `rf2o` built and verified. **Resolved 2026-10-30:** `/dev/rplidar` symlink exists, `i2c-tools` installed, MPU6050 answers at 0x68. **Still open:** no venv |
 | P1 Bring-up | lidar verified on this Pi (A1M8, 7.05 Hz, 26–29 % no-echo, gaps follow the room not the lidar); IMU node written and checked at rest (100 Hz, gyro z std 0.00175 rad/s); motors never driven by us; **robot built 2026-10-31**, lidar and IMU mounting measured into the URDF; gyro reads a hand-turned 360° as 360.2° |
-| P3–P5 (SLAM side) | rf2o hand tests done (−2 % turn, −3.8 % push); variances fitted; **first room map saved** (`results/maps/2026-10-31_room2.png`); 5.5 tuning sweep pending |
+| P3–P5 (SLAM side) | rf2o hand tests done (−2 % turn, −3.8 % push); variances fitted; **first room map saved** (`results/maps/2026-10-31_room2.png`); 5.5 sweep done and `slam_mapping.yaml` frozen; USB camera streams to Foxglove (1280x720 at 10 fps) |
 | P2, P6–P8 | not started (motors are the teammate's) |
 
 Known blockers live in [`docs/CA3.md`](docs/CA3.md) as OI-1…OI-5. The live one is
@@ -76,11 +76,11 @@ scans degrade `slam_toolbox` and rf2o alike.
 
 ## Next actions, in order
 
-*2026-10-31 update:* items 1–3 below are done (see `docs/test_log.md`); the robot is built and the hand-push SLAM steps (3.2, 4.4, 5.4) are done. Next: 5.5 sweep and freeze, then stage 6 localisation on `~/maps/2026-10-31_room2_graph`; motor-driven work waits on the teammate. Build path progress (stages 0–9) is in
+*2026-10-31 update:* items 1–3 below are done (see `docs/test_log.md`); the robot is built and the hand-push SLAM steps (3.2, 4.4, 5.4) are done. 5.5 sweep is done and the config frozen. Next: stage 6 localisation on `~/maps/2026-10-31_room2_graph`; motor-driven work waits on the teammate. Build path progress (stages 0–9) is in
 `docs/slam_build_path.md`; the SLAM software that can run without the robot is written
 and replay-tested (rf2o, covariance relay, mapping and replay launches, trajectory
 recorder, imu_node, explore_lite built). Waiting on the robot: 2.1 measurements, 3.2/3.3
-spin and push tests, 4.4 variances, 5.4 room map, 5.5 tuning sweep, stages 6, 8.4, 9.
+stages 6, 8.4, 9, plus 3.3 failure tests and 4.5 fusion comparison.
 
 0. ~~P0 install + rf2o build~~ — **done 2026-10-22**: apt stack in, 2 GB swapfile
    (persisted in `/etc/fstab`), D5 packages installed, `rf2o_laser_odometry` built

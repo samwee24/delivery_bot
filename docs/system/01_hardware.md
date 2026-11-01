@@ -14,7 +14,7 @@ short form plus everything we have **measured** on the real robot.
 | L298N motor driver | 2 ch, ENA/IN1/IN2 left, ENB/IN3/IN4 right | PWM from GPIO |
 | 2WD chassis, TT motors, 65 mm wheels | ~1:48 gearing | differential drive |
 | Separate motor battery | 2×18650 (7.4 V) + switch, ground shared with the Pi | keeps motor noise off the Pi |
-| USB webcam | UVC | unused in v1 |
+| UGREEN camera 2K | USB `1bcf:2284`, `/dev/video0`, MJPG up to 2592x1520, `robot` in `video` | live view in Foxglove only, not used by SLAM; config in `camera.yaml` |
 
 ## Power
 

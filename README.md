@@ -115,10 +115,14 @@ ros2 run delivery_bot_mission scan_stats
 
 ## Foxglove
 
-Connect to `ws://<pi-ip>:8765` (Jazzy + `foxglove_bridge`). Panels: 2D/3D plot for
+Connect to `ws://100.83.14.99:8765` (Tailscale: works on any network; the LAN address `192.168.31.109` only works on the Pi's own Wi-Fi) (Jazzy + `foxglove_bridge`). Panels: 2D/3D plot for
 `/scan`, `/odometry/filtered`, `/map`; Publish for goals; Timeline for bag replay.
 The bridge holds port 8765 between runs — `sudo fuser -k 8765/tcp` if a relaunch
 refuses to bind.
+The camera is `ros2 launch delivery_bot_bringup camera.launch.py`; show `/image_raw/compressed`, and
+hide the raw topic by starting the bridge with
+`ros2 run foxglove_bridge foxglove_bridge --ros-args -p 'topic_whitelist:=["^(?!/image_raw$)(?!/image_raw/(zstd|theora|compressedDepth)).*"]'`.
+The lidar, camera and bridge do not restart after a reboot, and the camera takes a full core: leave it off during mapping.
 
 ## Safety
 
