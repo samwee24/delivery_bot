@@ -1,4 +1,5 @@
-"""Delivery mission: named goals, then home.
+"""
+Delivery mission: named goals, then home.
 
 Usage:
 
@@ -15,8 +16,6 @@ coordinate in it.
 """
 
 from __future__ import annotations
-
-import rclpy
 
 
 def _goal_to_pose(navigator, goal: dict):

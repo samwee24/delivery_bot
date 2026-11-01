@@ -1,4 +1,5 @@
-"""Relay that gives rf2o's odometry a twist covariance the EKF can trust.
+"""
+Relay that gives rf2o's odometry a twist covariance the EKF can trust.
 
 Why this exists
 ---------------
@@ -6,9 +7,9 @@ The pinned rf2o (deps.repos, commit b38c68e) fills ``pose`` and ``twist`` but
 never writes ``twist.covariance``, so all 36 entries stay zero.
 robot_localization (Jazzy) replaces every zero measurement variance with 1e-9,
 so rf2o's yaw rate arrives at the filter looking almost perfect. The MPU6050's
-yaw rate carries a variance of 1e-4 (fitted 2026-10-31; 4e-4 was the brief default) -- five orders of magnitude
-larger -- so the EKF effectively ignores the gyro and follows scan-matching
-noise instead. This node rewrites the twist covariance to measured values and
+yaw rate carries a variance of 1e-4 (fitted 2026-10-31; 4e-4 was the brief default)
+-- five orders of magnitude larger -- so the EKF effectively ignores the gyro and
+follows scan-matching noise instead. This node rewrites the twist covariance to measured values and
 republishes the message otherwise unchanged.
 
 Contract
@@ -76,8 +77,8 @@ Build path: task 4.3 in docs/slam_build_path.md
 
 from __future__ import annotations
 
-import rclpy
 from nav_msgs.msg import Odometry
+import rclpy
 from rclpy.node import Node
 
 

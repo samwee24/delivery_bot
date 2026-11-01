@@ -2,7 +2,9 @@ name: CI
 
 # What this can and cannot prove:
 #   can:  the four packages build against Jazzy, the URDF is valid xacro, every
-#         YAML config parses, lint tests pass.
+#         YAML config parses, flake8 and pep257 pass on delivery_bot_slam,
+#         delivery_bot_drivers and delivery_bot_mission (description and bringup
+#         have no lint tests).
 #   cannot: lidar rate, IMU noise, motor direction, TF at runtime — those need
 #         the Pi and are recorded by hand in docs/test_log.md.
 #

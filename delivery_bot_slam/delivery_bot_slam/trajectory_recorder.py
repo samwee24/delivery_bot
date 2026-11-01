@@ -1,4 +1,5 @@
-"""Records two trajectories for SLAM evaluation, as Path topics and TUM files.
+"""
+Records two trajectories for SLAM evaluation, as Path topics and TUM files.
 
 ``/slam/path`` is built from TF ``map -> base_footprint``: it is what SLAM
 believes the robot did, including loop closures, so it can be compared with
@@ -50,7 +51,7 @@ TUM output
     frame. Files are written once per process; a second shutdown must not
     overwrite them.
 
-Parameters
+Node parameters
     ``tum_output_dir``    default ``""`` = write nothing.
     ``map_frame``         default ``map``.
     ``base_frame``        default ``base_footprint``.
@@ -64,7 +65,7 @@ Parameters
     every value is a property of how the trajectory is consumed rather than of
     the robot.
 
-    Example:
+    For example:
 
         ros2 run delivery_bot_slam trajectory_recorder --ros-args \
           -p tum_output_dir:=$HOME/ros2_ws/evidence/slam_2026-10-23
@@ -104,13 +105,13 @@ Build path: task 7.1 in docs/slam_build_path.md
 
 from __future__ import annotations
 
+from datetime import datetime
 import math
 import os
-from datetime import datetime
 
-import rclpy
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry, Path
+import rclpy
 from rclpy.node import Node
 from rclpy.time import Time
 from tf2_ros import Buffer, TransformException, TransformListener
@@ -124,7 +125,7 @@ def _yaw(p) -> float:
 
 
 def normalise(q):
-    """Unit quaternion, or None if the norm says the message is broken."""
+    """Return the unit quaternion, or None if the norm says the message is broken."""
     n = math.sqrt(sum(c * c for c in q))
     return None if n < 1e-9 else tuple(c / n for c in q)
 

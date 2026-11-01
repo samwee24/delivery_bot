@@ -1,4 +1,5 @@
-"""Save the robot's current map pose under a name in goals.yaml.
+"""
+Save the robot's current map pose under a name in goals.yaml.
 
 Run it while the robot is where you want the goal, and the map is already up
 (localization or mapping mode both publish map -> base_footprint):
@@ -14,7 +15,6 @@ existing file beyond the top-level dict order.
 
 from __future__ import annotations
 
-import rclpy
 from rclpy.node import Node
 
 
