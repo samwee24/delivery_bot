@@ -53,9 +53,9 @@ measure before P6; until then P3–P8 numbers are not comparable to the plan's.
 
 | Parameter | Symbol | Value | How measured |
 | --- | --- | --- | --- |
-| Wheel base | `wheel_base_m` | MEASURE | left tyre centre → right tyre centre |
+| Wheel base | `wheel_base_m` | 0.156, measured 2026-10-31 | left tyre centre → right tyre centre |
 | Wheel diameter | `wheel_diameter_m` | MEASURE | nominal 65 mm |
-| Robot radius | `robot_radius_m` | MEASURE | centre → farthest point |
+| Robot radius | `robot_radius_m` | ~0.12, measured 2026-10-31 (approx) | centre → farthest point |
 | Lidar offset | `lidar.offset_xy_m` | MEASURE | lidar centre → wheel midpoint, x forward / y left |
 | Lidar yaw offset | `lidar.yaw_offset_deg` | MEASURE | box at 50 cm test |
 | Self-occlusion | `lidar.mask_deg` | candidate `[[230, 250]]` | 0.23 m returns at raw 230–250° on the old Pi |

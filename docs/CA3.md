@@ -25,17 +25,17 @@ kernel `6.8.0-1065-raspi`, Python 3.12.
 | D3 | **Foxglove Studio for live visualisation** | 2026-10-22 | The plan's ZeroMQ telemetry + `tools/viewer.py` is replaced by ROS 2 topics + `foxglove_bridge` |
 | D4 | Keep the pure-Python maths stack | 2026-10-22 | EKF, A\*, pure pursuit and the occupancy grid stay as numpy modules, run inside ROS nodes — not bought from Nav2 in v1. **Superseded by D5.** |
 | D5 | **`rf2o_laser_odometry` → `robot_localization` EKF replaces KISS-ICP + our own filter** | 2026-10-22 | Range-flow odometry is a better fit for a sparse 2D scan than ICP, and it outputs velocity, which is what the EKF wants. Cost: P3/P4 now measure `robot_localization` tuning, not code we wrote; drift behaviour is unchanged because there is still no absolute position input. `rf2o` runs with `publish_tf: false` — the EKF alone owns `odom → base_footprint`. |
-| D6 | **Code lives in `~/ros2_ws/src/delivery_bot`** (git, commit `9e2fd2e`), not in this folder | 2026-10-22 | Packages: `bringup`, `description`, `drivers`, `mission`. Third-party `rf2o` is cloned alongside, outside the repo, pinned by branch/commit. This folder remains the documentation and evidence home. |
-| D5 | **Standard ROS 2 package stack** in v1 — `rplidar_ros`, `rf2o_laser_odometry`, `robot_localization`, `slam_toolbox`, Nav2 | 2026-10-22 | Supersedes D4's own-maths scope (brief permits packages); `kiss-icp` dropped. We write only: motor node, IMU node, URDF, Simple Commander delivery script. Own maths documented as fallback — see [system/07_ros_stack.md](system/07_ros_stack.md) and the 2026-10-22 D5 entry in [notes.md](../notes/notes.md) |
+| D6 | **Code lives in `~/ros2_ws/src/delivery_bot`** (git) | 2026-10-22 | Originally kept apart from this folder; since merged: this repo holds code, docs and evidence, and is cloned on the Pi at that path. Packages: `bringup`, `description`, `drivers`, `mission`, `slam`. Third-party `rf2o` is pinned in `deps.repos`, outside the repo. |
+| D7 | **Standard ROS 2 package stack** in v1 — `rplidar_ros`, `rf2o_laser_odometry`, `robot_localization`, `slam_toolbox`, Nav2 | 2026-10-22 | Supersedes D4's own-maths scope (brief permits packages); `kiss-icp` dropped. We write only: motor node, IMU node, URDF, Simple Commander delivery script. Own maths documented as fallback — see [system/07_ros_stack.md](system/07_ros_stack.md) and the 2026-10-22 D5 entry in [notes.md](../notes/notes.md) |
 
-What this costs: no venv exists yet, `pip` is not installed, `robot` is not in
-`dialout`, there is no udev rule, and the `rplidar` Python module is absent.
+What this cost at the start, all resolved since: no `dialout` (fixed), no udev rule (`/dev/rplidar` exists, 2026-10-30), no `i2c-tools` (installed). No venv and no `pip`: still absent, because the apt stack (D1, D7) covers the dependencies.
+
 
 ## Status
 
 | Phase | What it proves | Status |
 | --- | --- | --- |
-| **P0 Setup** | Python env, serial access, I2C, GPIO | **In progress** — see [docs/02_pi_setup.md](system/02_pi_setup.md) |
+| **P0 Setup** | Python env, serial access, I2C, GPIO | **Essentially done** (2026-10-22; `/dev/rplidar` and I2C resolved 2026-10-30) — only the venv is open, see [system/02_pi_setup.md](system/02_pi_setup.md) |
 | **P1 Bring-up** | Motors both ways, gyro calibrated, lidar plot | **Partial** — lidar verified on this Pi (7.05 Hz, 26–29 % no-echo, follows the room: OI-4 not a driver fault, mask not needed on this evidence); IMU checked at rest (2026-10-30) and on the built robot (2026-10-31, gyro 360.2° for a true 360°); robot built, mounting measured into the URDF (2026-10-31); motors untouched by us |
 | **P2 Teleop + logging** | 2-minute drive replays on the laptop | Not started |
 | **P3 Lidar odometry** | `rf2o`: 1 m square closes within 10 cm | **Partial** (2026-10-31, by hand) — full turn read 352.9° for a true 360° (−2 %), 1 m push read 0.962 m (−3.8 %); no square yet |
@@ -51,9 +51,9 @@ What this costs: no venv exists yet, `pip` is not installed, `robot` is not in
 | --- | --- | --- | --- |
 | OI-1 | `robot` @ `100.73.7.24` offline since 2026-10-21 | Everything from the brief (venv, `~/delivery-bot`, udev rule) is unreachable | Confirm whether that box is retired or just off |
 | OI-2 | `raspberrypi` @ `100.98.163.85` online, same Debian build, key rejected | Unknown whether it is the same machine reflashed | `ssh-copy-id` if needed |
-| OI-3 | `sherm-raspi` has no venv, no `pip`, no udev rule, user not in `dialout` | Cannot read `/dev/ttyUSB0` as `robot` | [docs/02_pi_setup.md](system/02_pi_setup.md) to-do list |
-| OI-4 | Lidar returns a distance for only **33–35 %** of pings | Sparse scans; mapping quality at risk | [docs/03_bringup.md](system/03_bringup.md) and the 50 cm white-box test |
-| OI-5 | Unit is 0.23 m from the robot's own structure at raw 230–250° | Self-occlusion | Goes in `mask_deg` once the unit is re-mounted |
+| OI-3 | ~~`sherm-raspi` has no udev rule, user not in `dialout`~~ **Resolved 2026-10-30**: `dialout` active, `/dev/rplidar` exists. No venv by choice (apt stack) | — | [system/02_pi_setup.md](system/02_pi_setup.md) |
+| OI-4 | Lidar returns a distance for only **33–35 %** of pings | **Mitigated**: 26–29 % no-echo on this Pi, gaps follow the room not the lidar (not a driver fault); the first map was made despite it. The echo rate itself is unexplained | [system/03_bringup.md](system/03_bringup.md) |
+| OI-5 | ~~Unit is 0.23 m from the robot's own structure at raw 230–250°~~ **Resolved 2026-10-31**: robot built, lidar re-mounted and measured into the URDF; mask not needed on this evidence | — | — |
 
 ## Layout
 

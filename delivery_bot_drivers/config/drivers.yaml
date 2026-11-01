@@ -12,7 +12,7 @@ motor_node:
     in3_pin: 20          # right direction A
     in4_pin: 21          # right direction B
     pwm_hz: 1000
-    wheel_base: 0.13     # MEASURE  left tyre centre -> right tyre centre
+    wheel_base: 0.156    # measured 2026-10-31, left-right wheel centres (URDF)
     max_duty: 0.85       # never above this, whatever the controller asks
     dead_zone_left: 0.35   # calibrate (phase 3)
     dead_zone_right: 0.35  # calibrate (phase 3)

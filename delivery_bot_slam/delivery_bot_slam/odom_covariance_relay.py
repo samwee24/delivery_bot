@@ -6,7 +6,7 @@ The pinned rf2o (deps.repos, commit b38c68e) fills ``pose`` and ``twist`` but
 never writes ``twist.covariance``, so all 36 entries stay zero.
 robot_localization (Jazzy) replaces every zero measurement variance with 1e-9,
 so rf2o's yaw rate arrives at the filter looking almost perfect. The MPU6050's
-yaw rate carries a variance of 4e-4 -- five and a half orders of magnitude
+yaw rate carries a variance of 1e-4 (fitted 2026-10-31; 4e-4 was the brief default) -- five orders of magnitude
 larger -- so the EKF effectively ignores the gyro and follows scan-matching
 noise instead. This node rewrites the twist covariance to measured values and
 republishes the message otherwise unchanged.

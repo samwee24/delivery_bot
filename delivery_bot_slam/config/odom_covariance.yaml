@@ -2,7 +2,7 @@
 # odom_covariance_relay: rewrite rf2o's empty twist covariance so the EKF can
 # use it. rf2o (b38c68e) leaves twist.covariance at zero, and
 # robot_localization turns a zero measurement variance into 1e-9, which makes
-# the scan-matching yaw rate look perfect and drowns the IMU's 4e-4.
+# the scan-matching yaw rate look perfect and drowns the IMU's 1e-4 (fitted; 4e-4 was the brief default).
 #
 # twist.covariance is row-major 6x6: index 0 is vx, index 35 is vyaw.
 # Everything else is 1e3, meaning "unknown, do not fuse".

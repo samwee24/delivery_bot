@@ -18,7 +18,7 @@
 
 ekf_filter_node:
   ros__parameters:
-    frequency: 30.0
+    frequency: 20.0   # was 30; "Failed to meet update rate" under camera load
     two_d_mode: true
     publish_tf: true
     map_frame: map

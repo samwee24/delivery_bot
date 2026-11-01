@@ -76,7 +76,7 @@ plan — just inside `robot_localization` instead of our own filter.
 
 | Parameter | Placeholder | Filled in by |
 | --- | --- | --- |
-| `wheel_base` | 0.13 | tape measure |
+| `wheel_base` | 0.156 (measured 2026-10-31) | tape measure |
 | `dead_zone_left/right` | 0.35 | P6 calibration |
 | `gain_left/right` | 2.0 duty per m/s | P6 calibration |
 | `gyro_scale_z` | 1.0 | 5-spin test |

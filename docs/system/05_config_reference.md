@@ -22,9 +22,9 @@ it is actually measured.
 ## `robot.yaml`
 
 ```yaml
-wheel_base_m: 0.13          # MEASURE  left→right tyre centre
+wheel_base_m: 0.156         # measured 2026-10-31  left→right wheel centre
 wheel_diameter_m: 0.065     # MEASURE  nominal 65 mm
-robot_radius_m: 0.10        # MEASURE  centre→farthest point; sets map inflation
+robot_radius_m: 0.12        # measured 2026-10-31 (approx)  centre→farthest point; sets map inflation
 lidar:
   port: /dev/rplidar        # udev alias, not the raw /dev/ttyUSB0
   model: A1M8
