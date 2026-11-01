@@ -77,6 +77,9 @@ jobs:
       - name: Test
         run: |
           source /opt/ros/jazzy/setup.bash
+          # The config and launch tests look up other packages' share directories, and
+          # colcon test alone does not put them on AMENT_PREFIX_PATH.
+          source "$HOME/ws/install/setup.bash"
           cd "$HOME/ws"
           # multirobot_map_merge is never built (see above), so it cannot be tested.
           # explore_lite is pinned third-party code: its own flake8/uncrustify/xmllint

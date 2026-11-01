@@ -87,6 +87,7 @@ def test_logs_once_and_keeps_publishing(relay) -> None:
     calls = []
 
     class Logger:
+
         def warn(self, text):
             calls.append(('warn', text))
 
@@ -109,6 +110,7 @@ def test_nonzero_input_logs_info_not_warn(relay) -> None:
     kinds = []
 
     class Logger:
+
         def warn(self, text):
             kinds.append('warn')
 

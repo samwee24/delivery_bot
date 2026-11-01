@@ -25,6 +25,7 @@ def make_node(monkeypatch):
         state = SimpleNamespace(who=who, gyro=gyro, accel=accel, reads=0, fail=False)
 
         class FakeBus:
+
             def __init__(self, bus):
                 pass
 
