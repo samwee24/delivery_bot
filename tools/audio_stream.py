@@ -5,14 +5,15 @@ Listen anywhere: vlc http://100.83.14.99:8090/audio.mp3
                  ffplay -nodisp http://100.83.14.99:8090/audio.mp3
                  or open the URL in a browser (expect 2-5 s of buffering)
 
-Picture and sound in one stream:  python3 tools/audio_stream.py --video [--size 1920x1080] [--fps 30]
+Picture and sound in one stream:  python3 tools/audio_stream.py --video [--size 1280x720] [--fps 30]
     vlc http://100.83.14.99:8090/stream.mkv    (VLC or ffplay; browsers do not play MJPEG in Matroska)
     The camera's MJPEG frames are copied, not re-encoded, so it costs little CPU; the network is the
     limit. Measured video data rate on 2026-11-02: 1280x720 15 fps 17 Mbit/s, 30 fps 33; 1920x1080
     15 fps 32, 30 fps 64; 2560x1440 15 fps 55, 30 fps 111. Received on the Mac over Tailscale (direct,
     7 ms): 1080p 15 fps 32.6, 720p 30 fps 32.9 (both keep up); 1080p 20 fps 38.2 of 42 needed, 1080p
-    24/30 fps stuck at 31: the link tops out near 33-38 Mbit/s, so the default is 1080p at 15 fps;
-    use `--size 1280x720 --fps 30` for smoother motion. The mic is stereo, native 16 kHz. It opens
+    24/30 fps stuck at 31: the link tops out near 33-38 Mbit/s. A later 60 s pull at 1080p 15 fps
+    got only 8 frames per second through, so the default is 1280x720 at 30 fps; 1080p is
+    `--size 1920x1080 --fps 15` and may stutter. The mic is stereo, native 16 kHz. It opens
     /dev/video0, so the ROS camera node (camera.launch.py) must not be running, and it needs
     the microphone, so the audio-only mode must not be running either.
 
@@ -37,7 +38,7 @@ def opt(name: str, default: str) -> str:
     return sys.argv[sys.argv.index(name) + 1] if name in sys.argv else default
 
 
-SIZE, FPS = opt('--size', '1920x1080'), opt('--fps', '15')  # the highest the Pi's link carries
+SIZE, FPS = opt('--size', '1280x720'), opt('--fps', '30')
 HEAD = ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-fflags', 'nobuffer']
 if VIDEO:
     PATH, TYPE = '/stream.mkv', 'video/x-matroska'
