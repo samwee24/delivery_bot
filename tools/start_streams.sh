@@ -1,5 +1,7 @@
 #!/bin/bash
 # Start streams on the Pi. Safe to rerun: anything already running is left alone.
+#   Both modes also start the Foxglove bridge and tools/stream_control.py, which gives Foxglove
+#   Call Service buttons /stream/start and /stream/stop for the combined stream.
 #   bash tools/start_streams.sh        ROS camera + Foxglove bridge + audio only
 #       video  Foxglove ws://100.83.14.99:8765, Image panel on /image_raw/compressed
 #       audio  http://100.83.14.99:8090/audio.mp3 (browser or VLC)
@@ -8,6 +10,8 @@
 # The two modes share the camera and the mic, so switching stops the other one's processes.
 source /opt/ros/jazzy/setup.bash; source ~/ros2_ws/install/setup.bash
 R=~/ros2_ws/src/delivery_bot
+if ! pgrep -f "[f]oxglove_bridge" > /dev/null; then setsid nohup ros2 run foxglove_bridge foxglove_bridge --ros-args -p 'topic_whitelist:=["^(?!/image_raw$)(?!/image_raw/(zstd|theora|compressedDepth)).*"]' > /tmp/fox.log 2>&1 < /dev/null & fi
+if ! pgrep -f "[s]tream_control.py" > /dev/null; then setsid nohup python3 $R/tools/stream_control.py > /tmp/ctl.log 2>&1 < /dev/null & fi
 if [ "$1" = av ]; then
   pkill -f "[u]sb_cam_node_exe"; pkill -f "[a]udio_stream.py$"; sleep 2
   if ! pgrep -f "[a]udio_stream.py --video" > /dev/null; then setsid nohup python3 $R/tools/audio_stream.py --video > /tmp/audio.log 2>&1 < /dev/null & fi
