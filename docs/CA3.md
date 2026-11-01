@@ -76,7 +76,8 @@ docs/system/             reference, kept true in place
   07_ros_stack.md        standard package stack + Foxglove plan (D5, supersedes D4)
 docs/wiring.md           pin map and power, short form
 docs/pi_setup.md         from-scratch install; system/02 is the measured state
-tools/                   probe_echo_rate.py, test_lidar.py — mirrors of the Pi copies
+tools/                   probe_echo_rate.py, test_lidar.py — mirrors of the Pi copies;
+                         robot_control.py (Foxglove buttons), streams/, analysis/
 evidence/                append-only artefacts, dated filenames
   lidar/  imu/  motors/
 results/                 experiment outcomes: metrics, logs, maps

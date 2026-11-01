@@ -5,6 +5,18 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-02 · Foxglove buttons for every routine hand-test action
+
+**Added (Mac, not yet run on the Pi).** `tools/robot_control.py` (replaces `stream_control.py`): Call Service buttons `/stack/base`, `/stack/mapping`, `/stack/localisation`, `/stack/stop`, `/camera/start|stop`, `/stream/start|stop`, `/bag/start|stop` (parameters `bag_label`, `bag_topics`), `/control/status`, `/pi/shutdown|reboot` (SetBool, refused unless `data: true`). Each command runs in its own process group and stops with SIGINT, SIGTERM, SIGKILL; stray stack processes started by hand are killed before a stack starts. `bridge:=false` added to `base`, `mapping` and `navigation` launch files so the runner owns the one Foxglove bridge. `/imu_node/recalibrate` (`imu_node.py`) and `/run/save` (`delivery_bot_slam/run_save.py`, started by `mapping.launch.py`) written, with a unit test each. `tools/robot-control.service` starts the runner at boot.
+
+**Moved.** `stream_control.py`, `start_streams.sh`, `audio_stream.py`, `lidar_off.py` to `tools/streams/`; `inf_histogram.py` to `tools/analysis/`. After `git pull` on the Pi, rerun `bash tools/streams/start_streams.sh`.
+
+**Checked.** Files compile; bag-name logic and the group kill ran against a stubbed `rclpy` on the Mac. pytest and ROS were not available on the Mac, so the new unit tests have not run. Nothing was run on the Pi: no number here is a measured result.
+
+**Next.** On the Pi: `git pull`, `colcon build`, then test `/imu_node/recalibrate` (robot still passes, nudged must fail) and `/run/save` during mapping, then the six checks in the task brief (`/stack/mapping` twice gives one lidar driver, one EKF, one bridge; hand-started processes killed as strays; `/stack/stop` leaves none; bag holds `/marker` and `/odometry/filtered`; camera returns after the stream; shutdown refused without `{data: true}`). Steps only the owner can do (sudoers rule, linger, Foxglove layout export to `docs/foxglove/control_layout.json`) are in the README.
+
+---
+
 ## 2026-11-01 (night) · rf2o reads 24 % of a hand push
 
 **Finding.** Two pushes (1.00 m and 1.20 m, two places) read 0.243 m and 0.289 m on rf2o (-76 % both), while the lidar's own front-wall range confirmed the real travel (0.996 m and 1.222 m). On 2026-10-31 the same stack read -3.8 % and -2 %. The two candidate causes: the scan format (those older bags have 1045 beams at 0.34 deg; every bag since `angle_compensate: True` has 720 beams at 0.50 deg) and a person's legs moving with the robot (about 150 scan points within 1.2 m behind it during the pushes). Not separated yet. The EKF has probably been fed a velocity about 4 times too small since the map run; the map itself is not affected (scan matching in slam_toolbox, loop closure 0.115 m).

@@ -88,7 +88,8 @@ Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplida
    (`frequency` is now 20). The 20 Hz late-update count is still unconfirmed on a quiet Pi (closure 0.115 m against 0.109 m); rerun the check with nothing else running.
 4. Still waiting on the robot: 3.3 failure tests, 4.5 fusion comparison, stages 8.4
    and 9. Motor-driven work (P2, P6–P8) waits on the teammate.
-5. Analysis scripts that produced the logged numbers are in `tools/analysis/`; bags
+5. Foxglove buttons (`tools/robot_control.py`, 2026-11-02) are written but **untested on the Pi**: build, test `/imu_node/recalibrate` and `/run/save`, then the checks in `notes/notes.md` (2026-11-02). Never pass `dry_run:=false` from it.
+6. Analysis scripts that produced the logged numbers are in `tools/analysis/`; bags
    and maps live only on the Pi (`~/bags`, `~/maps`), backed up by hand to
    `../delivery_bot_pi_backup/` on the Mac.
 
@@ -138,6 +139,8 @@ docs/pi_setup.md   from-scratch install (system/02 is the measured state)
 evidence/          lidar/ imu/ motors/ — raw artefacts, append-only
 results/           experiment outcomes and metrics
 report/            CA3_report.md, figures/
-tools/             probe_echo_rate.py, test_lidar.py (mirrors of the Pi copies)
+tools/             probe_echo_rate.py, test_lidar.py (mirrors of the Pi copies);
+                   robot_control.py (Foxglove buttons: stacks, bag, camera, power);
+                   streams/ (stream, lidar-off extras); analysis/ (offline scripts)
 delivery_bot_*/    the four ROS 2 packages
 ```
