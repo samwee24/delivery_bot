@@ -5,10 +5,14 @@ Listen anywhere: vlc http://100.83.14.99:8090/audio.mp3
                  ffplay -nodisp http://100.83.14.99:8090/audio.mp3
                  or open the URL in a browser (expect 2-5 s of buffering)
 
-Picture and sound in one stream:  python3 tools/audio_stream.py --video
+Picture and sound in one stream:  python3 tools/audio_stream.py --video [--size 1920x1080] [--fps 30]
     vlc http://100.83.14.99:8090/stream.mkv    (VLC or ffplay; browsers do not play MJPEG in Matroska)
-    The camera's MJPEG frames are copied, not re-encoded, so it costs little CPU (about 17 Mbit/s
-    at 1280x720, 15 fps: fine on the LAN, heavy over Tailscale from far away). It opens
+    The camera's MJPEG frames are copied, not re-encoded, so it costs little CPU; the network is the
+    limit. Measured video data rate on 2026-11-02: 1280x720 15 fps 17 Mbit/s, 30 fps 33; 1920x1080
+    15 fps 32, 30 fps 64; 2560x1440 15 fps 55, 30 fps 111. Received on the Mac over Tailscale (direct,
+    7 ms): 1080p 15 fps 32.6, 720p 30 fps 32.9 (both keep up); 1080p 20 fps 38.2 of 42 needed, 1080p
+    24/30 fps stuck at 31: the link tops out near 33-38 Mbit/s, so the default is 1080p at 15 fps;
+    use `--size 1280x720 --fps 30` for smoother motion. The mic is stereo, native 16 kHz. It opens
     /dev/video0, so the ROS camera node (camera.launch.py) must not be running, and it needs
     the microphone, so the audio-only mode must not be running either.
 
@@ -26,14 +30,21 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 DEVICE = 'plughw:U2K'  # by card id, so a reordered card number does not break it
 VIDEO = '--video' in sys.argv
-PORT = int(next((a for a in sys.argv[1:] if a.isdigit()), 8090))
+PORT = int(next((a for a in sys.argv[1:] if a.isdigit() and len(a) > 2), 8090))
+
+
+def opt(name: str, default: str) -> str:
+    return sys.argv[sys.argv.index(name) + 1] if name in sys.argv else default
+
+
+SIZE, FPS = opt('--size', '1920x1080'), opt('--fps', '15')  # the highest the Pi's link carries
 HEAD = ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-fflags', 'nobuffer']
 if VIDEO:
     PATH, TYPE = '/stream.mkv', 'video/x-matroska'
     FFMPEG = HEAD + ['-use_wallclock_as_timestamps', '1', '-f', 'v4l2', '-input_format', 'mjpeg',
-                     '-video_size', '1280x720', '-framerate', '15', '-i', '/dev/video0',
-                     '-f', 'alsa', '-i', DEVICE, '-ac', '1', '-c:v', 'copy', '-c:a', 'aac',
-                     '-b:a', '64k', '-flush_packets', '1', '-f', 'matroska', '-live', '1',
+                     '-video_size', SIZE, '-framerate', FPS, '-i', '/dev/video0',
+                     '-f', 'alsa', '-i', DEVICE, '-ac', '2', '-c:v', 'copy', '-c:a', 'aac',
+                     '-b:a', '128k', '-flush_packets', '1', '-f', 'matroska', '-live', '1',
                      '-cluster_time_limit', '500', 'pipe:1']
 else:
     PATH, TYPE = '/audio.mp3', 'audio/mpeg'
