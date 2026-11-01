@@ -64,6 +64,7 @@ text of the error, so it is searchable later.
 | **hit** `ros2 topic hz`, `ros2 topic echo --once`, `tf2_echo` print nothing or `Failed to create publisher: rcl node's context is invalid` | the command-line tools are flaky on this Pi under load | retry; pipe `ros2 topic hz` into `grep 'average rate'` instead of a file; for a pose use `tf2_echo map base_footprint` a few times |
 | **hit** `EKF Failed to get parameters: parameter 'imu1' is not initialized`, every 15 s | robot_localization probing for a second IMU | benign, ignore |
 | **hit** lidar prints `RPLIDAR running` and no `RPLIDAR S/N` after a restart | restarted too soon after the stop (3 s, 12 s both hung on 2026-11-01), or the USB device was re-created | wait 20 s after stopping; if it repeats check `ls -l /dev/ttyUSB*` and the USB cable |
+| **hit** `ffmpeg`/ALSA `Cannot get card index for U2K` (or for `2`), `Input/output error` opening the camera microphone | `robot` is not in the `audio` group; `/dev/snd/*` is `root:audio 0660` (card 2 is the camera's USB mic, `U2K`) | `sudo usermod -aG audio robot`, then log out and in (or reboot); check with `id` and `ffmpeg -f alsa -i plughw:2,0 -t 2 -f null -` |
 | **hit** `/odom_rf2o` shows `twist.linear.y` exactly 0 | rf2o is non-holonomic and never reports vy | not a fault; do not read sideways drift from the twist |
 
 ## Reporting a problem
