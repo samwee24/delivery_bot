@@ -16,7 +16,8 @@ def med(scans,deg):
             da=(a-deg+180)%360-180
             if abs(da)<=3 and math.isfinite(v) and v>0.1: out.append(v)
     return round(st.median(out),3) if out else None
-start=[s for s in S if s[0]-t0<70]
+W=float(sys.argv[2]) if len(sys.argv)>2 else 70
+start=[s for s in S if s[0]-t0<W]
 end=[s for s in S if s[0]-S[-1][0]>-12]
 print('scans',len(S),'start',len(start),'end',len(end))
 for deg in (0,90,180,-90): print('angle',deg,'start',med(start,deg),'end',med(end,deg))
