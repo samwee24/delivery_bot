@@ -3,8 +3,8 @@
     /stream/start   Trigger   stops the ROS camera and any audio-only stream, starts audio_stream.py --video
     /stream/stop    Trigger   stops the stream (however it was started)
 
-Run on the Pi (start_streams.sh does it):  python3 tools/stream_control.py
-Stopping does not bring the ROS camera back: run `bash tools/start_streams.sh` for that.
+Run on the Pi (start_streams.sh does it):  python3 tools/streams/stream_control.py
+Stopping does not bring the ROS camera back: run `bash tools/streams/start_streams.sh` for that.
 Not part of the SLAM stack: a utility for watching the robot.
 """
 import os

@@ -5,7 +5,7 @@ Closing the port releases DTR, so the motor would spin up again: this script the
 running until you stop it (Ctrl-C or `pkill -f lidar_off.py`). While it runs the lidar driver
 cannot open /dev/rplidar, so stop it before launching lidar.launch.py.
 
-    python3 tools/lidar_off.py            on the Pi
+    python3 tools/streams/lidar_off.py            on the Pi
 """
 import time
 

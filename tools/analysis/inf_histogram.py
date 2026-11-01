@@ -7,7 +7,7 @@ zero, counter-clockwise positive). Angles are computed per message because the
 beam count varies from scan to scan (1132-1143 on the A1M8).
 
     source /opt/ros/jazzy/setup.bash
-    python3 tools/inf_histogram.py ~/ros2_ws/bags/still_2026-10-30
+    python3 tools/analysis/inf_histogram.py ~/ros2_ws/bags/still_2026-10-30
 """
 import math
 import sys

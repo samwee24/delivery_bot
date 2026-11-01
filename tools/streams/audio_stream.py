@@ -1,11 +1,11 @@
 """Live stream from the camera: microphone (ALSA card U2K) over HTTP, optionally with video.
 
-Audio only:  python3 tools/audio_stream.py              (port 8090)
+Audio only:  python3 tools/streams/audio_stream.py              (port 8090)
 Listen anywhere: vlc http://100.83.14.99:8090/audio.mp3
                  ffplay -nodisp http://100.83.14.99:8090/audio.mp3
                  or open the URL in a browser (expect 2-5 s of buffering)
 
-Picture and sound in one stream:  python3 tools/audio_stream.py --video [--size 1280x720] [--fps 30]
+Picture and sound in one stream:  python3 tools/streams/audio_stream.py --video [--size 1280x720] [--fps 30]
     vlc http://100.83.14.99:8090/stream.mkv    (VLC or ffplay; browsers do not play MJPEG in Matroska)
     The camera's MJPEG frames are copied, not re-encoded, so it costs little CPU; the network is the
     limit. Measured video data rate on 2026-11-02: 1280x720 15 fps 17 Mbit/s, 30 fps 33; 1920x1080
