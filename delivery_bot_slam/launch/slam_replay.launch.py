@@ -1,4 +1,5 @@
-"""Offline SLAM replay from a recorded bag: estimation and mapping only.
+"""
+Offline SLAM replay from a recorded bag: estimation and mapping only.
 
 No hardware. No lidar driver, no IMU driver, no motor node: every sensor
 message comes out of the bag, so a mapping experiment can be re-run on the Mac
@@ -19,7 +20,8 @@ What this file starts
     trajectory_recorder     /slam/path and /odom/path, optional TUM output
     foxglove_bridge         so the replay can be watched from the Mac
 
-No ``robot_state_publisher`` by default (``use_rsp:=false``; set it true only for a bag with no ``/tf_static``). The static tree comes from ``/tf_static`` in the
+No ``robot_state_publisher`` by default (``use_rsp:=false``; set it true only for a
+bag with no ``/tf_static``). The static tree comes from ``/tf_static`` in the
 bag, which is the geometry that was current when the bag was recorded. A live
 ``robot_state_publisher`` would be a second publisher of
 ``base_footprint -> base_link``, ``base_link -> laser`` and
@@ -91,9 +93,8 @@ Build path: task 5.5 in docs/slam_build_path.md
 
 import os
 
-import launch
-import lifecycle_msgs.msg
 from ament_index_python.packages import get_package_share_directory
+import launch
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, EmitEvent, RegisterEventHandler
 from launch.conditions import IfCondition
@@ -102,6 +103,7 @@ from launch_ros.actions import LifecycleNode, Node
 from launch_ros.event_handlers import OnStateTransition
 from launch_ros.events.lifecycle import ChangeState
 from launch_ros.parameter_descriptions import ParameterValue
+import lifecycle_msgs.msg
 
 
 def generate_launch_description() -> LaunchDescription:

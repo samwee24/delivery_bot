@@ -1,4 +1,5 @@
-"""MPU6050 (GY-521) gyro driver.
+"""
+MPU6050 (GY-521) gyro driver.
 
 Publishes sensor_msgs/Imu with the gyro and accelerometer in SI units.
 Only the gyro z (yaw rate) is used by the EKF; the accelerometer is exposed

@@ -1,4 +1,5 @@
-"""LaserScan diagnostics.
+"""
+LaserScan diagnostics.
 
 Prints every ``period_s``: points per scan, scan rate, the fraction of returns
 that are zero / inf / outside [range_min, range_max], and a 12-bin (30 deg)
@@ -13,7 +14,6 @@ Parameter: period_s (default 2.0).
 
 from __future__ import annotations
 
-import rclpy
 from rclpy.node import Node
 
 

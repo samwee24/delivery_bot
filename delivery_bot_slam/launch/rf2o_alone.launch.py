@@ -1,4 +1,5 @@
-"""Build path 3.2 / 3.4 experiment: lidar + URDF + rf2o, no EKF.
+"""
+Build path 3.2 / 3.4 experiment: lidar + URDF + rf2o, no EKF.
 
 NOT the real stack. rf2o runs here with ``publish_tf: true`` because nothing else
 publishes odom -> base_footprint; in the real stack the EKF owns that transform

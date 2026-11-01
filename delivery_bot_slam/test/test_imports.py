@@ -1,4 +1,5 @@
-"""Import checks: catch syntax errors without starting anything.
+"""
+Import checks: catch syntax errors without starting anything.
 
 colcon test runs this on Jazzy, where rclpy and the message packages exist, so
 the modules are imported normally. Nothing is constructed and no node is spun:

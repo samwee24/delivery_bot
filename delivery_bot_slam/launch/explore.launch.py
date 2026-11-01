@@ -1,4 +1,5 @@
-"""Autonomous mapping: base stack, slam_toolbox, Nav2, explore_lite.
+"""
+Autonomous mapping: base stack, slam_toolbox, Nav2, explore_lite.
 
 STOP AND READ: explore_lite starts driving as soon as it launches.
 

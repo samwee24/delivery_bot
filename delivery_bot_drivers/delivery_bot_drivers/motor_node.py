@@ -1,4 +1,5 @@
-"""L298N motor driver for the delivery robot.
+"""
+L298N motor driver for the delivery robot.
 
 Safety contract (do not weaken):
   * /cmd_vel drives the wheels; a command older than ``watchdog_s`` means stop.
@@ -18,7 +19,6 @@ use_stamped, use_gyro_loop, kp_omega, ki_omega, dry_run.
 
 from __future__ import annotations
 
-import rclpy
 from rclpy.node import Node
 
 

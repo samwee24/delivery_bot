@@ -2,7 +2,9 @@ name: CI
 
 # What this can and cannot prove:
 #   can:  the four packages build against Jazzy, the URDF is valid xacro, every
-#         YAML config parses, lint tests pass.
+#         YAML config parses, flake8 and pep257 pass on delivery_bot_slam,
+#         delivery_bot_drivers and delivery_bot_mission (description and bringup
+#         have no lint tests).
 #   cannot: lidar rate, IMU noise, motor direction, TF at runtime — those need
 #         the Pi and are recorded by hand in docs/test_log.md.
 #
@@ -55,10 +57,11 @@ jobs:
       - name: Validate URDF and YAML
         run: |
           # setup-ros installs ros-base, which has neither xacro nor PyYAML.
-          sudo apt-get install -y ros-jazzy-xacro python3-yaml > /dev/null
+          sudo apt-get install -y ros-jazzy-xacro python3-yaml liburdfdom-tools > /dev/null
           source /opt/ros/jazzy/setup.bash
           source "$HOME/ws/install/setup.bash"
           xacro "$HOME/ws/src/delivery_bot/delivery_bot_description/urdf/delivery_bot.urdf.xacro" > /tmp/robot.urdf
+          check_urdf /tmp/robot.urdf
           python3 - <<'PY'
           import glob, os, sys, yaml
           root = os.path.expanduser("~/ws/src/delivery_bot")
@@ -74,6 +77,9 @@ jobs:
       - name: Test
         run: |
           source /opt/ros/jazzy/setup.bash
+          # The config and launch tests look up other packages' share directories, and
+          # colcon test alone does not put them on AMENT_PREFIX_PATH.
+          source "$HOME/ws/install/setup.bash"
           cd "$HOME/ws"
           # multirobot_map_merge is never built (see above), so it cannot be tested.
           # explore_lite is pinned third-party code: its own flake8/uncrustify/xmllint

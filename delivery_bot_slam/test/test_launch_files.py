@@ -1,0 +1,74 @@
+"""Every launch file must at least load; slam_replay must wire the TF and EKF rules."""
+
+import importlib.util
+from pathlib import Path
+import re
+
+from ament_index_python.packages import get_package_share_directory
+import launch
+from launch_ros.actions import LifecycleNode, Node
+import pytest
+
+LAUNCH_DIRS = [Path(get_package_share_directory(p)) / 'launch'
+               for p in ('delivery_bot_bringup', 'delivery_bot_slam')]
+LAUNCH_FILES = sorted(f for d in LAUNCH_DIRS for f in d.glob('*.launch.py'))
+STUBS = {'base.launch.py', 'navigation.launch.py', 'explore.launch.py'}
+REPLAY = LAUNCH_DIRS[1] / 'slam_replay.launch.py'
+
+
+def generate(path: Path) -> launch.LaunchDescription:
+    spec = importlib.util.spec_from_file_location(path.stem.replace('.', '_'), path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.generate_launch_description()
+
+
+def walk(entities):
+    for entity in entities:
+        yield entity
+        sub = getattr(entity, 'get_sub_entities', None)
+        if sub is not None:
+            yield from walk(sub())
+
+
+def nodes(description):
+    return [e for e in walk(description.entities) if isinstance(e, Node)]
+
+
+def test_launch_files_were_found() -> None:
+    assert {f.name for f in LAUNCH_FILES} >= {'slam_replay.launch.py', 'mapping.launch.py'}
+
+
+@pytest.mark.parametrize('path', LAUNCH_FILES, ids=lambda p: p.name)
+def test_launch_file_loads(path) -> None:
+    assert isinstance(generate(path), launch.LaunchDescription)
+
+
+@pytest.mark.xfail(strict=True, reason='stub, build path 5.3/6.2/8.3')
+@pytest.mark.parametrize('name', sorted(STUBS))
+def test_stub_launch_files_are_filled_in(name) -> None:
+    # Fails while the file is empty. When someone fills one in this XPASSes, which
+    # strict xfail reports as a failure: drop the name from STUBS and test it properly.
+    path = next(f for f in LAUNCH_FILES if f.name == name)
+    assert generate(path).entities
+
+
+def test_replay_has_one_ekf_and_the_relay() -> None:
+    found = nodes(generate(REPLAY))
+    assert sum(n.node_package == 'robot_localization' for n in found) == 1
+    assert sum(n.node_executable == 'odom_covariance_relay' for n in found) == 1
+    assert any(n.node_package == 'rf2o_laser_odometry' for n in found)
+
+
+def test_replay_slam_toolbox_is_a_lifecycle_node() -> None:
+    slam = [n for n in nodes(generate(REPLAY)) if n.node_package == 'slam_toolbox']
+    assert len(slam) == 1
+    assert isinstance(slam[0], LifecycleNode)
+
+
+def test_replay_rf2o_does_not_publish_tf() -> None:
+    # The launch_ros Node keeps its parameters in private attributes, so this reads
+    # the source: the first publish_tf after the rf2o executable is rf2o's own.
+    m = re.search(r"executable='rf2o_laser_odometry_node'.*?'publish_tf':\s*(\w+)",
+                  REPLAY.read_text(), re.S)
+    assert m and m.group(1) == 'False'
