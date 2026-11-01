@@ -28,6 +28,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, IncludeLaunchDescription,
                             TimerAction)
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
@@ -44,6 +45,8 @@ def generate_launch_description() -> LaunchDescription:
 
     return LaunchDescription([
         DeclareLaunchArgument('dry_run', default_value='true'),
+        # false when robot_control.py already runs the one bridge (port 8765)
+        DeclareLaunchArgument('bridge', default_value='true'),
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('serial_port', default_value='/dev/rplidar'),
         # rf2o reads base_footprint -> laser once, on the first scan, so the
@@ -80,5 +83,6 @@ def generate_launch_description() -> LaunchDescription:
              parameters=[os.path.join(bringup, 'config', 'ekf.yaml'),
                          {'use_sim_time': sim}]),
         Node(package='foxglove_bridge', executable='foxglove_bridge',
-             parameters=[{'use_sim_time': sim}]),
+             parameters=[{'use_sim_time': sim}],
+             condition=IfCondition(LaunchConfiguration('bridge'))),
     ])

@@ -1,0 +1,14 @@
+# Starts the Foxglove bridge (via the runner) and tools/robot_control.py at boot.
+# Not the camera or audio: those are buttons.
+[Unit]
+Description=delivery_bot Foxglove buttons (robot_control)
+After=network-online.target
+
+[Service]
+ExecStart=/bin/bash -lc 'source /opt/ros/jazzy/setup.bash; source %h/ros2_ws/install/setup.bash; exec python3 %h/ros2_ws/src/delivery_bot/tools/robot_control.py'
+Restart=on-failure
+# a runner restart must not kill the stack it started
+KillMode=process
+
+[Install]
+WantedBy=default.target

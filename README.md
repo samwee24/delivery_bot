@@ -124,12 +124,53 @@ hide the raw topic by starting the bridge with
 `ros2 run foxglove_bridge foxglove_bridge --ros-args -p 'topic_whitelist:=["^(?!/image_raw$)(?!/image_raw/(zstd|theora|compressedDepth)).*"]'`.
 The lidar, camera and bridge do not restart after a reboot, and the camera takes a full core: leave it off during mapping.
 
-**Side extras for watching the robot** (not part of the SLAM stack; `tools/`):
-- `bash tools/streams/start_streams.sh` starts the camera, the bridge, the microphone stream and the control node; `bash tools/streams/start_streams.sh av` starts one combined picture-and-sound stream instead (`vlc http://100.83.14.99:8090/stream.mkv`, 1280x720 at 30 fps). The streams do not restart after a reboot. Needs `robot` in the `audio` group.
-- Foxglove Call Service panel: `/stream/start` and `/stream/stop` (`tools/streams/stream_control.py`) switch the combined stream on and off; `/start_motor` and `/stop_motor` (the lidar driver's own services) spin the lidar motor up and down. With no driver running, `python3 tools/streams/lidar_off.py` holds the motor off.
-- Foxglove Call Service panel, mapping (`mapping.launch.py`): `/run/save` (`Trigger`) saves the map, the pose graph and a copy of the config YAMLs to `~/maps/<date>_<HHMM>*` in one press; `/slam_toolbox/pause_new_measurements` pauses mapping while you carry the robot; `/slam_toolbox/clear_queue` drops a scan backlog.
-- Foxglove Call Service panel, sensors: `/imu_node/recalibrate` (`Trigger`) re-measures the gyro bias with the robot still and returns it; `/set_capture` (`SetBool`) turns the USB camera off while mapping; `/set_pose` (EKF, zero pose, `header.frame_id: odom`) zeroes odometry before a push test; `/toggle` (`{on: false}`) pauses EKF fusion while you carry the robot.
-- Foxglove Publish panel: `std_msgs/String` on `/event` ("push start") puts a marker in the bag.
+**Foxglove buttons.** Each is one Call Service panel (request `{}` unless shown), served by
+`tools/robot_control.py` (run it with `python3 tools/robot_control.py`, or at boot, below). It starts every
+stack in its own process group and stops the whole group (SIGINT, then SIGTERM, then SIGKILL), so
+nothing is left running. It never passes `dry_run:=false` and never touches `/cmd_vel` or GPIO.
+
+| Button | Type | What it does |
+| --- | --- | --- |
+| `/stack/base`, `/stack/mapping`, `/stack/localisation` | Trigger | stop the running stack, kill stray stack processes, start this one, reply after 8 s with pass/fail |
+| `/stack/stop` | Trigger | stop the stack and kill strays |
+| `/camera/start`, `/camera/stop` | Trigger | ROS camera on/off (stops the A/V stream) |
+| `/stream/start`, `/stream/stop` | Trigger | combined picture-and-sound stream, `http://<pi>:8090/stream.mkv` (stops the camera) |
+| `/bag/start`, `/bag/stop` | Trigger | `ros2 bag record -s mcap` into `~/bags/<date>_<time>[_<bag_label>]`; start replies with the path, stop with path, duration and message count. Refuses if already recording or under 1 GB free. Set `bag_label` and `bag_topics` in Foxglove's Parameters panel (node `robot_control`) |
+| `/control/status` | Trigger | what is running, bag path, free disk, stray stack pids |
+| `/pi/shutdown`, `/pi/reboot` | SetBool | refused unless `{data: true}`; stops bag and stacks, then powers off after 2 s. Needs the sudoers rule below |
+| `/run/save` | Trigger | map, pose graph and config YAMLs to `~/maps/<date>_<HHMM>*` (during mapping) |
+| `/imu_node/recalibrate` | Trigger | re-measure gyro bias; fails if the robot moves |
+| `/start_motor`, `/stop_motor` | Empty | lidar spin (rplidar driver). With no driver, `python3 tools/streams/lidar_off.py` holds the motor off |
+| `/set_capture` | SetBool | USB camera capture on/off |
+| `/set_pose` | robot_localization/SetPose | zero odometry: `{pose: {header: {frame_id: odom}}}` |
+| `/toggle` | robot_localization/ToggleFilterProcessing | pause fusion: `{on: false}` / `{on: true}` |
+| `/slam_toolbox/pause_new_measurements` | Empty | toggles mapping pause |
+| `/slam_toolbox/reset` | slam_toolbox/Reset | `{pause_new_measurements: false}` |
+| `/slam_toolbox/clear_queue` | slam_toolbox/ClearQueue | drop the scan backlog |
+| `/slam_toolbox/deserialize_map` | slam_toolbox/DeserializePoseGraph | relocalise: `{filename: "...", match_type: 3, initial_pose: {x: 0, y: 0, theta: 0}}` |
+| Publish panel, topic `/marker` | std_msgs/String | `{data: "push start"}`; one panel per text. The runner creates the topic so the bag sees the first one. Put `/marker` in `bag_topics` (it is by default) |
+
+The `/slam_toolbox/*`, `/toggle` and `/set_pose` names are the packages' defaults: confirm with `ros2 service list` while the stack runs.
+Names for the bag recorder and player (`/rosbag2_recorder/*`) are not used: `/bag/*` replaces them.
+
+**Run at boot, and the steps only the Pi's owner can do** (not run by the repo):
+
+```bash
+# 1. power buttons need this exact sudoers rule
+sudo visudo -f /etc/sudoers.d/robot-power
+#    robot ALL=(root) NOPASSWD: /usr/bin/systemctl poweroff, /usr/bin/systemctl reboot
+
+# 2. start the bridge and robot_control at boot
+mkdir -p ~/.config/systemd/user
+cp ~/ros2_ws/src/delivery_bot/tools/robot-control.service ~/.config/systemd/user/
+sudo loginctl enable-linger robot
+systemctl --user daemon-reload && systemctl --user enable --now robot-control.service
+```
+
+3. In Foxglove, add one Call Service panel per button and Publish panels for the markers, then export the layout to `docs/foxglove/control_layout.json`.
+
+**Other extras** (`tools/streams/`):
+- `bash tools/streams/start_streams.sh` starts the camera, the bridge, the microphone stream and the runner; `bash tools/streams/start_streams.sh av` starts one combined picture-and-sound stream (`vlc http://100.83.14.99:8090/stream.mkv`, 1280x720 at 30 fps). Needs `robot` in the `audio` group.
 - Speech or voice commands could read the same stream later (see `tools/streams/audio_stream.py`); not built.
 
 ## Safety

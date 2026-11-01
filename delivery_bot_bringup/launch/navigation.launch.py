@@ -72,13 +72,15 @@ def generate_launch_description() -> LaunchDescription:
 
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
+        DeclareLaunchArgument('bridge', default_value='true'),
         DeclareLaunchArgument('include_base', default_value='true'),
         DeclareLaunchArgument('map', default_value=os.path.expanduser(
             '~/maps/2026-10-31_room2_graph')),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(bringup, 'launch', 'base.launch.py')),
-            launch_arguments={'use_sim_time': use_sim_time}.items(),
+            launch_arguments={'use_sim_time': use_sim_time,
+                              'bridge': LaunchConfiguration('bridge')}.items(),
             condition=launch.conditions.IfCondition(
                 LaunchConfiguration('include_base'))),
         slam, activate,
