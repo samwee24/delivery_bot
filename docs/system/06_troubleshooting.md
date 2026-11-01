@@ -65,6 +65,7 @@ text of the error, so it is searchable later.
 | **hit** `EKF Failed to get parameters: parameter 'imu1' is not initialized`, every 15 s | robot_localization probing for a second IMU | benign, ignore |
 | **hit** lidar prints `RPLIDAR running` and no `RPLIDAR S/N` after a restart | restarted too soon after the stop (3 s, 12 s both hung on 2026-11-01), or the USB device was re-created | wait 20 s after stopping; if it repeats check `ls -l /dev/ttyUSB*` and the USB cable |
 | **hit** `ffmpeg`/ALSA `Cannot get card index for U2K` (or for `2`), `Input/output error` opening the camera microphone | `robot` is not in the `audio` group; `/dev/snd/*` is `root:audio 0660` (card 2 is the camera's USB mic, `U2K`) | `sudo usermod -aG audio robot`, then log out and in (or reboot); check with `id` and `ffmpeg -f alsa -i plughw:2,0 -t 2 -f null -` |
+| **hit** the lidar keeps spinning after the driver was stopped (no ROS node running) | the USB adapter's DTR line drives the motor and falls back to "on" when the port is closed | `python3 tools/lidar_off.py` on the Pi asserts DTR and holds the port open (confirmed to stop the motor, 2026-11-02); stop it with `pkill -f lidar_off.py` before running `lidar.launch.py`, which cannot open the port while it runs |
 | **hit** `/odom_rf2o` shows `twist.linear.y` exactly 0 | rf2o is non-holonomic and never reports vy | not a fault; do not read sideways drift from the twist |
 
 ## Reporting a problem
