@@ -124,6 +124,11 @@ hide the raw topic by starting the bridge with
 `ros2 run foxglove_bridge foxglove_bridge --ros-args -p 'topic_whitelist:=["^(?!/image_raw$)(?!/image_raw/(zstd|theora|compressedDepth)).*"]'`.
 The lidar, camera and bridge do not restart after a reboot, and the camera takes a full core: leave it off during mapping.
 
+**Side extras for watching the robot** (not part of the SLAM stack; `tools/`):
+- `bash tools/start_streams.sh` starts the camera, the bridge, the microphone stream and the control node; `bash tools/start_streams.sh av` starts one combined picture-and-sound stream instead (`vlc http://100.83.14.99:8090/stream.mkv`, 1280x720 at 30 fps). The streams do not restart after a reboot. Needs `robot` in the `audio` group.
+- Foxglove Call Service panel: `/stream/start` and `/stream/stop` (`tools/stream_control.py`) switch the combined stream on and off; `/start_motor` and `/stop_motor` (the lidar driver's own services) spin the lidar motor up and down. With no driver running, `python3 tools/lidar_off.py` holds the motor off.
+- Speech or voice commands could read the same stream later (see `tools/audio_stream.py`); not built.
+
 ## Safety
 
 - **Motors start in dry run.** `base.launch.py` and `navigation.launch.py` default
