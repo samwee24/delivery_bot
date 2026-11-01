@@ -10,12 +10,12 @@ source /opt/ros/jazzy/setup.bash; source ~/ros2_ws/install/setup.bash
 R=~/ros2_ws/src/delivery_bot
 if [ "$1" = av ]; then
   pkill -f "[u]sb_cam_node_exe"; pkill -f "[a]udio_stream.py$"; sleep 2
-  pgrep -f "[a]udio_stream.py --video" > /dev/null || setsid nohup python3 $R/tools/audio_stream.py --video > /tmp/audio.log 2>&1 < /dev/null &
+  if ! pgrep -f "[a]udio_stream.py --video" > /dev/null; then setsid nohup python3 $R/tools/audio_stream.py --video > /tmp/audio.log 2>&1 < /dev/null & fi
   sleep 8; echo "av stream $(pgrep -fc '[a]udio_stream.py --video')"; exit
 fi
 pkill -f "[a]udio_stream.py --video"
-pgrep -f "[u]sb_cam_node_exe" > /dev/null || setsid nohup ros2 launch delivery_bot_bringup camera.launch.py > /tmp/cam.log 2>&1 < /dev/null &
-pgrep -f "[f]oxglove_bridge" > /dev/null || setsid nohup ros2 run foxglove_bridge foxglove_bridge --ros-args -p 'topic_whitelist:=["^(?!/image_raw$)(?!/image_raw/(zstd|theora|compressedDepth)).*"]' > /tmp/fox.log 2>&1 < /dev/null &
-pgrep -f "[a]udio_stream.py" > /dev/null || setsid nohup python3 $R/tools/audio_stream.py > /tmp/audio.log 2>&1 < /dev/null &
+if ! pgrep -f "[u]sb_cam_node_exe" > /dev/null; then setsid nohup ros2 launch delivery_bot_bringup camera.launch.py > /tmp/cam.log 2>&1 < /dev/null & fi
+if ! pgrep -f "[f]oxglove_bridge" > /dev/null; then setsid nohup ros2 run foxglove_bridge foxglove_bridge --ros-args -p 'topic_whitelist:=["^(?!/image_raw$)(?!/image_raw/(zstd|theora|compressedDepth)).*"]' > /tmp/fox.log 2>&1 < /dev/null & fi
+if ! pgrep -f "[a]udio_stream.py" > /dev/null; then setsid nohup python3 $R/tools/audio_stream.py > /tmp/audio.log 2>&1 < /dev/null & fi
 sleep 10
 echo "camera $(pgrep -fc '[u]sb_cam_node_exe') bridge $(pgrep -fc '[f]oxglove_bridge') audio $(pgrep -fc '[a]udio_stream.py')"

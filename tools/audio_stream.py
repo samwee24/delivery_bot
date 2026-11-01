@@ -59,7 +59,7 @@ header = b''  # Matroska only: everything before the first cluster; each new cli
 
 class Client:
     def __init__(self) -> None:
-        self.q = queue.Queue(maxsize=400)
+        self.q = queue.Queue(maxsize=320)  # 64 KB chunks: about 5 s at 32 Mbit/s
         self.started = not VIDEO  # video clients wait for the next cluster boundary
         self.prev = b''
 
@@ -69,7 +69,7 @@ def pump() -> None:
     proc = subprocess.Popen(FFMPEG, stdout=subprocess.PIPE)
     seen = b''
     while True:
-        chunk = proc.stdout.read(1024)
+        chunk = proc.stdout.read1(65536)
         if not chunk:
             print('ffmpeg ended (device busy or missing?)', file=sys.stderr)
             os._exit(1)  # sys.exit would only end this thread
@@ -90,8 +90,11 @@ def pump() -> None:
                     c.started, out = True, data[k:]
                 try:
                     c.q.put_nowait(out)
-                except queue.Full:  # slow client: drop data rather than stall the others
-                    pass
+                except queue.Full:  # slow client: drop its backlog and rejoin at the next cluster
+                    with c.q.mutex:
+                        c.q.queue.clear()
+                    c.started = not VIDEO
+                    c.prev = b''
 
 
 class Handler(BaseHTTPRequestHandler):
