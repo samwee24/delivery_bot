@@ -61,7 +61,7 @@ The CA3 brief's other machine, `robot` @ `100.73.7.24` (Debian 13), has been
 7. Don't touch the motor battery until the wiring checklist in
    `docs/design-plan.md` §4 is ticked. Kill switch is the motor switch, not software.
 
-## Current state (2026-11-01)
+## Current state (2026-11-03)
 
 | Phase | State |
 | --- | --- |
@@ -69,7 +69,7 @@ The CA3 brief's other machine, `robot` @ `100.73.7.24` (Debian 13), has been
 | P1 Bring-up | lidar verified on this Pi (A1M8, 7.05 Hz, 26–29 % no-echo, gaps follow the room not the lidar); IMU node written and checked at rest (100 Hz, gyro z std 0.00175 rad/s); motors never driven by us; **robot built 2026-10-31**, lidar and IMU mounting measured into the URDF; gyro reads a hand-turned 360° as 360.2° |
 | P6 localisation | **done by hand** (2026-11-01): `navigation.launch.py` = base + `localization_slam_toolbox_node` on the room graph (no Nav2 yet); a 30 cm / 20° wrong start recovers after a push, 31° does not; Foxglove pose estimate works. `base.launch.py` and `mapping.launch.py` run live from one command |
 | P3–P5 (SLAM side) | rf2o hand tests done (−2 % turn, −3.8 % push); variances fitted; **first room map saved** (`results/maps/2026-10-31_room2.png`); 5.5 sweep done and `slam_mapping.yaml` frozen; USB camera streams to Foxglove (1280x720 at 10 fps) |
-| Foxglove buttons | **done on the Pi** (2026-11-02): `robot_control.py` stacks, bag, camera, stream, power; `/run/save`; `/imu_node/recalibrate`. Power buttons need the sudoers rule (owner step) |
+| Foxglove buttons | **done on the Pi** (2026-11-02): `robot_control.py` stacks, bag, camera, stream, power; `/run/save`; `/imu_node/recalibrate`. Power buttons need the sudoers rule (owner step). **2026-11-03:** `robot_control.py` publishes `/robot/status/*` at 1 Hz (running on the Pi at 68b397d; a direct rclpy subscriber read `video: camera` after `/camera/start`), and `docs/foxglove/cockpit_layout.json` is the tabbed layout with a status strip (Indicator paths fixed to `.data` in PR 20; re-import not yet confirmed by eye) |
 | P2, P6–P8 | not started (motors are the teammate's) |
 
 Known blockers live in [`docs/CA3.md`](docs/CA3.md) as OI-1…OI-5. OI-3 and OI-5 are
@@ -84,12 +84,12 @@ Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplida
 `docs/slam_build_path.md`.
 
 1. Stage 6 is done by hand (6.2 to 6.4, 2026-11-01). Left from it: the second tape gap on the map (5.4); the new home mark is taped at the old position (the original tape was lost), so `goals.yaml` home stays 0, 0, 0.
-2. **rf2o under-reads a hand push by 76 % (OI-8).** Two straight pushes on 2026-11-01 read 24 % of the true distance, against −3.8 % on 2026-10-31. Leads: scan format (`angle_compensate: True`, 720 beams) or a person behind the robot. Offline rig `tools/analysis/rf2o_fmt.sh` now runs (2026-11-02) but its control does not match the live number on the good bag, so the format question is open; resampling 1046 to 720 beams changed the result by about 4 %. Next: repeat the live push with `angle_compensate:=false` on a charged battery, and with a stick or string so no person is in the scan. **The Pi read `throttled=0x50005` (under-voltage) on 2026-11-02: charge the battery first.**
+2. **rf2o under-reads a hand push by 76 % (OI-8).** Two straight pushes on 2026-11-01 read 24 % of the true distance, against −3.8 % on 2026-10-31. Offline work 2026-11-02/03 (rows in `docs/test_log.md`, blocks in `notes/notes.md`): the bad bag replays to the same 24 % every time and at 0.25x playback, so the fault is in the recorded data and CPU speed or under-voltage is not the cause; replays of the good bag vary about 12 % run to run (0.53-0.68 m against 0.962 m live), so the good bag is no control and the old 0.681/0.786 m format comparison means nothing; 720-beam bags have no more empty slots or repeated neighbour ranges than 1046-beam bags; push3-5 (2026-11-02) contain no push. Two suspects left, which offline data cannot separate: the 720-beam scan format and a person walking behind the robot. **Next, live:** charged battery (`/robot/status/undervolt` read true on 2026-11-03), robot pushed with a stick or string so nobody is in the scan, once with `angle_compensate:=false` and once with the current setting, `vcgencmd get_throttled` logged with each.
 3. Keep the camera off while mapping, or accept EKF `Failed to meet update rate`
    (`frequency` is now 20). The 20 Hz late-update count is still unconfirmed on a quiet Pi (closure 0.115 m against 0.109 m); rerun the check with nothing else running.
 4. Still waiting on the robot: 3.3 failure tests, 4.5 fusion comparison, stages 8.4
    and 9. Motor-driven work (P2, P6–P8) waits on the teammate.
-5. Foxglove buttons (`tools/robot_control.py`, 2026-11-02) run on the Pi and are logged in `notes/notes.md` and `docs/test_log.md`. Still open: the owner steps in the README (sudoers rule, linger and the systemd unit, Foxglove layout export), `/imu_node/recalibrate` with the robot nudged, `/stack/localisation`. Never pass `dry_run:=false` from it.
+5. Foxglove buttons (`tools/robot_control.py`, 2026-11-02) run on the Pi and are logged in `notes/notes.md` and `docs/test_log.md`. Still open: the owner steps in the README (sudoers rule, linger and the systemd unit), `/imu_node/recalibrate` with the robot nudged, `/stack/localisation`, and confirming the cockpit tiles change in Foxglove after re-importing `docs/foxglove/cockpit_layout.json`. Never pass `dry_run:=false` from it.
 6. Analysis scripts that produced the logged numbers are in `tools/analysis/`; bags
    and maps live only on the Pi (`~/bags`, `~/maps`), backed up by hand to
    `../delivery_bot_pi_backup/` on the Mac.
