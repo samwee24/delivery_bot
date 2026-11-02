@@ -127,6 +127,8 @@ change per run. Provenance: *chosen 2026-11-02*, no measurement behind them.
 | --- | --- | --- | --- |
 | `robot_control` | `bag_label` | `''` | appended to the bag directory name, e.g. `push3` |
 | `robot_control` | `bag_topics` | `/scan /odom_rf2o /odom_rf2o_cov /odometry/filtered /imu/data /tf /tf_static /marker /pose` | topics `/bag/start` records |
+| `robot_control` | `stream_size` | `640x480` | picture size of `/stream/start`; must be a mode the camera lists (`v4l2-ctl --list-formats-ext`); brief default was 1280x720, lowered 2026-11-02 after lag |
+| `robot_control` | `stream_fps` | `15` | frame rate of `/stream/start`, 1 to 60; brief default was 30 |
 | `robot_control` | (constants in `tools/robot_control.py`) | `MIN_FREE_GB 1.0`, `STACK_WAIT_S 25` | refuse a bag under 1 GB free; wait up to 25 s for a stack |
 | `run_save` | `maps_dir` | `~/maps` | where `/run/save` writes `<date>_<HHMM>.*` and `_config/` |
 
