@@ -5,6 +5,11 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-03 (Mac) · CA3 report framing chosen (tentative)
+
+Read the MA4890 brief (presentation 40 %, CA3 report 20 %, both due end of Week 13; rubric content 40, conclusions 25, presentation 20, peer 15; the lecturer weights own insights highest). Compared six framings (survey, build report, replication, mission matrix, safety case, lidar vs camera); chose replication and extension of [K26]/[M26] on the delivery robot, extended to people [Y21] (D8). Wrote `docs/report_plan.md`, `report/slides_outline.md`, `report/literature_notes.md`, rewrote `report/CA3_report.md`, aligned `docs/plan.md` and build-path Stage 9. No robot runs. After reading the papers (K26 is replay without ground truth and tests AMCL, not the IMU; M26 ablates the IMU on wheel odometry), the framing word became *re-evaluation against published baselines* and the title *Re-evaluating EKF-Fused 2D LiDAR SLAM on a Low-Cost Indoor Delivery Robot: Repeatability, Inertial Contribution and the Effect of Dynamic Human Obstacles*.
+Next: close OI-8 on a charged battery, tape the checkpoints (9.1), then motors 2026-11-04. Replay noise of about 12 % (entry below) means offline E2 ablation needs several replays per condition, or live runs.
+
 ## 2026-11-03 (Pi, remote) · OI-8: replay repeatability and rate
 
 Verdict: replay is **not repeatable** and **not rate-sensitive** (code e6792e8, rows in `docs/test_log.md`). Three identical rate-1.0 runs on the good bag read 0.679, 0.592 and 0.531 m over 39-50 s (mean 0.601 m, spread about 12 %; live is 0.962 m): `bash /tmp/rf2o_rate.sh ~/bags/2026-10-31_push_195343 orig 39 50 1.0`. Rates 0.5 and 0.25 read 0.689 and 0.681 m, and the bad bag reads max x 0.291 m at rate 1.0 and 0.289 m at 0.25 (`bash /tmp/rf2o_rate.sh ~/bags/2026-11-01_push_230535 orig 0 0 0.25`), so slowing playback does not recover the travel and CPU speed alone is not the cause. The arm clock did not track the distance either (600 MHz gave 0.679 m, 1500 MHz gave 0.592 and 0.531 m).
