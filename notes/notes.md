@@ -5,6 +5,12 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-02 (Mac) · git workflow: PR-only `main`, CI rule checks
+
+Goal: stop pushing to `main` with an admin bypass and make the repo rules bind. Added `.github/pull_request_template.md`, a `repo-rules` CI job (PR title `type: YYYY-MM-DD what`, `notes/notes.md` and `evidence/` append-only, no added `dry_run:=false`), the AGENTS.md "Git workflow" section and `docs/system/08_github.md` with the settings commands. Repo settings and the ruleset are applied after this PR merges (dated rows in 08). Both merged feature branches (`slam/build-path`, `slam/plan-and-skeleton`) were already in `main`.
+
+---
+
 ## 2026-11-02 (Pi) · robot_control and the new services run on the Pi
 
 All on `sherm-raspi`, commit 679d297 and later, `colcon build --symlink-install` of drivers, slam and bringup (3 packages, 38 s). `dry_run` stayed true, motors untouched, motor battery not connected. Replies are the actual service replies.
