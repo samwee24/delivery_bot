@@ -150,3 +150,8 @@ jobs:
           colcon test --event-handlers console_cohesion+ \
             --packages-skip multirobot_map_merge explore_lite
           colcon test-result --verbose
+
+      - name: Test tools (not a colcon package)
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          python3 -m pytest tools/tests -q
