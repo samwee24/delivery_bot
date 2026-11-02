@@ -75,6 +75,12 @@ text of the error, so it is searchable later.
 | `/camera/start` replies `camera running` but `/image_raw/compressed` is missing | `usb_cam` takes about 10 s to open the device and create the topics; the log shows `unknown control 'focus_auto'` and a missing calibration file, both harmless | wait 10 to 12 s; 9.9 Hz measured with `ros2 topic hz` |
 | **hit** `/odom_rf2o` shows `twist.linear.y` exactly 0 | rf2o is non-holonomic and never reports vy | not a fault; do not read sideways drift from the twist |
 
+## CI
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| **hit** CI build-and-test fails in setup-ros: `curl: (22) The requested URL returned error: 404`, `exit code 22`; a rerun passes | setup-ros reads the ros-apt-source version from the GitHub API without a token; the shared runner IP hits the 60/hour limit, the tag is empty and the .deb URL 404s | fixed 2026-11-02: build-and-test runs in the `ros:jazzy-ros-base` container, no setup-ros |
+
 ## Reporting a problem
 
 Put it in [`../notes.md`](../../notes/notes.md) with: date, exact error text, the command
