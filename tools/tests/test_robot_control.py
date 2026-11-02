@@ -97,3 +97,22 @@ def test_pids_matching_skips_own_group_and_finds_others():
     finally:
         proc.kill()
         proc.wait()
+
+
+def test_stream_args_accepts_a_size_and_rate():
+    assert rc.stream_args('640x480', 15) == ' --size 640x480 --fps 15'
+    assert rc.stream_args('1280x720', 30.0) == ' --size 1280x720 --fps 30'
+
+
+def test_stream_args_rejects_anything_a_shell_could_run():
+    for size, fps in [('640x480; reboot', 15), ('$(id)', 15), ('640', 15), ('640x480', 0),
+                      ('640x480', 61)]:
+        try:
+            rc.stream_args(size, fps)
+        except ValueError:
+            continue
+        raise AssertionError((size, fps))
+
+
+def test_stream_defaults_are_a_native_camera_mode():
+    assert rc.stream_args(rc.STREAM_SIZE, rc.STREAM_FPS) == ' --size 640x480 --fps 15'

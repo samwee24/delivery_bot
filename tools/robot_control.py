@@ -13,6 +13,7 @@ Services (all std_srvs/Trigger unless noted), request {} in Foxglove's Call Serv
     /stack/base  /stack/mapping  /stack/localisation  /stack/stop
     /camera/start  /camera/stop  /stream/start  /stream/stop
     /bag/start  /bag/stop      parameters bag_label, bag_topics (Parameters panel)
+    /stream/start              parameters stream_size, stream_fps (default 640x480 at 15 fps)
     /control/status
     /pi/shutdown  /pi/reboot   (SetBool, refused unless data: true)
 Publishes nothing on /marker; it only creates the topic so the recorder subscribes before
@@ -70,6 +71,7 @@ DEFAULT_TOPICS = ['/scan', '/odom_rf2o', '/odom_rf2o_cov', '/odometry/filtered',
                   '/imu/data', '/tf', '/tf_static', '/marker', '/pose']
 MIN_FREE_GB = 1.0
 STACK_WAIT_S = 25
+STREAM_SIZE, STREAM_FPS = '640x480', 15     # 2026-11-02: the 1280x720 30 fps copy lagged on the Pi
 
 
 def pids_matching(pattern: str, own_pgids: set) -> list:
@@ -85,6 +87,13 @@ def pids_matching(pattern: str, own_pgids: set) -> list:
     return pids
 
 
+def stream_args(size: str, fps: int) -> str:
+    """` --size WxH --fps N` for audio_stream.py; both reach a shell, so reject anything else."""
+    if not re.fullmatch(r'\d{3,4}x\d{3,4}', str(size)) or not 1 <= int(fps) <= 60:
+        raise ValueError(f'stream_size must be WxH and stream_fps 1-60, got {size!r} {fps!r}')
+    return f' --size {size} --fps {int(fps)}'
+
+
 def bag_name(label: str, now: datetime) -> str:
     """~/bags/<YYYY-MM-DD_HHMMSS>[_<label>]; the label is cut down to word characters."""
     label = re.sub(r'\W+', '_', label).strip('_')
@@ -96,6 +105,8 @@ class RobotControl(Node):
         super().__init__('robot_control')
         self.declare_parameter('bag_label', '')
         self.declare_parameter('bag_topics', DEFAULT_TOPICS)
+        self.declare_parameter('stream_size', STREAM_SIZE)
+        self.declare_parameter('stream_fps', STREAM_FPS)
         self.procs = {}          # name -> (Popen, start time)
         self.bag_path = None
         self.lock = threading.RLock()
@@ -130,9 +141,16 @@ class RobotControl(Node):
     def own_pgids(self) -> set:
         return {p.pid for p, _ in self.procs.values() if p.poll() is None}
 
+    def command(self, name: str) -> str:
+        cmd = PROCS[name][0]
+        if name == 'stream':
+            cmd += stream_args(self.get_parameter('stream_size').value,
+                               self.get_parameter('stream_fps').value)
+        return cmd
+
     def spawn(self, name: str) -> None:
         log = open(f'/tmp/{name}.log', 'ab')
-        proc = subprocess.Popen(['bash', '-lc', SRC + PROCS[name][0]], start_new_session=True,
+        proc = subprocess.Popen(['bash', '-lc', SRC + self.command(name)], start_new_session=True,
                                 stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
         self.procs[name] = (proc, time.time())
 
@@ -170,6 +188,10 @@ class RobotControl(Node):
         return pids
 
     def start(self, name: str):
+        try:
+            self.command(name)
+        except ValueError as err:
+            return False, str(err)
         group = PROCS[name][1]
         if self.running(name):
             return True, f'{name} already running (pid {self.procs[name][0].pid})'
