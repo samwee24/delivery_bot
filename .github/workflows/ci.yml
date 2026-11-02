@@ -31,6 +31,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: shellcheck on the tools scripts
+        run: shellcheck --severity=warning tools/*.sh tools/streams/*.sh
+
       - name: 'PR title is type, date, then what'
         env:
           TITLE: ${{ github.event.pull_request.title }}
@@ -53,6 +56,18 @@ jobs:
             echo "::error::live motors are a deliberate act on the Pi, not a committed default (AGENTS rule 1)"
             exit 1
           fi
+
+  # Secrets in the diff or history. Public repo; free for personal accounts.
+  secrets:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-test:
     runs-on: ubuntu-24.04

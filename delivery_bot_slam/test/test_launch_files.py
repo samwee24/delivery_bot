@@ -6,6 +6,8 @@ import re
 
 from ament_index_python.packages import get_package_share_directory
 import launch
+from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
 from launch_ros.actions import LifecycleNode, Node
 import pytest
 
@@ -79,3 +81,27 @@ def test_base_owns_odom_tf_once_and_rf2o_does_not() -> None:
     assert sum(n.node_package == 'robot_localization' for n in found) == 1
     assert {'robot_state_publisher', 'imu_node', 'odom_covariance_relay',
             'foxglove_bridge'} <= {n.node_executable for n in found}
+
+
+def declared(name: str) -> dict:
+    """Launch arguments a bringup file declares, name -> default text."""
+    path = LAUNCH_DIRS[0] / name
+    return {e.name: ''.join(t.text for t in e.default_value)
+            for e in generate(path).entities if isinstance(e, DeclareLaunchArgument)}
+
+
+def test_base_declares_dry_run_true_by_default() -> None:
+    # AGENTS rule 1: live motors are a deliberate act, never a launch default.
+    assert declared('base.launch.py')['dry_run'] == 'true'
+
+
+@pytest.mark.parametrize('name', ['base.launch.py', 'mapping.launch.py', 'navigation.launch.py'])
+def test_stack_launch_files_declare_bridge_true_by_default(name) -> None:
+    # robot_control.py passes bridge:=false when it already runs the one bridge on 8765.
+    assert declared(name)['bridge'] == 'true'
+
+
+def test_bridge_argument_gates_the_foxglove_node() -> None:
+    found = nodes(generate(LAUNCH_DIRS[0] / 'base.launch.py'))
+    bridge = next(n for n in found if n.node_executable == 'foxglove_bridge')
+    assert isinstance(bridge.condition, IfCondition)
