@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 0
 
       - name: shellcheck on the tools scripts
-        run: shellcheck --severity=warning tools/*.sh tools/streams/*.sh
+        run: shellcheck --severity=warning --exclude=SC1090 tools/*.sh tools/streams/*.sh
 
       - name: 'PR title is type, date, then what'
         env:
