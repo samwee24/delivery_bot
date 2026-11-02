@@ -134,7 +134,9 @@ nothing is left running. It never passes `dry_run:=false` and never touches `/cm
 | `/stack/base`, `/stack/mapping`, `/stack/localisation` | Trigger | stop the running stack, kill stray stack processes, start this one, reply after 8 s with pass/fail |
 | `/stack/stop` | Trigger | stop the stack and kill strays |
 | `/camera/start`, `/camera/stop` | Trigger | ROS camera on/off (stops the A/V stream) |
-| `/stream/start`, `/stream/stop` | Trigger | combined picture-and-sound stream, `http://<pi>:8090/stream.mkv` (stops the camera); picture size and rate from parameters `stream_size` (`640x480`) and `stream_fps` (`15`) |
+| `/stream/start` | Trigger | combined picture-and-sound stream, `http://<pi>:8090/stream.mkv` (stops the camera); picture size and rate from parameters `stream_size` (`640x480`) and `stream_fps` (`15`) |
+| `/stream/audio` | Trigger | audio only, `http://<pi>:8090/audio.mp3` (64 kbit/s MP3, light on CPU); stops the camera and the video stream, which share the mic and port 8090 |
+| `/stream/stop` | Trigger | stops either stream |
 | `/bag/start`, `/bag/stop` | Trigger | `ros2 bag record -s mcap` into `~/bags/<date>_<time>[_<bag_label>]`; start replies with the path, stop with path, duration and message count. Refuses if already recording or under 1 GB free. Set `bag_label` and `bag_topics` in Foxglove's Parameters panel (node `robot_control`) |
 | `/control/status` | Trigger | what is running, bag path, free disk, stray stack pids |
 | `/pi/shutdown`, `/pi/reboot` | SetBool | refused unless `{data: true}`; stops bag and stacks, then powers off after 2 s. Needs the sudoers rule below |
