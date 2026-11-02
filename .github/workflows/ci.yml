@@ -8,8 +8,7 @@ name: CI
 #   cannot: lidar rate, IMU noise, motor direction, TF at runtime — those need
 #         the Pi and are recorded by hand in docs/test_log.md.
 #
-# Private repo: each run is ~4 GitHub Actions minutes against the 2000/month
-# free tier, so keep it to one job.
+# Public since 2026-11-01, so Actions minutes are free; still one build job for speed.
 
 on:
   push:
@@ -71,20 +70,22 @@ jobs:
 
   build-and-test:
     runs-on: ubuntu-24.04
+    # ROS apt source is baked into the image; setup-ros fetched it via a rate-limited
+    # API call and failed with curl exit 22.
+    container: ros:jazzy-ros-base
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
-
-      - uses: ros-tooling/setup-ros@v0.7
-        with:
-          required-ros-distributions: jazzy
 
       - name: Install build dependencies for vendored explore_lite
         run: |
           # explore_lite compiles against nav2_msgs, nav2_costmap_2d and map_msgs.
-          # setup-ros installs ros-base only, so without this the vendored package
+          # the ros-base image has no Nav2, so without this the vendored package
           # fails in the build step for a reason that has nothing to do with us.
-          sudo apt-get update
-          sudo apt-get install -y ros-jazzy-navigation2 ros-jazzy-nav2-bringup
+          apt-get update
+          apt-get install -y ros-jazzy-navigation2 ros-jazzy-nav2-bringup
 
       - name: Assemble workspace (repo + pinned deps.repos)
         run: |
@@ -103,8 +104,8 @@ jobs:
 
       - name: Validate URDF and YAML
         run: |
-          # setup-ros installs ros-base, which has neither xacro nor PyYAML.
-          sudo apt-get install -y ros-jazzy-xacro python3-yaml liburdfdom-tools > /dev/null
+          # the ros-base image has neither xacro nor PyYAML.
+          apt-get install -y ros-jazzy-xacro python3-yaml liburdfdom-tools > /dev/null
           source /opt/ros/jazzy/setup.bash
           source "$HOME/ws/install/setup.bash"
           xacro "$HOME/ws/src/delivery_bot/delivery_bot_description/urdf/delivery_bot.urdf.xacro" > /tmp/robot.urdf
