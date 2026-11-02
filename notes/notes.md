@@ -5,6 +5,12 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-02 (Mac) · PR 3 merged, settings applied, tests-required check
+
+PR 3 squash-merged as 26c192a after two CI fixes (the `dry_run` scan matched `ci.yml` itself; one `setup-ros` exit-22 rerun). Applied: squash-only with branches auto-deleted, ruleset `main` with no bypass (admin direct pushes are now refused), tag `v0.1-slam-mapping`. The two merged feature branches are deleted. New check: code changes need a test, a `docs/test_log.md` row, or `no-test:` in the PR body. Commands are in `docs/system/08_github.md`.
+
+---
+
 ## 2026-11-02 (Mac) · git workflow: PR-only `main`, CI rule checks
 
 Goal: stop pushing to `main` with an admin bypass and make the repo rules bind. Added `.github/pull_request_template.md`, a `repo-rules` CI job (PR title `type: YYYY-MM-DD what`, `notes/notes.md` and `evidence/` append-only, no added `dry_run:=false`), the AGENTS.md "Git workflow" section and `docs/system/08_github.md` with the settings commands. Repo settings and the ruleset are applied after this PR merges (dated rows in 08). Both merged feature branches (`slam/build-path`, `slam/plan-and-skeleton`) were already in `main`.

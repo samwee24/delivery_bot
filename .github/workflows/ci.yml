@@ -46,6 +46,21 @@ jobs:
           changed=$(git diff --diff-filter=MDR --name-only "$base"...HEAD -- evidence/)
           [ -z "$changed" ] || { echo "::error::evidence/ is append-only, modified: $changed"; exit 1; }
 
+      - name: Code changes carry a test or a test-log row
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          base="origin/${{ github.base_ref }}"
+          files=$(git diff --diff-filter=AM --name-only "$base"...HEAD -- 'delivery_bot_*/*.py' 'tools/*.py')
+          code=$(echo "$files" | grep -Ev '(^|/)(test|tests)/|/setup\.py$|/__init__\.py$|/resource/' || true)
+          [ -n "$code" ] || exit 0
+          tests=$(git diff --name-only "$base"...HEAD | grep -E '(^|/)(test|tests)/.*\.py$|^docs/test_log\.md$' || true)
+          [ -z "$tests" ] || exit 0
+          echo "$BODY" | grep -q 'no-test:' && exit 0
+          echo "::error::code changed with no test and no docs/test_log.md row: $code"
+          echo "::error::add one, or write 'no-test: <reason>' in the PR description"
+          exit 1
+
       - name: No dry_run:=false added
         run: |
           if git diff -U0 "origin/${{ github.base_ref }}"...HEAD -- . ':!*.md' ':!.github' \
