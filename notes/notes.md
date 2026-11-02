@@ -5,6 +5,18 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-02 (Pi, remote) · OI-8: offline rig fixed, format still undecided; Pi is under-voltage
+
+Robot not at hand, so only offline work on the Pi (code 349912e). `vcgencmd get_throttled` read `throttled=0x50005` at about 15:34: under-voltage and throttling **right now**, and both have occurred since boot. The portable battery is low or the supply is weak; the Pi has not been loaded beyond the bridge and `robot_control`. Replays below ran in `ROS_DOMAIN_ID=42`.
+
+**Rig bug found.** `rf2o_fmt.sh` gave 0 updates because rcl rejects `-p init_pose_from_topic:=` (empty value); rf2o aborted at start. Passing `''` fixes it (3 bugs in all: that, the hard-coded `/tmp/resample_scan.py`, and a `pkill` pattern that never matched `resample_scan.py`).
+
+**Results** (rows in `docs/test_log.md`). The 2026-11-01 bad push replays to exactly its live value (0.291 m of 1.222 m, 23.8 %). That bag is already 720 beams, so resampling is a no-op there. On the good 2026-10-31 bag (1046 beams), resampling to 720 changed the forward leg by about 4 % (0.124 to 0.119 m), not 76 %. But the control does not reproduce the live number (0.124 against 0.429 m), so the rig still cannot decide the format question.
+
+**Next.** Find why the replay of the good bag differs from live (rf2o start 6 s before playback, `--clock`, or the `push_an.py` axis on a bag with a reversing leg). The live test with `angle_compensate:=false` and a stick or string (person out of the scan) still needs the robot and a charged battery.
+
+---
+
 ## 2026-11-02 (Mac) · PR 3 merged, settings applied, tests-required check
 
 PR 3 squash-merged as 26c192a after two CI fixes (the `dry_run` scan matched `ci.yml` itself; one `setup-ros` exit-22 rerun). Applied: squash-only with branches auto-deleted, ruleset `main` with no bypass (admin direct pushes are now refused), tag `v0.1-slam-mapping`. The two merged feature branches are deleted. New check: code changes need a test, a `docs/test_log.md` row, or `no-test:` in the PR body. Commands are in `docs/system/08_github.md`.
