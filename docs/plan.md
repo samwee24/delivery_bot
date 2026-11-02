@@ -52,7 +52,8 @@ teach it, keeps its own Progress list, and records answers and numbers in
   produce a result nobody can explain.
 - **The lidar's missing points are the known open risk.** If about a third of pings
   return no distance, mapping and scan matching both degrade; understand it in
-  phase 1 rather than discovering it in phase 5.
+  phase 1 rather than discovering it in phase 5. Mitigated on this Pi: the gaps follow
+  the room, and the first map was made despite them (`docs/CA3.md` OI-4, test_log 2026-10-31, 5.4).
 - **SLAM parameters are frozen before evaluation runs — one parameter set for all
   conditions.** Tuning each condition separately invalidates the comparison, because
   the difference then measures the tuning rather than the condition.
