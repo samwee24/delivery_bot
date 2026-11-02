@@ -29,11 +29,11 @@ lidar:
   port: /dev/rplidar        # udev alias, not the raw /dev/ttyUSB0
   model: A1M8
   baudrate: 115200
-  offset_xy_m: [0.0, 0.0]   # MEASURE  lidar centre relative to wheel midpoint
-  yaw_offset_deg: 0.0       # MEASURE  box-at-50 cm test
+  offset_xy_m: [0.02, 0.0]  # measured 2026-10-31  lidar centre relative to wheel midpoint (URDF laser_x/laser_y; notes 2026-10-31)
+  yaw_offset_deg: 0.0       # measured 2026-10-31  box test, two reps +6 / +2.6 deg, inside placement error (notes 2026-10-31)
   min_range_m: 0.15
   max_range_m: 8.0
-  mask_deg: []              # MEASURE  e.g. [[230, 250]] for the 0.23 m returns seen on the old Pi
+  mask_deg: []              # none needed: near returns follow the scene on this Pi (notes 2026-10-30 evening); [[230, 250]] was the old Pi
 imu:
   bus: 1
   address: 0x68
@@ -104,7 +104,7 @@ Foxglove must use `/image_raw/compressed`, not `/image_raw`.
 ## `goals.yaml` (P8)
 
 ```yaml
-home:    [x_m, y_m, yaw_deg]   # MEASURE: the taped home mark
+home:    [0, 0, 0]             # the taped home mark is the map origin (test_log 2026-11-01, 6.2 live)
 seat_1:  [x_m, y_m, yaw_deg]   # MEASURE
 ```
 
@@ -112,11 +112,11 @@ seat_1:  [x_m, y_m, yaw_deg]   # MEASURE
 
 | Key | Value | Source |
 | --- | --- | --- |
-| `lidar.port` | `/dev/rplidar` | udev rule `99-rplidar.rules`, verified on the old Pi |
+| `lidar.port` | `/dev/rplidar` | udev rule `99-rplidar.rules`, verified on the old Pi; exists on `sherm-raspi` since 2026-10-30 (notes 2026-10-30 evening) |
 | `lidar.baudrate` | `115200` | `get_info()` returned at 115200; 256000 timed out |
 | `lidar.model` | `A1M8` | `get_info()['model'] == 24` |
 | `lidar.max_range_m` | `8.0` | longest echo seen 8.7 m, but 67 % of pings silent → keep conservative |
-| `lidar.mask_deg` | *candidate* `[[230, 250]]` | 0.23 m returns at raw 230–250°, old Pi |
+| `lidar.mask_deg` | `[]` | 0.23 m returns at raw 230–250° were on the old Pi; on this Pi near returns follow the scene (notes 2026-10-30 evening), OI-5 resolved 2026-10-31 |
 
 ## Runtime parameters outside the YAML contract
 

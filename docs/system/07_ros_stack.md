@@ -36,7 +36,7 @@ ros2 pkg prefix rf2o_laser_odometry      # -> /home/robot/ros2_ws/install/rf2o_l
 | --- | --- | --- |
 | `odom → base_footprint` | **`ekf_filter_node` only** | rf2o (`publish_tf: false`), the lidar driver, anything else |
 | `base_footprint → base_link → laser` | `robot_state_publisher` from the URDF | — |
-| `map → odom` | `slam_toolbox` (mapping) or nothing in v1 | `robot_localization` (`world_frame: odom`) |
+| `map → odom` | `slam_toolbox`: mapping, or `localization_slam_toolbox_node` in `navigation.launch.py` (resolves, test_log 2026-11-01, 6.2) | `robot_localization` (`world_frame: odom`) |
 
 Two publishers of one transform makes the map spin and looks exactly like a broken
 lidar. If the map rotates on the spot, check `ros2 run tf2_tools view_frames` before
@@ -49,7 +49,7 @@ touching any filter.
 | `rplidar_node` | `rplidar_ros` (`rplidar_composition`) | `/scan` | — | `serial_port: /dev/rplidar`, `115200`, `frame_id: laser`, `angle_compensate: true`, `scan_mode: Standard` |
 | `rf2o_laser_odometry` | built from source | `/odom_rf2o` (velocity) | `/scan` | `publish_tf: false`, `base_frame_id: base_footprint`, `odom_frame_id: odom`, `freq: 10.0` |
 | `imu_node` | `delivery_bot_drivers` | `/imu/data` | — | `bus 1`, `address 104` (0x68), `rate_hz 100`, 3 s bias calibration, `calib_max_std 0.01` |
-| `ekf_filter_node` | `robot_localization` | `odometry/filtered`, **`odom → base_footprint`** | `/odom_rf2o`, `/imu/data` | `two_d_mode`, `30 Hz`, `world_frame: odom` |
+| `ekf_filter_node` | `robot_localization` | `odometry/filtered`, **`odom → base_footprint`** | `/odom_rf2o_cov` (rf2o via `odom_covariance_relay`, test_log 2026-10-30, 4.3), `/imu/data` | `two_d_mode`, `20 Hz` (lowered from 30, `ekf.yaml`; 19.93 Hz measured, test_log 2026-11-01), `world_frame: odom` |
 | `motor_node` | `delivery_bot_drivers` | — | `/cmd_vel` (`TwistStamped`) | pins 12/5/6/13/20/21, `max_duty 0.85`, `watchdog_s 0.5`, **`dry_run` overridden to `true` by the launch file** |
 | `foxglove_bridge` | `foxglove_bridge` | — | — | `port 8765`, `address 0.0.0.0` |
 | `robot_state_publisher` | — | `tf`, `robot_description` | — | URDF via `xacro` |
@@ -85,8 +85,8 @@ plan — just inside `robot_localization` instead of our own filter.
 | `wheel_base` | 0.156 (measured 2026-10-31) | tape measure |
 | `dead_zone_left/right` | 0.35 | P6 calibration |
 | `gain_left/right` | 2.0 duty per m/s | P6 calibration |
-| `gyro_scale_z` | 1.0 | 5-spin test |
-| `ekf.yaml` covariances | defaults | replay / spin test |
+| `gyro_scale_z` | 1.0 (measured 2026-10-31, one hand turn, -360.2° for 360°; test_log 2026-10-31) | 5-spin test still to do |
+| `ekf.yaml` covariances | defaults; the rf2o twist variances (`vx_variance` 1e-4, `vyaw_variance` 5e-3) and `gyro_var` 1e-4 are fitted 2026-10-31 from two hand-moved bags (test_log 2026-10-31, 4.4) | recheck with motors running |
 
 ## Gotchas that have already bitten, or will
 
