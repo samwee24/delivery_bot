@@ -1,5 +1,5 @@
 """Tests for the pure parts of tools/robot_control.py: the stray-process patterns, the
-PROCS table (rule 1) and the bag name. rclpy is stubbed when absent so this runs on a Mac."""
+PROCS table (rule 1), the bag name and the status parsers. rclpy is stubbed when absent so this runs on a Mac."""
 from datetime import datetime
 import os
 import re
@@ -17,7 +17,8 @@ except ImportError:
         'rclpy.executors': {'MultiThreadedExecutor': object},
         'rclpy.node': {'Node': object},
         'std_msgs': {},
-        'std_msgs.msg': {'String': object},
+        'std_msgs.msg': {'Bool': object, 'Float32': object, 'String': object,
+                         'UInt32': object},
         'std_srvs': {},
         'std_srvs.srv': {'SetBool': object, 'Trigger': object},
     }.items():
@@ -124,3 +125,52 @@ def test_audio_only_stream_shares_the_camera_group_and_has_no_video_flag():
     assert 'audio_stream.py' in command and '--video' not in command
     assert re.search(rc.AUDIO_RE, 'python3 /home/robot/x/tools/streams/audio_stream.py')
     assert rc.HELD_BY['audio'] == rc.AUDIO_RE
+
+
+class FakeProc:
+    def __init__(self, alive=True):
+        self.alive = alive
+
+    def poll(self):
+        return None if self.alive else 0
+
+
+def test_parse_throttled_reads_hex_and_survives_garbage():
+    assert rc.parse_throttled('throttled=0x50005\n') == 0x50005
+    assert rc.parse_throttled('throttled=0x0') == 0
+    assert rc.parse_throttled('throttled=0xA0005') == 0xA0005
+    for bad in ('', None, 'command not found', 'throttled=zz'):
+        assert rc.parse_throttled(bad) == 0
+
+
+def test_throttled_bits_under_voltage_is_bit0_and_throttled_is_bit2():
+    for raw, flags in [(0x50005, (True, True)), (0x50000, (False, False)), (0x1, (True, False)),
+                       (0x4, (False, True)), (0x2, (False, False)), (0, (False, False))]:
+        assert rc.throttle_flags(raw) == flags, hex(raw)
+
+
+def test_stack_and_video_state_ignore_dead_and_unrelated_procs():
+    live, dead = (FakeProc(), 0.0), (FakeProc(False), 0.0)
+    assert rc.stack_state({}) == 'none'
+    assert rc.stack_state({'mapping': live, 'camera': live}) == 'mapping'
+    assert rc.stack_state({'base': dead, 'bag': live}) == 'none'
+    assert rc.stack_state({'camera': live, 'bag': live}) == 'none'
+    assert rc.video_state({}) == 'off'
+    assert rc.video_state({'stream': live, 'base': live}) == 'stream'
+    assert rc.video_state({'audio': live}) == 'audio'
+    assert rc.video_state({'camera': dead}) == 'off'
+
+
+def test_status_readers_return_safe_values_when_the_source_is_missing(monkeypatch):
+    def no_vcgencmd(*_a, **_k):
+        raise FileNotFoundError('vcgencmd')
+    monkeypatch.setattr(rc.subprocess, 'run', no_vcgencmd)
+    assert rc.read_throttled() == 0
+    monkeypatch.setattr('builtins.open', no_vcgencmd)
+    assert rc.read_cpu_temp_c() == -1.0
+
+
+def test_cpu_temp_is_millidegrees_over_1000(monkeypatch):
+    import io
+    monkeypatch.setattr('builtins.open', lambda *_a, **_k: io.StringIO('51234\n'))
+    assert rc.read_cpu_temp_c() == 51.234
