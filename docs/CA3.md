@@ -13,7 +13,7 @@ kernel `6.8.0-1065-raspi`, Python 3.12.
 | --- | --- |
 | LAN | `192.168.31.109`, also `sherm-raspi.local` (the bare name `sherm-raspi` does **not** resolve) |
 | Tailscale | `100.83.14.99` (tailnet owned by `chloe.tan.yi.ling@`) |
-| Login | user `robot`, password `robot`; the Mac's key is in `authorized_keys` |
+| Login | user `robot`; key auth from the Mac (its key is in `authorized_keys`); no password stored here |
 | ROS | ROS 2 **Jazzy** in `/opt/ros/jazzy`, `foxglove_bridge` and `rosbag2` (MCAP) installed |
 
 ### Decisions
