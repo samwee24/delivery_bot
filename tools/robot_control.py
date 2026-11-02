@@ -69,6 +69,7 @@ POWER = {'shutdown': 'poweroff', 'reboot': 'reboot'}
 DEFAULT_TOPICS = ['/scan', '/odom_rf2o', '/odom_rf2o_cov', '/odometry/filtered',
                   '/imu/data', '/tf', '/tf_static', '/marker', '/pose']
 MIN_FREE_GB = 1.0
+STACK_WAIT_S = 25
 
 
 def pids_matching(pattern: str, own_pgids: set) -> list:
@@ -192,11 +193,16 @@ class RobotControl(Node):
     def stack(self, name: str):
         self.stack_stop()
         self.spawn(name)
-        time.sleep(8)
-        counts = {p: len(pids_matching(exe_re(p), set()))
-                  for p in ('rplidar_composition', 'ekf_node')}
-        ok = self.running(name) and all(counts.values())
-        return ok, f"{'pass' if ok else 'FAIL'}: {name} {counts}, log /tmp/{name}.log"
+        start = time.time()
+        while True:     # the launch takes 10 s or more on the Pi before its nodes exist
+            counts = {p: len(pids_matching(exe_re(p), set()))
+                      for p in ('rplidar_composition', 'ekf_node')}
+            ok = self.running(name) and all(counts.values())
+            if ok or time.time() - start > STACK_WAIT_S:
+                break
+            time.sleep(1)
+        return ok, (f"{'pass' if ok else 'FAIL'} after {time.time() - start:.0f} s: {name} "
+                    f'{counts}, log /tmp/{name}.log')
 
     def stack_stop(self):
         for name, (_, group) in PROCS.items():
