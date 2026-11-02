@@ -5,6 +5,12 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-02 (Pi, remote) · OI-8: replay window by sim time
+
+`push_an.py` now has `window(P, t0, t1)` (straight-line distance and yaw change, odom frame) and `--sim`; `rf2o_fmt.sh` records with `--use-sim-time` and takes `[t0 t1]` (code ae9cef6). The old 0.429 m "live" number was a projection onto the first heading after an 83 degree turn; over the push window 39-50 s the live odom travels **0.962 m** (`python3 /tmp/push_an.py ~/bags/2026-10-31_push_195343 39 50 --sim`), the 2026-10-31 value.
+Replay of the same window: orig **0.681 m** (71 % of live, 543 updates of 554 scans), resampled to 720 beams **0.786 m**. Control does not match live (29 % short), so the rig is still unvalidated and the format question stays open. Bad bag still replays to max x 0.291 m. Pi still `0x50005`.
+Next: find why orig replay is short (first-scan or `--clock` handling; compare per-update steps against live), then the live `angle_compensate:=false` push on a charged battery. Bags `2026-11-02_121116_push3/4/5` exist and are not analysed.
+
 ## 2026-11-02 (Pi, remote) · OI-8: offline rig fixed, format still undecided; Pi is under-voltage
 
 Robot not at hand, so only offline work on the Pi (code 349912e). `vcgencmd get_throttled` read `throttled=0x50005` at about 15:34: under-voltage and throttling **right now**, and both have occurred since boot. The portable battery is low or the supply is weak; the Pi has not been loaded beyond the bridge and `robot_control`. Replays below ran in `ROS_DOMAIN_ID=42`.
