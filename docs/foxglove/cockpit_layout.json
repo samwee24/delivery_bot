@@ -1,7 +1,7 @@
 {
   "configById": {
     "Indicator!Stack": {
-      "path": "/robot/status/stack",
+      "path": "/robot/status/stack.data",
       "style": "background",
       "fallbackColor": "#616161",
       "fallbackLabel": "NO STACK",
@@ -28,7 +28,7 @@
       "foxglovePanelTitle": "Stack"
     },
     "Indicator!Video": {
-      "path": "/robot/status/video",
+      "path": "/robot/status/video.data",
       "style": "background",
       "fallbackColor": "#616161",
       "fallbackLabel": "VIDEO OFF",
@@ -55,7 +55,7 @@
       "foxglovePanelTitle": "Video"
     },
     "Indicator!Bag": {
-      "path": "/robot/status/bag",
+      "path": "/robot/status/bag.data",
       "style": "background",
       "fallbackColor": "#c62828",
       "fallbackLabel": "REC",
@@ -70,7 +70,7 @@
       "foxglovePanelTitle": "Bag"
     },
     "Indicator!Undervolt": {
-      "path": "/robot/status/undervolt",
+      "path": "/robot/status/undervolt.data",
       "style": "background",
       "fallbackColor": "#2e7d32",
       "fallbackLabel": "POWER OK",
@@ -85,7 +85,7 @@
       "foxglovePanelTitle": "Undervolt"
     },
     "Indicator!Throttling": {
-      "path": "/robot/status/throttling",
+      "path": "/robot/status/throttling.data",
       "style": "background",
       "fallbackColor": "#2e7d32",
       "fallbackLabel": "NO THROTTLE",
@@ -100,7 +100,7 @@
       "foxglovePanelTitle": "Throttling"
     },
     "Indicator!CpuTemp": {
-      "path": "/robot/status/cpu_temp_c",
+      "path": "/robot/status/cpu_temp_c.data",
       "style": "background",
       "fallbackColor": "#2e7d32",
       "fallbackLabel": "CPU OK",
@@ -121,7 +121,7 @@
       "foxglovePanelTitle": "CpuTemp"
     },
     "Indicator!Disk": {
-      "path": "/robot/status/disk_free_gb",
+      "path": "/robot/status/disk_free_gb.data",
       "style": "background",
       "fallbackColor": "#2e7d32",
       "fallbackLabel": "DISK OK",
