@@ -11,7 +11,7 @@ touches /cmd_vel or GPIO: motors stay the safety node's business (AGENTS.md rule
 
 Services (all std_srvs/Trigger unless noted), request {} in Foxglove's Call Service panel:
     /stack/base  /stack/mapping  /stack/localisation  /stack/stop
-    /camera/start  /camera/stop  /stream/start  /stream/stop
+    /camera/start  /camera/stop  /stream/start  /stream/audio  /stream/stop
     /bag/start  /bag/stop      parameters bag_label, bag_topics (Parameters panel)
     /stream/start              parameters stream_size, stream_fps (default 640x480 at 15 fps)
     /control/status
@@ -48,6 +48,7 @@ PROCS = {
     'localisation': (LAUNCH + 'navigation.launch.py bridge:=false', 'stack'),
     'camera': (LAUNCH + 'camera.launch.py', 'video0'),
     'stream': (f'python3 {HERE}/streams/audio_stream.py --video', 'video0'),
+    'audio': (f'python3 {HERE}/streams/audio_stream.py', 'video0'),
     'bridge': (BRIDGE, 'bridge'),
 }
 def exe_re(names: str) -> str:
@@ -65,7 +66,7 @@ CAMERA_RE = exe_re('usb_cam_node_exe')
 AUDIO_RE = r'^(/usr/bin/)?python3 \S*/audio_stream\.py'
 # processes started by hand (or start_streams.sh) that hold what a group needs
 FOREIGN = {'stack': STACK_STRAYS, 'video0': f'{CAMERA_RE}|{AUDIO_RE}'}
-HELD_BY = {'camera': CAMERA_RE, 'stream': AUDIO_RE}
+HELD_BY = {'camera': CAMERA_RE, 'stream': AUDIO_RE, 'audio': AUDIO_RE}
 POWER = {'shutdown': 'poweroff', 'reboot': 'reboot'}
 DEFAULT_TOPICS = ['/scan', '/odom_rf2o', '/odom_rf2o_cov', '/odometry/filtered',
                   '/imu/data', '/tf', '/tf_static', '/marker', '/pose']
@@ -119,7 +120,8 @@ class RobotControl(Node):
                   '/camera/start': lambda: self.start('camera'),
                   '/camera/stop': lambda: self.stop('camera'),
                   '/stream/start': lambda: self.start('stream'),
-                  '/stream/stop': lambda: self.stop('stream'),
+                  '/stream/audio': lambda: self.start('audio'),
+                  '/stream/stop': self.stop_stream,
                   '/bag/start': self.bag_start, '/bag/stop': self.bag_stop,
                   '/control/status': self.status}
         for name, fn in routes.items():
@@ -211,6 +213,10 @@ class RobotControl(Node):
         if name in HELD_BY:     # also the copy start_streams.sh started by hand
             self.kill_strays(HELD_BY[name])
         return True, f'{name} stopped'
+
+    def stop_stream(self):
+        self.stop('audio')      # a managed audio-only stream is not a stray of 'stream'
+        return self.stop('stream')
 
     def stack(self, name: str):
         _, cleared = self.stack_stop()

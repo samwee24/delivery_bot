@@ -116,3 +116,11 @@ def test_stream_args_rejects_anything_a_shell_could_run():
 
 def test_stream_defaults_are_a_native_camera_mode():
     assert rc.stream_args(rc.STREAM_SIZE, rc.STREAM_FPS) == ' --size 640x480 --fps 15'
+
+
+def test_audio_only_stream_shares_the_camera_group_and_has_no_video_flag():
+    command, group = rc.PROCS['audio']
+    assert group == rc.PROCS['stream'][1] == rc.PROCS['camera'][1]
+    assert 'audio_stream.py' in command and '--video' not in command
+    assert re.search(rc.AUDIO_RE, 'python3 /home/robot/x/tools/streams/audio_stream.py')
+    assert rc.HELD_BY['audio'] == rc.AUDIO_RE
