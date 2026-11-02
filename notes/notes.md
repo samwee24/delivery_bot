@@ -5,6 +5,31 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-02 (Pi) · robot_control and the new services run on the Pi
+
+All on `sherm-raspi`, commit 679d297 and later, `colcon build --symlink-install` of drivers, slam and bringup (3 packages, 38 s). `dry_run` stayed true, motors untouched, motor battery not connected. Replies are the actual service replies.
+
+| Check | Result |
+| --- | --- |
+| `/stack/mapping` twice | `pass after 15 s` then `pass after 16 s`; `pgrep` gave 1 lidar driver, 1 EKF, 1 bridge, 1 slam_toolbox each time |
+| mapping started by hand over SSH, then `/stack/base` | `pass after 12 s`; one lidar driver, one EKF, no slam_toolbox, one `ros2 launch` (base) |
+| `/stack/stop` | `stack stopped; killed strays []`; no rplidar, ekf_node or slam_toolbox left, bridge still up |
+| strays reported | `/stack/stop` after a runner restart: `killed strays [11784, 11785, 11786, 11787, 11788, 11839]` |
+| bag `push5` | `/bag/start` returned `/home/robot/bags/2026-11-02_121451_push5`; `/bag/stop` returned `Duration: 21.48 s Messages: 2753`; `ros2 bag info`: `/marker` Count 2, `/odometry/filtered` Count 388 |
+| `/stream/start`, `/stream/stop`, `/camera/start` | all `success=True`; `ros2 topic hz /image_raw/compressed` 9.84 and 9.91 Hz |
+| `/pi/shutdown {}` | `refused: send {data: true}` |
+| `/pi/shutdown {data: true}` | `sudo: a password is required` (no sudoers rule yet); Pi stayed up |
+| `/imu_node/recalibrate`, robot still | `success=True`, `gyro bias rad/s x=-0.02706 y=-0.00610 z=-0.02585` |
+| `/run/save` during mapping | `/home/robot/maps/2026-11-02_1228.* and 6 config files in .../2026-11-02_1228_config/`, 25 s; `.pgm .yaml .posegraph .data` and `_config/` present |
+
+**Bugs found and fixed here** (full text in `docs/system/06_troubleshooting.md`): stray pattern killed the ssh shell (anchored it); 8 s fixed wait too short (polls to 25 s); first marker lost because the recorder is not ready for 2.5 s (`/bag/start` waits for `Recording...`); `/run/save` never replied (blocking calls on a multi-threaded executor). `tools/analysis/marker_pub.py` is the CLI stand-in for Foxglove's Publish panel.
+
+**Not tested.** `/imu_node/recalibrate` with the robot nudged during the call (needs a person; the unit test covers the noisy case, but that test has not run in CI either). `/stack/localisation`. The systemd unit and the sudoers rule (owner steps). `/pi/reboot`, and an actual shutdown. Test saves left in `~/maps` on the Pi: `2026-11-02_1224.pgm/.yaml` (incomplete, from the hung call), `2026-11-02_cli.*`, `2026-11-02_1228*`; delete by hand if unwanted.
+
+**Next.** Owner steps in the README (sudoers, linger, unit), the Foxglove layout export, then the OI-8 push rerun using `/set_pose`, `/bag/start` and `/marker`.
+
+---
+
 ## 2026-11-02 · Foxglove buttons for every routine hand-test action
 
 **Added (Mac, not yet run on the Pi).** `tools/robot_control.py` (replaces `stream_control.py`): Call Service buttons `/stack/base`, `/stack/mapping`, `/stack/localisation`, `/stack/stop`, `/camera/start|stop`, `/stream/start|stop`, `/bag/start|stop` (parameters `bag_label`, `bag_topics`), `/control/status`, `/pi/shutdown|reboot` (SetBool, refused unless `data: true`). Each command runs in its own process group and stops with SIGINT, SIGTERM, SIGKILL; stray stack processes started by hand are killed before a stack starts. `bridge:=false` added to `base`, `mapping` and `navigation` launch files so the runner owns the one Foxglove bridge. `/imu_node/recalibrate` (`imu_node.py`) and `/run/save` (`delivery_bot_slam/run_save.py`, started by `mapping.launch.py`) written, with a unit test each. `tools/robot-control.service` starts the runner at boot.
