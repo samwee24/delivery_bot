@@ -53,9 +53,15 @@ touching any filter.
 | `motor_node` | `delivery_bot_drivers` | — | `/cmd_vel` (`TwistStamped`) | pins 12/5/6/13/20/21, `max_duty 0.85`, `watchdog_s 0.5`, **`dry_run` overridden to `true` by the launch file** |
 | `foxglove_bridge` | `foxglove_bridge` | — | — | `port 8765`, `address 0.0.0.0` |
 | `robot_state_publisher` | — | `tf`, `robot_description` | — | URDF via `xacro` |
+| `run_save` | `delivery_bot_slam` (started by `mapping.launch.py`) | service `/run/save` | calls `/slam_toolbox/save_map`, `/slam_toolbox/serialize_map` | `maps_dir ~/maps`; map, pose graph and config YAMLs under one dated name |
+| `robot_control` | `tools/robot_control.py`, outside the packages | `/marker` topic (created, never published), services `/stack/*`, `/camera/*`, `/stream/*`, `/bag/*`, `/control/status`, `/pi/*` | — | `bag_label`, `bag_topics`; starts and stops whole stacks in their own process groups; run by `robot-control.service` |
+
+`imu_node` also serves `/imu_node/recalibrate` (`Trigger`: re-measure gyro bias, fails if the board moves).
 
 Launches: `base.launch.py` (everything above), `lidar.launch.py`, `mapping.launch.py`,
-`navigation.launch.py`. `base.launch.py` declares `dry_run:=true` and `use_sim_time:=false`.
+`navigation.launch.py`. `base.launch.py` declares `dry_run:=true`, `use_sim_time:=false` and `bridge:=true`;
+`mapping` and `navigation` pass `bridge` through. `robot_control` starts stacks with `bridge:=false` because it owns the one
+Foxglove bridge on port 8765 (two bridges fight for the port). The buttons are tabulated in the README.
 
 ## What the EKF fuses, and why
 
@@ -99,6 +105,7 @@ plan — just inside `robot_localization` instead of our own filter.
 
 ```bash
 ros2 launch delivery_bot_bringup base.launch.py        # bridge included on 8765
+# or press /stack/base in Foxglove once robot_control.py runs (it starts the bridge itself)
 ```
 
 Connect Foxglove Studio to `ws://100.83.14.99:8765` (Tailscale) or

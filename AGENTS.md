@@ -69,6 +69,7 @@ The CA3 brief's other machine, `robot` @ `100.73.7.24` (Debian 13), has been
 | P1 Bring-up | lidar verified on this Pi (A1M8, 7.05 Hz, 26–29 % no-echo, gaps follow the room not the lidar); IMU node written and checked at rest (100 Hz, gyro z std 0.00175 rad/s); motors never driven by us; **robot built 2026-10-31**, lidar and IMU mounting measured into the URDF; gyro reads a hand-turned 360° as 360.2° |
 | P6 localisation | **done by hand** (2026-11-01): `navigation.launch.py` = base + `localization_slam_toolbox_node` on the room graph (no Nav2 yet); a 30 cm / 20° wrong start recovers after a push, 31° does not; Foxglove pose estimate works. `base.launch.py` and `mapping.launch.py` run live from one command |
 | P3–P5 (SLAM side) | rf2o hand tests done (−2 % turn, −3.8 % push); variances fitted; **first room map saved** (`results/maps/2026-10-31_room2.png`); 5.5 sweep done and `slam_mapping.yaml` frozen; USB camera streams to Foxglove (1280x720 at 10 fps) |
+| Foxglove buttons | **done on the Pi** (2026-11-02): `robot_control.py` stacks, bag, camera, stream, power; `/run/save`; `/imu_node/recalibrate`. Power buttons need the sudoers rule (owner step) |
 | P2, P6–P8 | not started (motors are the teammate's) |
 
 Known blockers live in [`docs/CA3.md`](docs/CA3.md) as OI-1…OI-5. OI-3 and OI-5 are
@@ -88,7 +89,7 @@ Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplida
    (`frequency` is now 20). The 20 Hz late-update count is still unconfirmed on a quiet Pi (closure 0.115 m against 0.109 m); rerun the check with nothing else running.
 4. Still waiting on the robot: 3.3 failure tests, 4.5 fusion comparison, stages 8.4
    and 9. Motor-driven work (P2, P6–P8) waits on the teammate.
-5. Foxglove buttons (`tools/robot_control.py`, 2026-11-02) are written but **untested on the Pi**: build, test `/imu_node/recalibrate` and `/run/save`, then the checks in `notes/notes.md` (2026-11-02). Never pass `dry_run:=false` from it.
+5. Foxglove buttons (`tools/robot_control.py`, 2026-11-02) run on the Pi and are logged in `notes/notes.md` and `docs/test_log.md`. Still open: the owner steps in the README (sudoers rule, linger and the systemd unit, Foxglove layout export), `/imu_node/recalibrate` with the robot nudged, `/stack/localisation`. Never pass `dry_run:=false` from it.
 6. Analysis scripts that produced the logged numbers are in `tools/analysis/`; bags
    and maps live only on the Pi (`~/bags`, `~/maps`), backed up by hand to
    `../delivery_bot_pi_backup/` on the Mac.

@@ -77,6 +77,13 @@ The nodes must be runnable off-robot: pure-python code with no ROS imports insid
 ROS only at the edges. That is the test — if `kiss_icp` or the EKF needs a ROS
 graph to be exercised, the layering has leaked.
 
+## Control plane
+
+`tools/robot_control.py` sits beside the stack, not in it: it starts `base`, `mapping` or `localisation` launches, the
+camera, the A/V stream and `ros2 bag record` as separate process groups and stops them with SIGINT first, so it survives
+whatever it controls. It never passes `dry_run:=false` and never touches `/cmd_vel` or GPIO. Foxglove Call Service panels
+are its only interface. See the README for the button table and `docs/system/07_ros_stack.md` for the nodes.
+
 ## Risks
 
 | Risk | Why here | Mitigation |

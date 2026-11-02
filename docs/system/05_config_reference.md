@@ -118,4 +118,16 @@ seat_1:  [x_m, y_m, yaw_deg]   # MEASURE
 | `lidar.max_range_m` | `8.0` | longest echo seen 8.7 m, but 67 % of pings silent → keep conservative |
 | `lidar.mask_deg` | *candidate* `[[230, 250]]` | 0.23 m returns at raw 230–250°, old Pi |
 
+## Runtime parameters outside the YAML contract
+
+Set live in Foxglove's Parameters panel or with `ros2 param set`; not in a package YAML because they
+change per run. Provenance: *chosen 2026-11-02*, no measurement behind them.
+
+| Node | Key | Default | Meaning |
+| --- | --- | --- | --- |
+| `robot_control` | `bag_label` | `''` | appended to the bag directory name, e.g. `push3` |
+| `robot_control` | `bag_topics` | `/scan /odom_rf2o /odom_rf2o_cov /odometry/filtered /imu/data /tf /tf_static /marker /pose` | topics `/bag/start` records |
+| `robot_control` | (constants in `tools/robot_control.py`) | `MIN_FREE_GB 1.0`, `STACK_WAIT_S 25` | refuse a bag under 1 GB free; wait up to 25 s for a stack |
+| `run_save` | `maps_dir` | `~/maps` | where `/run/save` writes `<date>_<HHMM>.*` and `_config/` |
+
 Everything else is still the brief's default, not a measurement.
