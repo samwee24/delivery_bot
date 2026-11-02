@@ -17,7 +17,7 @@ is [`docs/CA3.md`](docs/CA3.md).
 | | |
 | --- | --- |
 | SSH | `robot@100.83.14.99` (Tailscale, works from anywhere); LAN fallback `robot@192.168.31.109` or `sherm-raspi.local` |
-| Password | `robot`; Mac key already authorised, so key auth works from here |
+| Auth | Mac key already authorised, so key auth works from here; no password is stored in this repo (ask the owner) |
 | OS / ROS | Ubuntu 24.04.5 LTS, **ROS 2 Jazzy**, Foxglove bridge + rosbag2 MCAP |
 | Project dir on Pi | `~/ros2_ws/src/delivery_bot/` — this repo, cloned on the Pi (D6). `~/delivery-bot/` is the older pre-ROS layout, scripts only |
 

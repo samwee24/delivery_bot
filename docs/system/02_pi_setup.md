@@ -10,7 +10,7 @@ kernel `6.8.0-1065-raspi`, Python 3.12.3, 32 GB card (3.6 GB used).
 
 | Item | State |
 | --- | --- |
-| Access | `robot` / `robot` over password; Mac key in `authorized_keys` ✅ |
+| Access | `robot` over key auth; Mac key in `authorized_keys` ✅ |
 | Tailscale | installed 2026-10-21, IP `100.83.14.99`, tailnet `chloe.tan.yi.ling@` ✅ |
 | ROS 2 Jazzy | `/opt/ros/jazzy`, 184 MB, 205 `ros-jazzy-*` packages ✅ |
 | `foxglove_bridge` | 3.6.0 installed ✅ |
@@ -28,7 +28,7 @@ kernel `6.8.0-1065-raspi`, Python 3.12.3, 32 GB card (3.6 GB used).
 
 ## To-do (P0)
 
-Run as `robot` unless noted; `sudo` password is `robot`.
+Run as `robot` unless noted; `sudo` needs the owner's password (not stored here).
 
 - [x] **Serial access — udev route** (2026-10-22, partially)
   ```bash
