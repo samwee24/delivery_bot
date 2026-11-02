@@ -5,11 +5,27 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-03 (Pi, remote) · OI-8: beam-format stats and the push3-5 bags
+
+Two offline checks, nothing run live (code 2f62989: `tools/analysis/beamstats.py`, `pushwall.py`).
+
+**Beam format.** The 720-beam bags do not show more non-finite slots or binning duplicates than the 1046-beam bags: bad (inf/nan/0) median 5.8-11 % against 9-13 %, equal adjacent ranges 20-31 % against 22-27 %, longest bad run median 8-21 against 18. The two bad 2026-11-01 bags are at the low end (bad 5.8 and 8.7 %). Suspect (a) gets no support from the slot statistics, though this does not rule out the gradients themselves.
+
+**push3-5 (2026-11-02).** No push in any of them. Front wall 2.932-2.936 m and back wall 2.136-2.140 m in every second, rf2o 0.000 m over the marker window (push5) and over the whole bag (push3, push4). Real travel 0 m, so no ratio; rear points constant at about 111 (static room, nobody walking). They cannot separate the two suspects.
+
+**Classification:** format suspect: not supported by the slot statistics, not tested by these bags. Person suspect: not tested. Overall inconclusive; a bag with a real push after `angle_compensate` is still needed (live push, no one behind, charged battery).
+
+Rows in `docs/test_log.md`.
+
+---
+
 ## 2026-11-03 (Pi, remote) · OI-8: replay repeatability and rate
 
 Verdict: replay is **not repeatable** and **not rate-sensitive** (code e6792e8, rows in `docs/test_log.md`). Three identical rate-1.0 runs on the good bag read 0.679, 0.592 and 0.531 m over 39-50 s (mean 0.601 m, spread about 12 %; live is 0.962 m): `bash /tmp/rf2o_rate.sh ~/bags/2026-10-31_push_195343 orig 39 50 1.0`. Rates 0.5 and 0.25 read 0.689 and 0.681 m, and the bad bag reads max x 0.291 m at rate 1.0 and 0.289 m at 0.25 (`bash /tmp/rf2o_rate.sh ~/bags/2026-11-01_push_230535 orig 0 0 0.25`), so slowing playback does not recover the travel and CPU speed alone is not the cause. The arm clock did not track the distance either (600 MHz gave 0.679 m, 1500 MHz gave 0.592 and 0.531 m).
 Run-to-run noise of 0.15 m means single replay numbers, including the earlier 0.681 and 0.786 m, cannot separate orig from resampled. Before this the live mapping stack was stopped (map saved as `~/maps/2026-11-03_0014.*`) so no live rf2o ran during the replays.
 Next: nothing applied. Open points: why the replay differs run to run when the input bag is identical, and the live `angle_compensate:=false` push on a charged battery.
+
+---
 
 ## 2026-11-02 (Pi, remote) · OI-8: replay window by sim time
 
