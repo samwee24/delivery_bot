@@ -73,6 +73,7 @@ text of the error, so it is searchable later.
 | **hit** `/run/save` never replies, `.pgm`/`.yaml` written but no `.posegraph` | the first version awaited both `slam_toolbox` calls inside an async service callback on a single-threaded executor and the reply never arrived (`serialize_map` from the CLI answers `result=0` in about 9 s) | fixed 2026-11-02: blocking `Client.call` on a `MultiThreadedExecutor` with a reentrant callback group; the call takes about 25 s |
 | **hit** `/pi/shutdown {data: true}` replies `sudo: a password is required` | no sudoers rule yet; the Pi stays up and nothing is stopped | add `/etc/sudoers.d/robot-power` (README, Foxglove buttons); `{}` is refused with `refused: send {data: true}` |
 | `/camera/start` replies `camera running` but `/image_raw/compressed` is missing | `usb_cam` takes about 10 s to open the device and create the topics; the log shows `unknown control 'focus_auto'` and a missing calibration file, both harmless | wait 10 to 12 s; 9.9 Hz measured with `ros2 topic hz` |
+| **hit** `ros2 run ... -p name:=` aborts with `Couldn't parse parameter override rule: '-p init_pose_from_topic:='`, `rclcpp::exceptions::RCLInvalidROSArgsError` | rcl rejects an empty value in a parameter override | pass the empty string as `"name:=''"` (fixed in `tools/analysis/rf2o_fmt.sh`) |
 | **hit** `/odom_rf2o` shows `twist.linear.y` exactly 0 | rf2o is non-holonomic and never reports vy | not a fault; do not read sideways drift from the twist |
 
 ## CI
