@@ -172,6 +172,7 @@ systemctl --user daemon-reload && systemctl --user enable --now robot-control.se
 ```
 
 3. In Foxglove, add one Call Service panel per button and Publish panels for the markers, then export the layout to `docs/foxglove/control_layout.json`.
+4. Or import `docs/foxglove/cockpit_layout.json` (2026-11-03): one layout with a status strip on `/robot/status/*` and tabs Map, Localise, Debug, Camera and Power; see [`docs/foxglove/README.md`](docs/foxglove/README.md).
 
 **Other extras** (`tools/streams/`):
 - `bash tools/streams/start_streams.sh` starts the camera, the bridge, the microphone stream and the runner; `bash tools/streams/start_streams.sh av` starts one combined picture-and-sound stream (`vlc http://100.83.14.99:8090/stream.mkv`, 1280x720 at 30 fps). Needs `robot` in the `audio` group.
