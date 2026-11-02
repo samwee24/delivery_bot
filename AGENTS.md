@@ -107,12 +107,27 @@ Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplida
   [`docs/system/06_troubleshooting.md`](docs/system/06_troubleshooting.md) with their
   exact text. Add to it when you hit something new.
 
+## Git workflow
+
+`main` is protected: changes land by pull request with CI green, never by direct push.
+
+- **One task, one short branch** from `main`, named `type/topic` (`docs/test-log`,
+  `slam/run-save`, `fix/imu-bias`). Open a PR, squash-merge, the branch is deleted
+  automatically. No long-lived branches.
+- **PR title is the commit:** `type: YYYY-MM-DD what`, with the date (CI checks it).
+  The PR template asks for the Pi command and result that back any number (rule 6).
+- **CI enforces what a file cannot** (job `repo-rules`): `notes/notes.md` is
+  append-only, `evidence/` files are never modified or deleted, and no added line
+  contains `dry_run:=false` outside markdown.
+- Tag a milestone as `vX.Y-name` (`v0.1-slam-mapping`) and add a GitHub Release.
+- The repo settings behind this are recorded in `docs/system/08_github.md`.
+
 ## Syncing (Mac ↔ GitHub ↔ Pi)
 
 One repo, three copies. The GitHub repo (public as of 2026-11-01, see OI-7) is the source of truth.
 
-- **`git pull` at the start of every session, `git push` at the end.** No long-lived
-  divergence, no merge conflicts to resolve by hand.
+- **`git pull` at the start of every session; push a branch at the end** (see Git
+  workflow). No long-lived divergence, no merge conflicts to resolve by hand.
 - **Never edit the same file on the Mac and the Pi in one session.** Prose and
   analysis on the Mac; hardware runs on the Pi.
 - **The Pi pulls; it is not a second author** unless the run happened there and could

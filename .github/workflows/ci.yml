@@ -22,6 +22,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Rules a markdown file cannot enforce. Seconds, no ROS, runs on PRs only.
+  repo-rules:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 'PR title is type, date, then what'
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "$TITLE" | grep -Eq '^[a-z]+(\([a-z0-9_-]+\))?: [0-9]{4}-[0-9]{2}-[0-9]{2} .+' \
+            || { echo "::error::title must look like 'docs: 2026-11-02 what changed'"; exit 1; }
+
+      - name: notes.md and evidence/ are append-only
+        run: |
+          base="origin/${{ github.base_ref }}"
+          removed=$(git diff --numstat "$base"...HEAD -- notes/notes.md | awk '{print $2}')
+          [ "${removed:-0}" = 0 ] || { echo "::error::notes/notes.md lost $removed line(s); it is append-only"; exit 1; }
+          changed=$(git diff --diff-filter=MDR --name-only "$base"...HEAD -- evidence/)
+          [ -z "$changed" ] || { echo "::error::evidence/ is append-only, modified: $changed"; exit 1; }
+
+      - name: No dry_run:=false added
+        run: |
+          if git diff -U0 "origin/${{ github.base_ref }}"...HEAD -- . ':!*.md' ':!.github' \
+              | grep -E '^\+' | grep -Ei 'dry_run(:=|=| *: *)(false|0)'; then
+            echo "::error::live motors are a deliberate act on the Pi, not a committed default (AGENTS rule 1)"
+            exit 1
+          fi
+
   build-and-test:
     runs-on: ubuntu-24.04
     steps:
