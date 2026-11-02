@@ -16,12 +16,15 @@ import shutil
 
 from ament_index_python.packages import get_package_share_directory
 import rclpy
+from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from slam_toolbox.srv import SaveMap, SerializePoseGraph
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
 
 # (package, subdir) whose *.yaml are copied beside each saved run
+CALL_TIMEOUT_S = 60.0
 CONFIG_SOURCES = (('delivery_bot_bringup', 'config'), ('delivery_bot_drivers', 'config'))
 
 
@@ -42,20 +45,25 @@ class RunSave(Node):
     def __init__(self) -> None:
         super().__init__('run_save')
         self.declare_parameter('maps_dir', os.path.expanduser('~/maps'))
-        self._save = self.create_client(SaveMap, '/slam_toolbox/save_map')
+        cb = ReentrantCallbackGroup()   # the service callback blocks on the two clients
+        self._save = self.create_client(SaveMap, '/slam_toolbox/save_map', callback_group=cb)
         self._serialize = self.create_client(
-            SerializePoseGraph, '/slam_toolbox/serialize_map')
-        self.create_service(Trigger, '/run/save', self._on_save)
+            SerializePoseGraph, '/slam_toolbox/serialize_map', callback_group=cb)
+        self.create_service(Trigger, '/run/save', self._on_save, callback_group=cb)
 
-    async def _on_save(self, _req, res):
+    def _on_save(self, _req, res):
         if not (self._save.service_is_ready() and self._serialize.service_is_ready()):
             res.success, res.message = False, 'slam_toolbox services not up: is mapping running?'
             return res
         maps_dir = self.get_parameter('maps_dir').value
         base = os.path.join(maps_dir, datetime.now().strftime('%Y-%m-%d_%H%M'))
         os.makedirs(maps_dir, exist_ok=True)
-        grid = await self._save.call_async(SaveMap.Request(name=String(data=base)))
-        graph = await self._serialize.call_async(SerializePoseGraph.Request(filename=base))
+        grid = self._save.call(SaveMap.Request(name=String(data=base)), timeout_sec=CALL_TIMEOUT_S)
+        graph = self._serialize.call(
+            SerializePoseGraph.Request(filename=base), timeout_sec=CALL_TIMEOUT_S)
+        if grid is None or graph is None:
+            res.success, res.message = False, f'slam_toolbox did not answer in {CALL_TIMEOUT_S} s'
+            return res
         if grid.result != 0 or graph.result != 0:
             res.success = False
             res.message = (f'save_map result {grid.result} (1 = no map yet), '
@@ -72,7 +80,9 @@ def main(args=None) -> None:
     rclpy.init(args=args)
     node = RunSave()
     try:
-        rclpy.spin(node)
+        ex = MultiThreadedExecutor(num_threads=2)
+        ex.add_node(node)
+        ex.spin()
     except KeyboardInterrupt:
         pass
     finally:
