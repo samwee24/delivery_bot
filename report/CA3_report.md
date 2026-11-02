@@ -6,11 +6,41 @@ Skeleton only. Write it from [`../notes/notes.md`](../notes/notes.md) and
 
 ## 1. System
 
-- Target: Raspberry Pi 4B Rev 1.4, Ubuntu 24.04.5, ROS 2 Jazzy, standard package stack (D5).
-- Sensors: RPLidar A1M8 (serial, 115200), MPU6050 (I2C 0x68); L298N + TT motors.
-- Stack: `rplidar_ros` + `rf2o` + `robot_localization` + `slam_toolbox` + Nav2, with
-  custom motor and IMU nodes and a URDF; Foxglove for live view; rosbag2 MCAP for
-  logs. Decisions D1–D5 in [`../docs/CA3.md`](../docs/CA3.md).
+> Draft by Claude (2026-11-03), to be rewritten in the author's words.
+
+The robot is a four-wheel skid-steer chassis with TT motors on an L298N. It carries:
+- a Raspberry Pi 4B (4 GB, Ubuntu 24.04.5, ROS 2 Jazzy);
+- an RPLIDAR A1M8 on top, 12 cm up;
+- an MPU6050 for gyro z;
+- a USB camera, for viewing only.
+
+It maps one room once by hand, then is meant to drive from a taped home mark to named
+spots and back.
+
+**Pipeline.**
+1. `rplidar_ros` publishes `/scan`: 720 beams at about 7 Hz.
+2. `rf2o_laser_odometry` turns consecutive scans into a planar velocity. It runs with
+   `publish_tf: false`, and a small relay adds the fitted covariances.
+3. `robot_localization` fuses that velocity with gyro z from our `imu_node` (100 Hz)
+   in a 2D EKF at 20 Hz. It is the only publisher of `odom → base_footprint`.
+4. `slam_toolbox` builds the map and later localises on it (`map → odom`).
+5. Nav2 and the delivery script (P7–P8) are still to come.
+
+**Our code.** We wrote only the hardware glue, the URDF and the tooling:
+- `imu_node`;
+- `motor_node`, owned by the teammate, defaulting to `dry_run`;
+- the URDF;
+- the launch files and YAML config;
+- `robot_control.py`, Foxglove buttons that start stacks, bags and the camera, and
+  save runs;
+- the offline analysis scripts.
+
+All estimation and mapping maths is standard packages (D7). The own numpy EKF and
+planner are the documented fallback, not the implementation.
+
+**Tooling.** Foxglove (over Tailscale) replaces the plan's ZeroMQ viewer, and rosbag2
+MCAP replaces its logger (D3). Decisions D1–D7 are in
+[`../docs/CA3.md`](../docs/CA3.md).
 
 ## 2. Sensor characterisation
 
@@ -210,8 +240,81 @@ sits on the saved map. A 30 cm / 20° wrong start converged after a short push; 
 
 ## 8. What went wrong
 
-Honest list: the 33 % echo rate, the offline Pi, the Ubuntu/Raspberry-Pi-OS split,
-the `min_len=100` rate artefact. State what each cost and what it taught.
+> Draft by Claude from `notes/notes.md`, `docs/test_log.md` and `docs/CA3.md`
+> (2026-11-03), to be rewritten in the author's words. Ordered roughly by cost.
+
+**The brief's Pi went offline (OI-1).** `robot` @ 100.73.7.24 stopped answering on
+2026-10-21. Its venv, scripts and udev rule were lost with it.
+- Cost: P0 was redone on `sherm-raspi` (D1), and every lidar number from the first
+  session became "not re-verified".
+- Lesson: keep the code in git and clone it on the robot (D6), so no machine holds
+  the only copy.
+
+**Ubuntu, not Raspberry Pi OS (D1).** `sherm-raspi` runs Ubuntu 24.04. The plan's
+`raspi-config`, `config.txt` and apt `gpiozero`/`lgpio` paths do not exist there.
+- Cost: the GPIO library choice stayed open until `motor_node` settled on gpiozero
+  with `LGPIOFactory`.
+- Gain: ROS 2 Jazzy installs from apt. That made the standard package stack (D7)
+  cheap, and that stack replaced most of the planned own maths.
+
+**sshd starved of memory (2026-10-22).** SSH stalled at the banner while ping and
+port 22 still answered. A `colcon build` on 4 GB RAM with no swap left sshd unable
+to start a session.
+- Fix: a 2 GB swapfile, persisted in `/etc/fstab`.
+- Lesson: long builds on the Pi need swap, and are run under `tmux` or `setsid`.
+
+**Lidar echo rate (OI-4).** On the first Pi, 33–35 % of pings returned a distance.
+- Cost: a day of diagnosis, and a lingering doubt over every scan.
+- Outcome: on the second mounting, gaps followed the room, not the lidar, and the
+  map was made anyway (Section 2.1). The cause is still not explained, and the 50 cm
+  white-box control was never run.
+
+**`min_len=100` rate artefact.** The brief's `iter_scans` dropped every sparse
+revolution, so the rate read 0.9 Hz when the true rate was 5–7 Hz.
+- Cost: briefly suggested the lidar was failing.
+- Lesson: check a diagnostic's own filter before blaming the sensor.
+
+**Varying beam count broke the first map.** With `angle_compensate` off,
+slam_toolbox rejected 223 scans (`expected 931`) and drew a fan. Fixed with a fixed
+720-beam scan (Section 5).
+- Lesson: one log line explained a failure that looked like bad odometry.
+
+**rf2o under-reads (OI-8), open.** Two hand pushes on 2026-11-01 read 24 % of the
+true travel, against −3.8 % the day before.
+- What was tried: an offline replay setup. It needed three fixes to run at all:
+  - rcl rejected the empty-string parameter;
+  - a script path was hard-coded;
+  - a `pkill` pattern never matched.
+- Then its "forward leg" measure turned out to project onto the heading from before
+  an 83° turn, which made 0.962 m read as 0.429 m.
+- With the window and the measure matched, the replay still reads 0.681 m against
+  0.962 m live.
+- Current lead: CPU or power. The Pi read under-voltage (`0x50005`) during the
+  replays.
+- Lessons:
+  - Validate a test setup against a known answer before using it to judge anything.
+  - Measure straight-line displacement over an explicit window, not a projection.
+
+**Power on a portable bank.** Under-voltage and throttling (2026-11-02), a bag lost
+when the battery went flat mid-recording (2026-11-01), and lidar start-up hangs that
+may be USB power (OI-6).
+- Cost: lost runs, plus a suspected effect on OI-8.
+- Lesson: log `vcgencmd get_throttled` with every run.
+
+**Stale processes confounded measurements.** Orphaned nodes from earlier runs were
+still running during the EKF 20 Hz check (load 5) and a 5.3 rerun. They inflated the
+late-update counts, and one stale slam_toolbox made a failed lifecycle look active.
+- Fix: `robot_control.py`'s `/stack/stop` kills strays and reports them.
+- Lesson: check `pgrep` before trusting a count.
+
+**Shell gotchas over SSH.**
+- `pkill -f` with a pattern that appears in the SSH command line kills the SSH
+  session itself.
+- A backgrounded `ros2 bag record` ignores SIGINT from a non-interactive shell.
+- A Pi reboot clears `/tmp`.
+
+Each cost a run before it was written down. The first two are in
+`docs/system/06_troubleshooting.md`; the third is only in the 2026-10-31 notes entry.
 
 ---
 
