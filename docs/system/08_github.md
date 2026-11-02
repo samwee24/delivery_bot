@@ -33,3 +33,6 @@ enforced) is left in place; the ruleset is the stricter of the two.
 
 | Date | What | Command |
 | --- | --- | --- |
+| 2026-11-02 | squash-only, head branches auto-deleted | `gh repo edit samwee24/delivery_bot --enable-squash-merge --enable-merge-commit=false --enable-rebase-merge=false --delete-branch-on-merge` |
+| 2026-11-02 | ruleset `main` (id 26349259), no bypass actors; verified rules `deletion`, `non_fast_forward`, `pull_request`, `required_status_checks` | `gh api -X POST repos/samwee24/delivery_bot/rulesets --input docs/system/08_github_ruleset.json` |
+| 2026-11-02 | tag `v0.1-slam-mapping` at 26c192a | `git tag -a v0.1-slam-mapping -m ... 26c192a && git push origin v0.1-slam-mapping` |

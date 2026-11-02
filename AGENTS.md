@@ -122,6 +122,15 @@ Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplida
 - Tag a milestone as `vX.Y-name` (`v0.1-slam-mapping`) and add a GitHub Release.
 - The repo settings behind this are recorded in `docs/system/08_github.md`.
 
+## Definition of done
+
+A task that adds or changes logic (a branch, parser, regex, service handler) is not done
+until it has a test: a pytest under the package's `test/` (or `tools/tests/`) that fails
+if the logic breaks. Hardware glue cannot be unit-tested here; it gets a dated row in
+`docs/test_log.md` with the Pi command and result instead. Docs-only and rename-only
+changes need neither; say `no-test: <reason>` in the PR description. CI enforces this
+(job `repo-rules`).
+
 ## Syncing (Mac ↔ GitHub ↔ Pi)
 
 One repo, three copies. The GitHub repo (public as of 2026-11-01, see OI-7) is the source of truth.

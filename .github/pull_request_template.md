@@ -7,6 +7,7 @@
 
 ## Checklist
 - [ ] `notes/notes.md` entry added at the top (append-only) if this was a lab run
+- [ ] Logic changed: a test added (`*/test/`), or a `docs/test_log.md` row for the Pi run, or `no-test: <reason>` below
 - [ ] `docs/test_log.md` row added for any new measurement
 - [ ] No `evidence/` file edited or deleted (new dated file instead)
 - [ ] No `dry_run:=false`, GPIO write or `/cmd_vel` publisher added outside the motor node
