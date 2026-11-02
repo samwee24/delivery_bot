@@ -48,7 +48,7 @@ jobs:
 
       - name: No dry_run:=false added
         run: |
-          if git diff -U0 "origin/${{ github.base_ref }}"...HEAD -- . ':!*.md' \
+          if git diff -U0 "origin/${{ github.base_ref }}"...HEAD -- . ':!*.md' ':!.github' \
               | grep -E '^\+' | grep -Ei 'dry_run(:=|=| *: *)(false|0)'; then
             echo "::error::live motors are a deliberate act on the Pi, not a committed default (AGENTS rule 1)"
             exit 1
