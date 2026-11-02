@@ -49,11 +49,22 @@ PROCS = {
     'stream': (f'python3 {HERE}/streams/audio_stream.py --video', 'video0'),
     'bridge': (BRIDGE, 'bridge'),
 }
+def exe_re(names: str) -> str:
+    """Match a process by its executable path, not any command line that mentions the name.
+
+    An unanchored pattern also matches `ssh ... pgrep -f ekf_node` and kills the shell.
+    """
+    return rf'^(/usr/bin/python3 )?\S*/({names})( |$)'
+
+
+STACK_NAMES = ('rplidar_composition|rf2o_laser_odometry_node|ekf_node|imu_node|'
+               r'odom_covariance_relay|robot_state_publisher|\w*slam_toolbox_node|run_save')
+STACK_STRAYS = exe_re(STACK_NAMES)
+CAMERA_RE = exe_re('usb_cam_node_exe')
+AUDIO_RE = r'^(/usr/bin/)?python3 \S*/audio_stream\.py'
 # processes started by hand (or start_streams.sh) that hold what a group needs
-STACK_STRAYS = ('rplidar_composition|rf2o_laser_odometry_node|ekf_node|imu_node|'
-                'odom_covariance_relay|robot_state_publisher|slam_toolbox|run_save')
-FOREIGN = {'stack': STACK_STRAYS, 'video0': 'usb_cam_node_exe|audio_stream.py'}
-HELD_BY = {'camera': 'usb_cam_node_exe', 'stream': 'audio_stream.py'}
+FOREIGN = {'stack': STACK_STRAYS, 'video0': f'{CAMERA_RE}|{AUDIO_RE}'}
+HELD_BY = {'camera': CAMERA_RE, 'stream': AUDIO_RE}
 POWER = {'shutdown': 'poweroff', 'reboot': 'reboot'}
 DEFAULT_TOPICS = ['/scan', '/odom_rf2o', '/odom_rf2o_cov', '/odometry/filtered',
                   '/imu/data', '/tf', '/tf_static', '/marker', '/pose']
@@ -182,7 +193,7 @@ class RobotControl(Node):
         self.stack_stop()
         self.spawn(name)
         time.sleep(8)
-        counts = {p: len(pids_matching(f'[{p[0]}]{p[1:]}', set()))
+        counts = {p: len(pids_matching(exe_re(p), set()))
                   for p in ('rplidar_composition', 'ekf_node')}
         ok = self.running(name) and all(counts.values())
         return ok, f"{'pass' if ok else 'FAIL'}: {name} {counts}, log /tmp/{name}.log"
