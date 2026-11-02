@@ -5,6 +5,12 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-03 (Pi, remote) · OI-8: replay repeatability and rate
+
+Verdict: replay is **not repeatable** and **not rate-sensitive** (code e6792e8, rows in `docs/test_log.md`). Three identical rate-1.0 runs on the good bag read 0.679, 0.592 and 0.531 m over 39-50 s (mean 0.601 m, spread about 12 %; live is 0.962 m): `bash /tmp/rf2o_rate.sh ~/bags/2026-10-31_push_195343 orig 39 50 1.0`. Rates 0.5 and 0.25 read 0.689 and 0.681 m, and the bad bag reads max x 0.291 m at rate 1.0 and 0.289 m at 0.25 (`bash /tmp/rf2o_rate.sh ~/bags/2026-11-01_push_230535 orig 0 0 0.25`), so slowing playback does not recover the travel and CPU speed alone is not the cause. The arm clock did not track the distance either (600 MHz gave 0.679 m, 1500 MHz gave 0.592 and 0.531 m).
+Run-to-run noise of 0.15 m means single replay numbers, including the earlier 0.681 and 0.786 m, cannot separate orig from resampled. Before this the live mapping stack was stopped (map saved as `~/maps/2026-11-03_0014.*`) so no live rf2o ran during the replays.
+Next: nothing applied. Open points: why the replay differs run to run when the input bag is identical, and the live `angle_compensate:=false` push on a charged battery.
+
 ## 2026-11-02 (Pi, remote) · OI-8: replay window by sim time
 
 `push_an.py` now has `window(P, t0, t1)` (straight-line distance and yaw change, odom frame) and `--sim`; `rf2o_fmt.sh` records with `--use-sim-time` and takes `[t0 t1]` (code ae9cef6). The old 0.429 m "live" number was a projection onto the first heading after an 83 degree turn; over the push window 39-50 s the live odom travels **0.962 m** (`python3 /tmp/push_an.py ~/bags/2026-10-31_push_195343 39 50 --sim`), the 2026-10-31 value.
