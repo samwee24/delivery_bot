@@ -5,6 +5,20 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-03 (Pi, remote) · OI-8: beam-format stats and the push3-5 bags
+
+Two offline checks, nothing run live (code 2f62989: `tools/analysis/beamstats.py`, `pushwall.py`).
+
+**Beam format.** The 720-beam bags do not show more non-finite slots or binning duplicates than the 1046-beam bags: bad (inf/nan/0) median 5.8-11 % against 9-13 %, equal adjacent ranges 20-31 % against 22-27 %, longest bad run median 8-21 against 18. The two bad 2026-11-01 bags are at the low end (bad 5.8 and 8.7 %). Suspect (a) gets no support from the slot statistics, though this does not rule out the gradients themselves.
+
+**push3-5 (2026-11-02).** No push in any of them. Front wall 2.932-2.936 m and back wall 2.136-2.140 m in every second, rf2o 0.000 m over the marker window (push5) and over the whole bag (push3, push4). Real travel 0 m, so no ratio; rear points constant at about 111 (static room, nobody walking). They cannot separate the two suspects.
+
+**Classification:** format suspect: not supported by the slot statistics, not tested by these bags. Person suspect: not tested. Overall inconclusive; a bag with a real push after `angle_compensate` is still needed (live push, no one behind, charged battery).
+
+Rows in `docs/test_log.md`.
+
+---
+
 ## 2026-11-02 (Pi, remote) · OI-8: replay window by sim time
 
 `push_an.py` now has `window(P, t0, t1)` (straight-line distance and yaw change, odom frame) and `--sim`; `rf2o_fmt.sh` records with `--use-sim-time` and takes `[t0 t1]` (code ae9cef6). The old 0.429 m "live" number was a projection onto the first heading after an 83 degree turn; over the push window 39-50 s the live odom travels **0.962 m** (`python3 /tmp/push_an.py ~/bags/2026-10-31_push_195343 39 50 --sim`), the 2026-10-31 value.
