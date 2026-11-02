@@ -16,8 +16,19 @@ Services (all std_srvs/Trigger unless noted), request {} in Foxglove's Call Serv
     /stream/start              parameters stream_size, stream_fps (default 640x480 at 15 fps)
     /control/status
     /pi/shutdown  /pi/reboot   (SetBool, refused unless data: true)
-Publishes nothing on /marker; it only creates the topic so the recorder subscribes before
-the first Foxglove "push start" message.
+Creates /marker without publishing on it, so the recorder subscribes before the first
+Foxglove "push start" message.
+Status, 1 Hz (the cockpit layout's indicators read these; a missing source gives a safe value):
+    /robot/status/stack         String   base|mapping|localisation|none (stacks started here)
+    /robot/status/video         String   camera|stream|audio|off
+    /robot/status/bag           String   bag directory name, or off
+    /robot/status/bag_s         Float32  seconds recording, 0 when off
+    /robot/status/throttled     UInt32   raw `vcgencmd get_throttled`, 0 if unavailable
+    /robot/status/undervolt     Bool     bit 0: under-voltage now
+    /robot/status/throttling    Bool     bit 2: throttled now
+    /robot/status/cpu_temp_c    Float32  thermal_zone0 / 1000, -1 if unreadable
+    /robot/status/load1         Float32  1-minute load average
+    /robot/status/disk_free_gb  Float32  free space under ~/bags
 """
 from datetime import datetime
 import os
@@ -33,7 +44,7 @@ import rclpy
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
-from std_msgs.msg import String
+from std_msgs.msg import Bool, Float32, String, UInt32
 from std_srvs.srv import SetBool, Trigger
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -101,6 +112,54 @@ def bag_name(label: str, now: datetime) -> str:
     return os.path.expanduser(f"~/bags/{now:%Y-%m-%d_%H%M%S}" + (f'_{label}' if label else ''))
 
 
+def parse_throttled(text: str) -> int:
+    """`throttled=0x50005` -> 0x50005; anything unparsable -> 0 (no flags)."""
+    match = re.search(r'throttled=(0x[0-9a-fA-F]+)', text or '')
+    return int(match.group(1), 16) if match else 0
+
+
+def throttle_flags(raw: int) -> tuple:
+    """(under-voltage now, throttled now) = bits 0 and 2 of get_throttled."""
+    return bool(raw & 1), bool(raw & 4)
+
+
+def _running(procs: dict, name: str) -> bool:
+    return name in procs and procs[name][0].poll() is None
+
+
+def stack_state(procs: dict) -> str:
+    return next((n for n in ('base', 'mapping', 'localisation') if _running(procs, n)), 'none')
+
+
+def video_state(procs: dict) -> str:
+    return next((n for n in ('camera', 'stream', 'audio') if _running(procs, n)), 'off')
+
+
+def read_throttled() -> int:
+    try:
+        out = subprocess.run(['vcgencmd', 'get_throttled'], capture_output=True, text=True,
+                             timeout=1).stdout
+    except (OSError, subprocess.SubprocessError):
+        return 0
+    return parse_throttled(out)
+
+
+def read_cpu_temp_c() -> float:
+    try:
+        with open('/sys/class/thermal/thermal_zone0/temp') as f:
+            return int(f.read()) / 1000
+    except (OSError, ValueError):
+        return -1.0
+
+
+def bag_dir_free_gb() -> float:
+    bags = os.path.expanduser('~/bags')     # same disk as ~ until the first bag
+    try:
+        return shutil.disk_usage(bags if os.path.isdir(bags) else os.path.expanduser('~')).free / 1e9
+    except OSError:
+        return -1.0
+
+
 class RobotControl(Node):
     def __init__(self) -> None:
         super().__init__('robot_control')
@@ -112,6 +171,12 @@ class RobotControl(Node):
         self.bag_path = None
         self.lock = threading.RLock()
         self.create_publisher(String, '/marker', 10)
+        kinds = {'stack': String, 'video': String, 'bag': String, 'bag_s': Float32,
+                 'throttled': UInt32, 'undervolt': Bool, 'throttling': Bool,
+                 'cpu_temp_c': Float32, 'load1': Float32, 'disk_free_gb': Float32}
+        self.status_pubs = {k: self.create_publisher(t, f'/robot/status/{k}', 1)
+                            for k, t in kinds.items()}
+        self.create_timer(1.0, self.publish_status)
         cb = ReentrantCallbackGroup()
         routes = {'/stack/base': lambda: self.stack('base'),
                   '/stack/mapping': lambda: self.stack('mapping'),
@@ -131,6 +196,23 @@ class RobotControl(Node):
         with self.lock:
             if not pids_matching('[f]oxglove_bridge', set()):
                 self.spawn('bridge')
+
+    def publish_status(self) -> None:
+        try:
+            procs = dict(self.procs)    # no lock: start/stop hold it for seconds
+            throttled = read_throttled()
+            under, throttling = throttle_flags(throttled)
+            bag = _running(procs, 'bag') and self.bag_path
+            values = {'stack': stack_state(procs), 'video': video_state(procs),
+                      'bag': os.path.basename(bag) if bag else 'off',
+                      'bag_s': time.time() - procs['bag'][1] if bag else 0.0,
+                      'throttled': throttled, 'undervolt': under,
+                      'throttling': throttling, 'cpu_temp_c': read_cpu_temp_c(),
+                      'load1': os.getloadavg()[0], 'disk_free_gb': bag_dir_free_gb()}
+            for key, value in values.items():
+                self.status_pubs[key].publish(self.status_pubs[key].msg_type(data=value))
+        except Exception as err:    # a status glitch must never take the buttons down
+            self.get_logger().warn(f'status publish failed: {err}', throttle_duration_sec=30)
 
     def wrap(self, fn):
         def handler(_req, res):

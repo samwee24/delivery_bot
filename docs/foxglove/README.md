@@ -71,3 +71,29 @@ the relay is not running and the EKF still believes rf2o's zero covariance.
 
 The underlying reasons, and what each failure does to the map, are in
 [`../slam.md`](../slam.md).
+
+## Cockpit layout
+
+`cockpit_layout.json` is the one-screen control layout: a status strip across the top,
+and tabs below it (Map, Localise, Debug, Camera, Power) with the buttons for each job.
+Import it with Foxglove → Layouts → Import from file, then connect to the bridge.
+
+Indicators (fed by the 1 Hz `/robot/status/*` topics that `tools/robot_control.py`
+publishes; the strip is blank until that node runs):
+
+| Indicator | Meaning |
+| --- | --- |
+| Stack | green with the name (BASE, MAPPING, LOCALISE) of the stack started by the buttons; grey NO STACK otherwise |
+| Video | green CAMERA, STREAM or AUDIO; grey when off |
+| Bag | grey BAG OFF, red REC while recording |
+| Undervolt | red UNDER-VOLTAGE when `vcgencmd get_throttled` bit 0 is set now; green otherwise |
+| Throttling | amber THROTTLED when bit 2 is set now |
+| CPU | red above 75 °C, amber above 65 °C |
+| Disk | red below 1 GB free under `~/bags` |
+
+Not verified yet: neither the topics nor the layout have been run on the Pi. The Indicator
+JSON keys and operators were written from memory of Foxglove's export format; if a
+panel shows its fallback only, re-save it in Foxglove and compare. The Debug tab's reply
+box shows `/rosout`; the reply to a button press appears in the button's own panel.
+Stack and Video show only what `robot_control.py` started, so a stack launched by hand
+reads NO STACK.
