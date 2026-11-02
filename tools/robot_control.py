@@ -191,7 +191,7 @@ class RobotControl(Node):
         return True, f'{name} stopped'
 
     def stack(self, name: str):
-        self.stack_stop()
+        _, cleared = self.stack_stop()
         self.spawn(name)
         start = time.time()
         while True:     # the launch takes 10 s or more on the Pi before its nodes exist
@@ -202,7 +202,7 @@ class RobotControl(Node):
                 break
             time.sleep(1)
         return ok, (f"{'pass' if ok else 'FAIL'} after {time.time() - start:.0f} s: {name} "
-                    f'{counts}, log /tmp/{name}.log')
+                    f'{counts}, log /tmp/{name}.log; {cleared}')
 
     def stack_stop(self):
         for name, (_, group) in PROCS.items():
@@ -222,14 +222,19 @@ class RobotControl(Node):
         os.makedirs(os.path.dirname(self.bag_path), exist_ok=True)
         topics = list(self.get_parameter('bag_topics').value)
         cmd = shlex.join(['ros2', 'bag', 'record', '-s', 'mcap', '-o', self.bag_path] + topics)
+        mark = os.path.getsize('/tmp/bag.log') if os.path.exists('/tmp/bag.log') else 0
         log = open('/tmp/bag.log', 'ab')
         self.procs['bag'] = (subprocess.Popen(
             ['bash', '-lc', SRC + cmd], start_new_session=True, stdout=log,
             stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL), time.time())
-        time.sleep(2)
-        if not self.running('bag'):
-            return False, 'recorder exited, see /tmp/bag.log'
-        return True, self.bag_path
+        end = time.time() + 20      # markers sent before "Recording..." would be lost
+        while self.running('bag') and time.time() < end:
+            with open('/tmp/bag.log', 'rb') as f:
+                f.seek(mark)
+                if b'Recording...' in f.read():
+                    return True, self.bag_path
+            time.sleep(0.5)
+        return False, 'recorder not ready, see /tmp/bag.log'
 
     def bag_stop(self):
         if not self.running('bag'):
