@@ -87,6 +87,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 - [ ] [9.4 IMU ablation](#94-imu-ablation)
 - [ ] [9.5 Measure the Pi's load](#95-measure-the-pis-load)
 - [ ] [9.6 Write the SLAM section](#96-write-the-slam-section)
+- [ ] [9.7 People in the room, driven (E4)](#97-people-in-the-room-driven-e4)
 
 **Stage X: Extensions**
 
@@ -771,6 +772,12 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 > Later: only after parameters are frozen (5.5).
 
+> Report link: Stage 9 now feeds [`report_plan.md`](report_plan.md). The driven runs of
+> 9.2 are experiment E1 (the delivery mission); 9.3 gives E3 (repeatability); 9.4 gives
+> E2 (IMU ablation); 9.7 gives E4 (people). The config is frozen before **2026-11-06**,
+> and the 9.2 runs start only after that. Hand-pushed runs remain the fallback if the
+> robot cannot drive in time.
+
 ### 9.1 Survey floor checkpoints
 
 *Tags:* robot
@@ -790,12 +797,13 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 *Tags:* robot, bag
 
-**Why it matters.** Several physical runs, not one bag replayed, so results show real variation.
+**Why it matters.** Several physical runs, not one bag replayed, so results show real variation. These are also the report's E1 delivery runs, so one set of bags feeds E1, E2 and E3.
 
 **Do:**
 
-1. Five runs of the same route: stop at each checkpoint, publish its ID, end on home.
+1. Five driven runs home → seat → home (the phase 7 delivery route): the robot stops at each checkpoint, publish its ID, end on home. Measure the arrival error at each checkpoint with the tape.
 2. Keep the frozen config; note the commit hash per run.
+3. Fallback if the robot cannot drive in time: the same five runs pushed by hand, labelled as such in `docs/test_log.md`.
 
 **Done when:** Five bags with checkpoint markers, listed in `docs/test_log.md`.
 
@@ -812,7 +820,7 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 **Do:**
 
 1. Checkpoint error and return-to-start drift.
-2. Repeatability: pairwise trajectory error between runs and map overlap (IoU), as in Kudriashov et al.
+2. Repeatability (report experiment E3, a partial replication of [K26]'s "AMCL off" condition; add checkpoint error from 9.1, the ground truth K26 lacks): pairwise trajectory error (ATE) between runs and map overlap (IoU), as in Kudriashov et al.
 3. Use `evo` for alignment and trajectory error where it fits.
 
 **Done when:** One command prints the metrics table for all five runs.
@@ -825,12 +833,12 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 *Tags:* bag
 
-**Why it matters.** Answers 'is the gyro worth it?' with your own data.
+**Why it matters.** Answers 'is the gyro worth it?' with your own data. This is report experiment E2, an analogue of [M26] (they ablate the IMU on top of wheel odometry; we have none). Measure before SLAM and after SLAM: M26 saw the gain almost vanish after SLAM.
 
 **Do:**
 
-1. Replay every run with two EKF configs: rf2o only, and rf2o plus gyro.
-2. Measure error before SLAM (odometry alone) and after SLAM.
+1. Replay every 9.2 run with two EKF configs: rf2o only, and rf2o plus gyro. Add one live run per config to check the replay against the real robot.
+2. Measure error before SLAM (odometry alone) and after SLAM: ATE, RPE and heading error (with `evo`).
 
 **Done when:** A table for both configs, before and after SLAM.
 
@@ -858,6 +866,8 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 *Tags:* learn
 
+> Do this last, after 9.7 (it was added later, so it sits below).
+
 **Why it matters.** Bring it together: what you built, why, what the numbers say, and what you'd do next.
 
 **Do:**
@@ -870,6 +880,24 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 **Explain it back:** *If you had one more week, which extension would you pick and why?*
 
 **Read:** [Ran et al. 2025, 2D Lidar SLAM review](https://doi.org/10.3390/rs17071214) · [Kudriashov et al. 2026, AMCL-EKF benchmark](https://doi.org/10.3390/s26134264) · [Merrick & Nandikolla 2026, EKF odometry vs SLAM](https://doi.org/10.3390/s26175468)
+
+### 9.7 People in the room, driven (E4)
+
+*Tags:* robot, bag
+
+**Why it matters.** A delivery robot's customers are the obstacles. This is report experiment E4: it measures what people do to localisation on the same route you already measured empty. It extends X.2 from mapping to driving.
+
+**Do:**
+
+1. Repeat the 9.2 route, with the frozen config, with one or two people walking through the room. Five runs, a bag each, commit hash noted.
+2. Compare against the empty-room 9.2 runs: arrival error at each checkpoint, and the number of localisation failures (pose jumps, or a relocalisation needed).
+3. Safety half, if time allows: one person steps in front of the robot. The stop distance and any contact are recorded. The motor and safety behaviour belong to the teammate; here you only need the bag and the tape-measured distance.
+
+**Done when:** A table of arrival error and localisation failures, empty room against people, from bags listed in `docs/test_log.md`.
+
+**Explain it back:** *Did the people hurt the pose estimate more through the scan matching (rf2o) or through the map matching (slam_toolbox)? How would you tell from the bag?*
+
+**Read:** [Ye et al. 2021, mapping with a person tracker](https://doi.org/10.1109/ROBIO54168.2021.9739394)
 
 ---
 
