@@ -189,6 +189,8 @@ systemctl --user daemon-reload && systemctl --user enable --now robot-control.se
   can override a stuck L298N.
 - The motor node stops both channels if no `/cmd_vel` arrives for 0.5 s, on Ctrl+C,
   and on any exception.
+- **Nobody within 1 m of the robot during odometry runs; push it with a stick** (OI-8: a person
+  walking behind it pulled rf2o down to 24 % of the true distance).
 - `v_max` is 0.15 m/s. Do not raise it casually: the planner, the smoother and the
   controller are all tuned to it.
 
