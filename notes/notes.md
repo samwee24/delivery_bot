@@ -5,6 +5,23 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-03 (Pi, live) · OI-8: live push, nobody in the scan
+
+Two stick pushes of a 1 m tape line on a charged battery (`get_throttled` 0x0 throughout), same start mark and heading, only `angle_compensate` changed (code 766511d, `tools/analysis/push_start.sh`; pushwall as in `docs/test_log.md`).
+
+| Run | angle_compensate | beams | tape m | wall change m | rf2o m | ratio | rear pts median/max | throttled before/after |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| A | true | 720 | 1.00 | 1.007 | 1.008 | 1.008 | 18 / 37 | 0x0 / 0x0 |
+| B | false | 1022 | 1.01 | 1.023 | 0.971 | 0.961 | 16 / 61 | 0x0 / 0x0 |
+
+**Verdict:** both at or above the 0.87 line, so the scan format is cleared; the 2026-11-01 failure points at the person behind the robot (suspect b). Cause identified, not fixed, and not reproduced here: no person walked behind in these runs.
+
+Caveats. The stick end sat about 0.3 m behind the robot in both runs (rear points up to 37 and 61); it moves with the robot, which should bias rf2o low, and it still read the full metre. Run B started recording about 1 s into the push, so about 2 cm is missing from its rf2o and wall numbers. Run A's first start failed IMU calibration (robot touched) and was redone once. The battery was first read under-voltage (0x50005) and was charged before the runs.
+
+Next: planner's call. Per the rule nothing was changed in config. Open questions: whether to keep `angle_compensate:=true`, and whether to repeat the push with a person walking behind to reproduce the 2026-11-01 24 %.
+
+---
+
 ## 2026-11-03 (Pi, remote) · OI-8: beam-format stats and the push3-5 bags
 
 Two offline checks, nothing run live (code 2f62989: `tools/analysis/beamstats.py`, `pushwall.py`).
