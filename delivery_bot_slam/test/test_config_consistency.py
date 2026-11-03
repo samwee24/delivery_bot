@@ -1,5 +1,6 @@
 """Cross-file checks: configs, URDF and safety limits that must agree or stay capped."""
 
+import ast
 from pathlib import Path
 import re
 import xml.etree.ElementTree as ET
@@ -82,8 +83,8 @@ def test_costmap_radius_matches_urdf(nav2, urdf) -> None:
 def test_collision_monitor_zones(nav2) -> None:
     cm = nav2['collision_monitor']['ros__parameters']
     assert {'stop', 'slowdown', 'approach'} <= set(cm['polygons'])
-    stop_reach = max(x for x, _ in cm['stop']['points'])
-    slow_reach = max(x for x, _ in cm['slowdown']['points'])
+    stop_reach = max(x for x, _ in ast.literal_eval(cm['stop']['points']))
+    slow_reach = max(x for x, _ in ast.literal_eval(cm['slowdown']['points']))
     assert stop_reach == 0.20          # E4 baseline, not re-tuned
     assert slow_reach > stop_reach
     assert 0 < cm['slowdown']['slowdown_ratio'] < 1
