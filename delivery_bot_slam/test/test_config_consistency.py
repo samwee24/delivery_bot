@@ -79,6 +79,20 @@ def test_costmap_radius_matches_urdf(nav2, urdf) -> None:
     assert float(cylinder.get('radius')) == xacro_property('robot_radius')
 
 
+def test_collision_monitor_zones(nav2) -> None:
+    cm = nav2['collision_monitor']['ros__parameters']
+    assert {'stop', 'slowdown', 'approach'} <= set(cm['polygons'])
+    stop_reach = max(x for x, _ in cm['stop']['points'])
+    slow_reach = max(x for x, _ in cm['slowdown']['points'])
+    assert stop_reach == 0.20          # E4 baseline, not re-tuned
+    assert slow_reach > stop_reach
+    assert 0 < cm['slowdown']['slowdown_ratio'] < 1
+    local = nav2['local_costmap']['local_costmap']['ros__parameters']['robot_radius']
+    assert cm['approach']['radius'] == local
+    assert cm['approach']['time_before_collision'] > 0
+    assert all(cm[name]['enabled'] is True for name in cm['polygons'])
+
+
 def test_nav2_speed_cap(nav2) -> None:
     desired = list(find_all(nav2, 'desired_linear_vel'))
     limits = list(find_all(nav2, 'max_velocity'))

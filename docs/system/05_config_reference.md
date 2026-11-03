@@ -53,6 +53,10 @@ control:
 safety:
   stop_dist_m: 0.20
   stop_half_angle_deg: 35
+  slowdown_dist_m: 0.50       # default 2026-11-03, not measured
+  slowdown_half_width_m: 0.20 # default 2026-11-03, not measured
+  slowdown_ratio: 0.3         # default 2026-11-03, not measured
+  approach_ttc_s: 1.5         # default 2026-11-03, not measured
   watchdog_s: 0.5
 map:
   resolution_m: 0.05
@@ -79,7 +83,9 @@ values**; they are mapped into the package config files at run time:
 | --- | --- |
 | `control.v_max`, `omega_max`, `lookahead_m` | Nav2 RPP controller (`desired_linear_vel`, `max_angular_vel`, `lookahead_dist`) |
 | `control.goal_tol_m` | Nav2 goal checker |
-| `safety.stop_dist_m`, `stop_half_angle_deg` | Collision Monitor polygon; motor-node watchdog follows `watchdog_s` |
+| `safety.stop_dist_m`, `stop_half_angle_deg` | Collision Monitor `stop` polygon; motor-node watchdog follows `watchdog_s` |
+| `safety.slowdown_dist_m`, `slowdown_half_width_m`, `slowdown_ratio` | Collision Monitor `slowdown` polygon |
+| `safety.approach_ttc_s` | Collision Monitor `approach` polygon (`time_before_collision`) |
 | `map.resolution_m`, `size_m` | `slam_toolbox` `resolution` / map bounds, occupancy grid |
 
 ## `camera.yaml` (`delivery_bot_bringup/config/`)

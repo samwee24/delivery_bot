@@ -285,12 +285,28 @@ collision_monitor:
     stop_pub_timeout: 2.0
     # Polygons represent zone around the robot for "stop", "slowdown" and "limit" action types,
     # and robot footprint for "approach" action type.
-    polygons: ["stop"]
+    polygons: ["stop", "slowdown", "approach"]
     stop:
       type: "polygon"
       action_type: "stop"
       # 0.20 m straight ahead, +-35 deg, in base_footprint
       points: [[0.0, 0.0], [0.20, 0.14], [0.20, -0.14]]
+      visualize: true
+      enabled: true
+    slowdown:
+      type: "polygon"
+      action_type: "slowdown"
+      # box 0.50 m ahead, +-0.20 m (robot_radius 0.12 + 0.08 margin), ~3 s at 0.15 m/s; default 2026-11-03, not measured
+      points: [[0.0, 0.20], [0.50, 0.20], [0.50, -0.20], [0.0, -0.20]]
+      slowdown_ratio: 0.3  # default 2026-11-03, not measured
+      visualize: true
+      enabled: true
+    approach:
+      type: "circle"
+      action_type: "approach"
+      radius: 0.12  # = local_costmap robot_radius; default 2026-11-03, not measured
+      time_before_collision: 1.5  # s; default 2026-11-03, not measured
+      simulation_time_step: 0.1  # s; default 2026-11-03, not measured
       visualize: true
       enabled: true
     observation_sources: ["scan"]
