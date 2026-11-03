@@ -1,6 +1,6 @@
 # CA3 report and presentation plan
 
-**Tentative, agreed 2026-11-03; revisit after OI-8 is closed and after the E1 runs.**
+**Tentative, agreed 2026-11-03; revisit after the E1 runs.** OI-8 closed 2026-11-03: the scan format is cleared; a person walking behind the robot pulled rf2o to 25–28 % of the real push ([notes](../notes/notes.md), `evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`). That is a first measured data point for E4.
 Decision D8 in [CA3.md](CA3.md). Report outline: [../report/CA3_report.md](../report/CA3_report.md).
 Slides: [../report/slides_outline.md](../report/slides_outline.md). Sources:
 [../report/literature_notes.md](../report/literature_notes.md). Robot phases: [plan.md](plan.md);
@@ -113,7 +113,7 @@ assessment is 15 %).
 
 | Day | Robot | Others |
 | --- | --- | --- |
-| Tue 3 Nov | Charge battery (Pi read `0x50005`); close OI-8 (push with `angle_compensate:=false`, with and without a person in the scan); tape checkpoints | Read [K26], [M26], [Y21]; start the product table |
+| Tue 3 Nov | Charge battery (Pi read `0x50005`); ~~close OI-8~~ (done: person behind the robot); tape checkpoints | Read [K26], [M26], [Y21]; start the product table |
 | Wed 4 | Motors in; first live test wheels raised; calibration (dead zone, per-side gain, 1 m straight) | Background draft |
 | Thu 5 | Nav2: 5 goals within 15 cm; delivery script | Hazard table draft |
 | Fri 6 | **Freeze config.** E1 runs (also E3 data); E2 live runs | Report skeleton in the template |
@@ -127,7 +127,7 @@ assessment is 15 %).
 
 | Risk | Fallback |
 | --- | --- |
-| OI-8 not fixed by Wed | E2 on the good 2026-10-31 bag (several replays); report OI-8 as a finding about rf2o's static-scene assumption |
+| People near the robot during hand-pushed fallback runs | Push with a stick or string, nobody within the scan; OI-8 showed a person behind cuts rf2o to about a quarter |
 | Nav2 unreliable by Fri | Teleop on taped routes for E2–E4; E1 reported as partial with the named blocker |
 | Under-voltage, lidar start hang (OI-6) | Charged battery; wait 20 s before a lidar restart |
 | Results contradict the papers | Best slide: explain why |
@@ -140,7 +140,7 @@ Hypotheses until the data decides. Never present one as a finding before its exp
 | Insight | Confirmed by | Killed by |
 | --- | --- | --- |
 | The [K26]/[M26] results transfer (or do not) to a lidar with a much lower echo rate | E3 spread close to (or far from) K26; E2 gain close to (or far from) M26 | — (either way is a result; name the reason) |
-| "The customer is the obstacle": people degrade localisation and are the main safety hazard | E4 arrival error and failures clearly above E1 | E4 ≈ E1 |
+| "The customer is the obstacle": people degrade localisation and are the main safety hazard | E4 arrival error and failures clearly above E1. Early evidence: OI-8, rf2o read 0.242 of 0.862 m and 0.307 of 1.222 m with a person behind (measured, 2026-11-03) | E4 ≈ E1 on driven runs |
 | Redundancy earns its cost | E2 shows the IMU lowers error after SLAM, not only before | E2 gain vanishes after SLAM, as in [M26]: then "SLAM hides odometry quality; the IMU matters only when the map can't correct", also a take |
 | Delivery robots win by simplifying their world | Product table (markers, mapped rooms, slow speed) + E1 success | E1 fails for reasons a simpler world would not fix |
 | Published 2D SLAM evaluation misses what matters for deployment (no ground truth in [K26]; covariances fitted on test data in [M26]; replay not live) | Our checkpoint error disagrees with what pairwise ATE alone suggests, or live differs from replay | Checkpoint error and pairwise ATE tell the same story |
