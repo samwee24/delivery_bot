@@ -1,0 +1,12 @@
+OI-8 bad bags of 2026-11-01 re-read with pushwall.py, Pi sherm-raspi, 2026-11-03 (person pushed the robot by hand, no stick)
+source /opt/ros/jazzy/setup.bash; source ~/ros2_ws/install/setup.bash; cd /tmp/oi8chk   # copies of tools/analysis/pushwall.py, push_an.py, scanchk.py
+
+python3 pushwall.py ~/bags/2026-11-01_push_225752 76 91
+window 76-91 s: rf2o dist 0.242 m yaw 2.4 deg n 106; front 2.572 -> 1.71; back 2.504 -> 0.918
+rear pts in window: median 127 max 148 over 106 scans
+(whole bag: back range 0.51-0.94 m from 77 s, 3.4 m from 94 s; rear points median 105-142 during the push, 43 after)
+
+python3 pushwall.py ~/bags/2026-11-01_push_230535 17 37
+window 17-37 s: rf2o dist 0.307 m yaw 0.8 deg n 139; front 1.896 -> 0.674; back 1.996 -> 0.853
+rear pts in window: median 152 max 160 over 139 scans
+(whole bag: back range 4.18 m at rest, 0.35-0.90 m from 17 s, 5.26 m from 39 s; rear points median 2-3 at rest, 140-158 during the push, 12 after)

@@ -18,7 +18,9 @@ Two stick pushes of a 1 m tape line on a charged battery (`get_throttled` 0x0 th
 
 Caveats. The stick end sat about 0.3 m behind the robot in both runs (rear points up to 37 and 61); it moves with the robot, which should bias rf2o low, and it still read the full metre. Run B started recording about 1 s into the push, so about 2 cm is missing from its rf2o and wall numbers. Run A's first start failed IMU calibration (robot touched) and was redone once. The battery was first read under-voltage (0x50005) and was charged before the runs.
 
-Next: planner's call. Per the rule nothing was changed in config. Open questions: whether to keep `angle_compensate:=true`, and whether to repeat the push with a person walking behind to reproduce the 2026-11-01 24 %.
+**Cause confirmed in the old bags.** `pushwall.py` on the two bad 2026-11-01 bags (rows in `docs/test_log.md`): during the push the range straight behind stayed at 0.35-0.94 m and 105-158 rear points sat there (stick runs today: median 16-18); at push end the back range jumped to 3.4 m and 5.26 m and the rear points fell to 43 and 12. rf2o read 0.242 m of 0.862 m (0.28) and 0.307 m of 1.222 m (0.25) by the front wall. So a person walking behind the robot, in the scan the whole push, is what pulled rf2o down: it assumes a still room. Evidence `evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`. This is also a measured result for experiment E4 (people in the room).
+
+Next: no config change made. `angle_compensate:=true` read best and `slam_mapping.yaml` was frozen with it, so it stays; the planner confirms. rf2o needs nobody near the robot on hand pushes; motor-driven runs do not have this problem.
 
 ---
 
