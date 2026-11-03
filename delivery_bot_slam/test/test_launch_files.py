@@ -134,5 +134,5 @@ def test_navigation_nav2_uses_our_params_without_composition() -> None:
 def test_navigation_does_not_start_amcl_or_map_server() -> None:
     # slam_toolbox supplies /map and map -> odom; bringup_launch.py would add both.
     text = NAV.read_text()
-    assert "'bringup_launch.py'" not in text
+    assert 'bringup_launch.py\'' not in text
     assert not {'amcl', 'map_server'} & {n.node_executable for n in nodes(generate(NAV))}
