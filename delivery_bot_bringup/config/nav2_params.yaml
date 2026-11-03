@@ -289,8 +289,10 @@ collision_monitor:
     stop:
       type: "polygon"
       action_type: "stop"
-      # 0.20 m straight ahead, +-35 deg, in base_footprint
-      points: "[[0.0, 0.0], [0.20, 0.14], [0.20, -0.14]]"  # string: rcl rejects nested lists
+      # 0.20 m straight ahead, +-35 deg, in base_footprint. A string because rcl rejects
+      # nested lists; [0.20, 0.0] is a collinear 4th vertex because Jazzy's string parser
+      # rejects polygons of 3 vertices (`size() <= 3`), the triangle is unchanged.
+      points: "[[0.0, 0.0], [0.20, 0.14], [0.20, 0.0], [0.20, -0.14]]"
       visualize: true
       enabled: true
     slowdown:

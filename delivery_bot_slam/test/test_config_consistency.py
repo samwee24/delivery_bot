@@ -92,6 +92,9 @@ def test_collision_monitor_zones(nav2) -> None:
     assert cm['approach']['radius'] == local
     assert cm['approach']['time_before_collision'] > 0
     assert all(cm[name]['enabled'] is True for name in cm['polygons'])
+    # Jazzy's string parser rejects fewer than 4 vertices (`vvf.size() <= 3`).
+    for name in ('stop', 'slowdown'):
+        assert len(ast.literal_eval(cm[name]['points'])) >= 4
 
 
 def test_nav2_speed_cap(nav2) -> None:
