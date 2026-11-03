@@ -118,7 +118,7 @@ def test_navigation_nav2_include_is_gated_by_nav_and_starts_on_slam_active() -> 
     # The event handler hides its entities from walk(), so this reads the source.
     m = re.search(r"goal_state='active',\s*entities=\[IncludeLaunchDescription\("
                   r"(.*?)\)\]\)\)", NAV.read_text(), re.S)
-    assert m, 'Nav2 include must sit in the OnStateTransition(goal_state="active")'
+    assert m, 'Nav2 include must sit in the slam-active OnStateTransition'
     body = m.group(1)
     assert "'navigation_launch.py'" in body
     assert "IfCondition(LaunchConfiguration('nav'))" in body
@@ -134,5 +134,5 @@ def test_navigation_nav2_uses_our_params_without_composition() -> None:
 def test_navigation_does_not_start_amcl_or_map_server() -> None:
     # slam_toolbox supplies /map and map -> odom; bringup_launch.py would add both.
     text = NAV.read_text()
-    assert 'bringup_launch.py\'' not in text
+    assert "bringup_launch.py'" not in text
     assert not {'amcl', 'map_server'} & {n.node_executable for n in nodes(generate(NAV))}
