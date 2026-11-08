@@ -2,9 +2,8 @@
 
 import math
 
-import pytest
-
 from delivery_bot_mission import goals
+import pytest
 
 
 @pytest.mark.parametrize('yaw', [0.0, math.pi / 2, -math.pi / 2, math.pi - 1e-6])
