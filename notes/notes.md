@@ -5,6 +5,11 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-03 (Mac) · CA3 report framing chosen (tentative)
+
+Read the MA4890 brief (presentation 40 %, CA3 report 20 %, both due end of Week 13; rubric content 40, conclusions 25, presentation 20, peer 15; the lecturer weights own insights highest). Compared six framings (survey, build report, replication, mission matrix, safety case, lidar vs camera); chose replication and extension of [K26]/[M26] on the delivery robot, extended to people [Y21] (D8). Wrote `docs/report_plan.md`, `report/slides_outline.md`, `report/literature_notes.md`, rewrote `report/CA3_report.md`, aligned `docs/plan.md` and build-path Stage 9. No robot runs. After reading the papers (K26 is replay without ground truth and tests AMCL, not the IMU; M26 ablates the IMU on wheel odometry), the framing word became *re-evaluation against published baselines* and the title *Re-evaluating EKF-Fused 2D LiDAR SLAM on a Low-Cost Indoor Delivery Robot: Repeatability, Inertial Contribution and the Effect of Dynamic Human Obstacles*.
+Next: tape the checkpoints (9.1), then motors 2026-11-04 (OI-8 was closed later the same day, entry below: a person behind the robot). Replay noise of about 12 % (entry below) means offline E2 ablation needs several replays per condition, or live runs.
+
 ## 2026-11-03 (Pi, live) · OI-8: live push, nobody in the scan
 
 Two stick pushes of a 1 m tape line on a charged battery (`get_throttled` 0x0 throughout), same start mark and heading, only `angle_compensate` changed (code 766511d, `tools/analysis/push_start.sh`; pushwall as in `docs/test_log.md`).
