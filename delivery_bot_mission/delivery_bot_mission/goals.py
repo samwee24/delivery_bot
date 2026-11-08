@@ -45,7 +45,8 @@ def pose_fields(goal: dict) -> tuple[float, float, float, float, float, float]:
 
 def save_goal(path: str, name: str, x: float, y: float, yaw: float,
               overwrite: bool = False) -> None:
-    """Add one goal to goals.yaml, keeping every other entry.
+    """
+    Add one goal to goals.yaml, keeping every other entry.
 
     A new name is appended as text so the file's comments survive. Replacing an
     existing name (only with ``overwrite``) rewrites the file and loses comments.
