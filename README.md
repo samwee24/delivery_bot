@@ -10,7 +10,7 @@ RPLidar A1M8 + MPU6050 gyro, fused by `robot_localization`, mapped and localised
 > `NotImplementedError`. Since rebuilt and run on the Pi: `imu_node` (test_log
 > 2026-10-30), the URDF with measured mounting (notes 2026-10-31), and
 > `base.launch.py`, `mapping.launch.py`, `navigation.launch.py` (test_log 2026-11-01).
-> Still skeleton: `motor_node` (the teammate's) and `delivery_bot_mission`'s
+> `motor_node` implemented 2026-11-08 (always live, no dry run). Still skeleton: `delivery_bot_mission`'s
 > `scan_stats`, `save_goal`, `deliver`. Each docstring states the contract that file
 > must satisfy. The finished implementation is the tag `reference-v1`
 > (`git checkout reference-v1`) if you want to compare.
@@ -81,7 +81,7 @@ sudo apt install python3-smbus2 python3-gpiozero python3-lgpio
 ## Common commands
 
 ```bash
-# base stack only: robot_state_publisher, lidar, IMU, motors (dry run), rf2o, EKF, Foxglove
+# base stack only: robot_state_publisher, lidar, IMU, motors (LIVE), rf2o, EKF, Foxglove
 ros2 launch delivery_bot_bringup base.launch.py
 
 # mapping: base + slam_toolbox online async
@@ -180,9 +180,10 @@ systemctl --user daemon-reload && systemctl --user enable --now robot-control.se
 
 ## Safety
 
-- **Motors start in dry run.** `base.launch.py` and `navigation.launch.py` default
-  `dry_run:=true`; only `mapping.launch.py` forwards it explicitly. Turning it off is
-  always a deliberate act.
+- **Motors are live in every launch.** `motor_node` has no dry run (2026-11-08):
+  anything that includes `base.launch.py` drives the wheels when `/cmd_vel` is
+  published, whatever `dry_run` says. Keep the motor switch off unless the robot
+  should move.
 - **First live test with the wheels off the ground.** Nothing moves on the floor until
   the dead zone/gain calibration is done with the robot raised.
 - The **motor switch is the kill switch**; there is no software emergency stop that

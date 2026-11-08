@@ -73,7 +73,7 @@ Run as `robot` unless noted; `sudo` needs the owner's password (not stored here)
 - [x] **I2C probe** — MPU6050 read by `imu_node` at 100.04 Hz (test_log 2026-10-30); `i2cdetect -y 1` output not logged. Plan's `dtparam=i2c_arm_baudrate=400000`
   lives in `/boot/firmware/config.txt` on Pi OS; on Ubuntu 24.04 the Pi 4 path is the same file, but check
   `grep -i i2c /boot/firmware/config.txt` before editing.
-- [x] **ROS side** — `delivery_bot` packages in `~/ros2_ws/src/` (D6); IMU node run on the Pi (test_log 2026-10-30), URDF with measured mounting (notes 2026-10-31); `motor_node` is still the skeleton (its functions raise `NotImplementedError`), see [07_ros_stack.md](07_ros_stack.md)).
+- [x] **ROS side** — `delivery_bot` packages in `~/ros2_ws/src/` (D6); IMU node run on the Pi (test_log 2026-10-30), URDF with measured mounting (notes 2026-10-31); `motor_node` implemented 2026-11-08, not yet logged on the Pi, see [07_ros_stack.md](07_ros_stack.md)).
 - [ ] **Shell** — `.bashrc` already sources `/opt/ros/jazzy/setup.bash` and `~/ros2_ws/install/setup.bash`.
   No venv, so nothing else to source.
 

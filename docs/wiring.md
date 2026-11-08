@@ -1,6 +1,6 @@
 # Wiring
 
-BCM GPIO numbering, as used by `gpiozero`/`lgpio` and `drivers.yaml`.
+BCM GPIO numbering, as used by `gpiozero`/`lgpio` and `drivers.yaml`. IN3/IN4 moved from 20/21 to 26/16 on 2026-11-08.
 
 | Signal | GPIO | L298N |
 | --- | --- | --- |
@@ -8,8 +8,8 @@ BCM GPIO numbering, as used by `gpiozero`/`lgpio` and `drivers.yaml`.
 | IN1 (left dir A) | 5 | IN1 |
 | IN2 (left dir B) | 6 | IN2 |
 | ENB (right PWM) | 13 | ENB |
-| IN3 (right dir A) | 20 | IN3 |
-| IN4 (right dir B) | 21 | IN4 |
+| IN3 (right dir A) | 26 | IN3 |
+| IN4 (right dir B) | 16 | IN4 |
 
 ## Power
 

@@ -37,8 +37,9 @@ The CA3 brief's other machine, `robot` @ `100.73.7.24` (Debian 13), has been
 - **`odom → base_footprint` is published by `robot_localization` alone.** rf2o runs
   with `publish_tf: false`. Two publishers of one transform makes the map spin and
   looks exactly like a broken sensor — check `tf2_tools view_frames` first.
-- `motor_node` defaults to `dry_run:=true` from the launch file (computes duties,
-  never touches GPIO). Live motors are a deliberate act.
+- `motor_node` (2026-11-08) has **no dry run**: `base.launch.py` starts it and it
+  drives GPIO whenever `/cmd_vel` is published. `dry_run` defaults to `false` and is
+  ignored. The motor battery switch is the only way to keep the wheels dead.
 
 ## Rules
 

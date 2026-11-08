@@ -103,7 +103,7 @@ artefact. True rate, measured off the `new_scan` flag: **5–7 Hz**. Diagnostics
 
 | Check | State |
 | --- | --- |
-| Each wheel spins both ways | ⏸ not run by us; motors are the teammate's (`docs/CA3.md` P1). `motor_node` is still the skeleton (`NotImplementedError`); its contract names `gpiozero` with `LGPIOFactory` (notes 2026-10-22, rf2o built) |
+| Each wheel spins both ways | ⏸ not logged yet. `motor_node` is implemented (2026-11-08: `/cmd_vel` → gpiozero with `LGPIOFactory`, 20 Hz, 0.5 s watchdog); no `test_log` row for a wheel test yet |
 | Gyro reads ~0 °/s at rest after bias removal | ✅ `imu_node` at rest: 100.04 Hz, z mean 1e-5 rad/s, std 0.00175 rad/s after bias removal, board not yet on the robot (test_log 2026-10-30). On the robot a hand-turned 360° read -360.2° (test_log 2026-10-31, 3.2 spin) |
 | Scan of the room plots correctly | ✅ first room map, 317 x 233 cells (test_log 2026-10-31, 5.4); gaps follow the room (OI-4, mitigated) |
 

@@ -46,8 +46,8 @@ See [07_ros_stack.md](07_ros_stack.md) for topics, frames and Foxglove panels.
    feature-poor scan — and with a 33 % echo rate, feature-poor scans are common.
 5. **Safety is not optional.** Intended: motors get commands only from a safety node.
    **Actual (2026-10-22): `motor_node` subscribes to `/cmd_vel` directly** — there is no
-   mux or safety node yet, so the only protection is the 0.5 s watchdog, `max_duty: 0.85`,
-   and `dry_run` defaulting to `true`. Closing this gap is a P7/prequel task, not a
+   mux or safety node yet, so the only protection is the 0.5 s watchdog and `max_duty: 0.85`
+   (`motor_node` has no dry run since 2026-11-08; the motor switch is the kill switch). Closing this gap is a P7/prequel task, not a
    nice-to-have: Nav2 publishes `TwistStamped`, and a stale or runaway publisher is
    one launch file away.
 6. **Unknown space is blocked.** Planning treats occupied *and* unknown cells as
