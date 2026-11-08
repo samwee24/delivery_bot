@@ -2,10 +2,19 @@
 
 Raw artefacts: [`../evidence/lidar/`](../../evidence/lidar/). Session log: [`../notes.md`](../../notes/notes.md).
 
-## P1 lidar — status: **partially verified**
+## P1 lidar — status: **verified on `sherm-raspi`**
 
-All numbers below come from `robot` @ `100.73.7.24` (Debian 13), which is now
-offline. **They are not re-verified on `sherm-raspi`.**
+The tables below come from `robot` @ `100.73.7.24` (Debian 13), now offline. On
+`sherm-raspi` the lidar has since been used for every SLAM run:
+
+- `/scan` at 6.92 Hz from `base.launch.py` (test_log 2026-11-01) and 7.10 Hz from
+  `mapping.launch.py` (test_log 2026-11-01, 5.3 live).
+- Near returns below 0.30 m move between bags, so they follow the scene, not the lidar;
+  no `mask_deg` needed (notes 2026-10-30 evening).
+- Raw ranges agree with tape within 3.5 cm on two gaps (test_log 2026-10-31, 5.4 scale
+  check), and the first room map was made (test_log 2026-10-31, 5.4).
+- `docs/CA3.md` (P1, OI-4) also quotes 7.05 Hz and 26–29 % no-echo for this Pi; no
+  test_log row or notes entry carries the command for those two numbers.
 
 > **D5 update (2026-10-22).** The stack moves to `rplidar_ros` (see
 > [07_ros_stack.md](07_ros_stack.md)). The probe must therefore read `/scan` rather
@@ -65,7 +74,10 @@ Per 15° sector, from `scripts/probe_echo_rate.py`:
 No sector exceeds 82 %, so there is a uniform ~20 % loss floor even on the best
 wall — consistent with film/dust on the scan window rather than room geometry.
 
-### Decisive test still outstanding
+### White-box echo test — not run
+
+No white-box echo run is in the test log or the notes. The 1.4 box tests (notes 2026-10-30,
+2026-10-31) checked the lidar's facing, not its echo rate.
 
 Put a white box or sheet **50 cm** in front of the lidar, clear space all round,
 and re-run `probe_echo_rate.py`:
@@ -87,15 +99,17 @@ The brief's `iter_scans(..., min_len=100)` drops every revolution with fewer tha
 artefact. True rate, measured off the `new_scan` flag: **5–7 Hz**. Diagnostics use
 `min_len=5`.
 
-## P1 — not started
+## P1 — partial
 
 | Check | State |
 | --- | --- |
-| Each wheel spins both ways | ⏸ `test_motors.py` not written; GPIO library choice still open on Ubuntu (see [02_pi_setup.md](02_pi_setup.md)) |
-| Gyro reads ~0 °/s at rest after bias removal | ⏸ `i2cdetect -y 1` never run; MPU6050 not probed |
-| Scan of the room plots correctly | ⚠️ plots, but sparse — see OI-4 |
+| Each wheel spins both ways | ⏸ not run by us; motors are the teammate's (`docs/CA3.md` P1). `motor_node` is still the skeleton (`NotImplementedError`); its contract names `gpiozero` with `LGPIOFactory` (notes 2026-10-22, rf2o built) |
+| Gyro reads ~0 °/s at rest after bias removal | ✅ `imu_node` at rest: 100.04 Hz, z mean 1e-5 rad/s, std 0.00175 rad/s after bias removal, board not yet on the robot (test_log 2026-10-30). On the robot a hand-turned 360° read -360.2° (test_log 2026-10-31, 3.2 spin) |
+| Scan of the room plots correctly | ✅ first room map, 317 x 233 cells (test_log 2026-10-31, 5.4); gaps follow the room (OI-4, mitigated) |
 
 ## How to reproduce
+
+Old-Pi commands, kept as recorded: `sherm-raspi` has no venv (`docs/CA3.md`, P0).
 
 ```bash
 ssh robot@sherm-raspi.local

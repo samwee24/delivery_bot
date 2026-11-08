@@ -20,10 +20,10 @@ things (EKF predict+update, planner+controller).
 
 | Plan stage | ROS node (actual) | Package | Rate |
 | --- | --- | --- | --- |
-| 1. Lidar input | `rplidar_node` → `/scan` | `rplidar_ros` | 5–7 Hz (one scan per revolution) |
+| 1. Lidar input | `rplidar_node` → `/scan` | `rplidar_ros` | 5–7 Hz (one scan per revolution); 6.92–7.10 Hz on this Pi (test_log 2026-11-01) |
 | 2. Gyro input | `imu_node` → `/imu/data` | `delivery_bot_drivers` | 100 Hz |
-| 3. Lidar odometry | `rf2o_laser_odometry` → `/odom_rf2o` (velocity) | built from source | 10 Hz |
-| 4. Pose fusion | `ekf_filter_node` → `odometry/filtered` + `odom→base_footprint` | `robot_localization` | 30 Hz |
+| 3. Lidar odometry | `rf2o_laser_odometry` → `/odom_rf2o` (velocity) | built from source | on scan: 7.06–7.33 Hz on this Pi (test_log 2026-10-30 relay, 2026-11-01 base) |
+| 4. Pose fusion | `ekf_filter_node` → `odometry/filtered` + `odom→base_footprint` | `robot_localization` | 20 Hz (`ekf.yaml` `frequency`, lowered from 30; 19.93 Hz measured, test_log 2026-11-01) |
 | 5. Mapping | `slam_toolbox` | apt | on scan |
 | 6. Planning | Nav2 | `nav2_bringup` | on goal |
 | 7. Control | `motor_node` | `delivery_bot_drivers` | 20 Hz |

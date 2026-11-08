@@ -1,0 +1,17 @@
+OI-8 live push, nobody behind but the stick, Pi sherm-raspi, 2026-11-03
+Scripts: tools/analysis/push_start.sh / push_stop.sh at 766511d; stack started by hand with
+  ros2 launch delivery_bot_slam rf2o_alone.launch.py angle_compensate:=<true|false> + imu_node,
+  bag recorded with Foxglove /bag/start and /bag/stop (robot_control.py, label push_ac<true|false>).
+get_throttled: 0x0 before and after both runs (0x50005 before the battery was charged).
+
+--- Run A: angle_compensate:=true, 720 beams, tape 1.00 m
+source /opt/ros/jazzy/setup.bash; source ~/ros2_ws/install/setup.bash
+python3 ~/ros2_ws/src/delivery_bot/tools/analysis/pushwall.py ~/bags/2026-11-03_135611_push_actrue 7 35
+window 7-35 s: rf2o dist 1.008 m yaw 1.2 deg n 210; front 1.494 -> 0.487; back 0.298 -> 0.398
+rear pts in window: median 18 max 37 over 211 scans
+
+--- Run B: angle_compensate:=false, 1022 beams, tape 1.01 m (bag started about 1 s into the push)
+python3 ~/ros2_ws/src/delivery_bot/tools/analysis/pushwall.py ~/bags/2026-11-03_140352_push_acfalse 0 15
+window 0-15 s: rf2o dist 0.971 m yaw -2.9 deg n 99; front None -> 0.447; back None -> 0.544
+rear pts in window: median 16 max 61 over 114 scans
+(front 1.47 at the first scan second, 0.447 at the end: 1.023 m; run A rested at 1.494 on the same mark)

@@ -1,322 +1,394 @@
-# CA3 report — draft outline
-
-Skeleton only. Write it from [`../notes/notes.md`](../notes/notes.md) and
-[`../results/`](../results/) once P1 is clean; do not restate the plan — the plan is
-[`../docs/design-plan.md`](../docs/design-plan.md).
-
-## 1. System
-
-> Draft by Claude (2026-11-03), to be rewritten in the author's words.
-
-The robot is a four-wheel skid-steer chassis with TT motors on an L298N. It carries:
-- a Raspberry Pi 4B (4 GB, Ubuntu 24.04.5, ROS 2 Jazzy);
-- an RPLIDAR A1M8 on top, 12 cm up;
-- an MPU6050 for gyro z;
-- a USB camera, for viewing only.
-
-It maps one room once by hand, then is meant to drive from a taped home mark to named
-spots and back.
-
-**Pipeline.**
-1. `rplidar_ros` publishes `/scan`: 720 beams at about 7 Hz.
-2. `rf2o_laser_odometry` turns consecutive scans into a planar velocity. It runs with
-   `publish_tf: false`, and a small relay adds the fitted covariances.
-3. `robot_localization` fuses that velocity with gyro z from our `imu_node` (100 Hz)
-   in a 2D EKF at 20 Hz. It is the only publisher of `odom → base_footprint`.
-4. `slam_toolbox` builds the map and later localises on it (`map → odom`).
-5. Nav2 and the delivery script (P7–P8) are still to come.
-
-**Our code.** We wrote only the hardware glue, the URDF and the tooling:
-- `imu_node`;
-- `motor_node`, owned by the teammate, defaulting to `dry_run`;
-- the URDF;
-- the launch files and YAML config;
-- `robot_control.py`, Foxglove buttons that start stacks, bags and the camera, and
-  save runs;
-- the offline analysis scripts.
-
-All estimation and mapping maths is standard packages (D7). The own numpy EKF and
-planner are the documented fallback, not the implementation.
-
-**Tooling.** Foxglove (over Tailscale) replaces the plan's ZeroMQ viewer, and rosbag2
-MCAP replaces its logger (D3). Decisions D1–D7 are in
-[`../docs/CA3.md`](../docs/CA3.md).
-
-## 2. Sensor characterisation
-
-> Draft for sections 2, 3 and 5, written by Claude from `docs/test_log.md`,
-> `notes/notes.md` and `docs/system/` on 2026-11-03. To be rewritten in the author's
-> words. Every number names the log row it came from.
-
-### 2.1 Lidar (RPLIDAR A1M8)
-
-The unit reports `model 24` (A1M8), firmware 1.29, hardware 7, health `('Good', 0)`,
-at 115200 baud (`docs/system/03_bringup.md`). The serial link was clean: no sync or
-descriptor errors were raised in any run.
-
-**Echo rate.** On the first Pi (`robot` @ 100.73.7.24, 2026-10-21), only 95–105 of
-284 pings per revolution came back with a distance. That is an echo rate of 33–35 %
-(three runs: 34, 35, 35 %), against more than 90 % expected
-(`evidence/lidar/2026-10-21_*.png`). The returns that did arrive were strong (quality
-median 15 of 15). A dropped return is reported as distance 0, so the loss happens in
-the optics or the room, not on the wire.
-
-Per 15° sector (`probe_echo_rate.py`), the echo rate ranged from 0 % in a sector
-looking through an opening to 80–82 % on the best wall. Even that best wall lost
-about 20 %, which pointed at the scan window.
-
-The brief's `iter_scans(min_len=100)` dropped every revolution with fewer than 100
-valid points. That made the rate read about 0.9 Hz when the true rate was 5–7 Hz.
-Diagnostics use `min_len=5` instead.
-
-**Controls.**
-- Second mounting, on `sherm-raspi`: 26–29 % no-echo at 7.05 Hz, so roughly 71–74 %
-  of pings return. The source is the P1 row of `docs/CA3.md`; the probe command is
-  not recorded with that number, so it should be rerun and logged before the report
-  quotes it.
-- Near returns (under 0.30 m) were binned over three bags on 2026-10-30. The bins
-  moved with the scene, so they are the room, not the robot, and no `mask_deg` is
-  needed.
-- The planned 50 cm white-box echo test was never run as specified. The 1.4 box
-  tests done instead checked the lidar's yaw, not its echo rate: face at +6° and
-  +2.6°, so `laser_yaw` stays 0.
-
-OI-4 is therefore mitigated but not explained.
-
-**Beam count.** With `angle_compensate` off (the `rplidar_ros` default), each scan
-carries a varying number of beams, 1041–1046. slam_toolbox rejected 223 scans of the
-first map run with
-`LaserRangeScan contains 1041 range readings, expected 931`. Setting
-`angle_compensate: True` gives a fixed 720 beams at 0.50°, with 0 rejections after
-(commit 4a16fe8, test log 2026-10-31).
-
-**Scale against tape.** Raw `/scan` ranges at two poses summed to 1.085 m against a
-1.05 m tape gap (+3.5 cm) and 1.494 m against 1.48 m (+1.4 cm) (test log 2026-10-31,
-`lr.sh`).
-
-**Consequence for mapping.** The scans are sparse, but walls still show as dotted
-arcs. slam_toolbox's correlative matcher and rf2o's range flow both still had
-enough to work on: the first map closed its loop within 0.109 m over 42 m
-(Section 5).
-
-### 2.2 IMU (MPU6050)
-
-At rest, before the robot was built (2026-10-30, `imu_node`):
-- rate 100.04 Hz;
-- gyro bias z −0.0279 rad/s, removed at start-up;
-- after bias removal, z std 0.00175 rad/s (variance 3.1e-6).
-
-Accel z reads 11.16 m/s² against 9.81, 14 % high. The scale is not calibrated, and
-the EKF uses only gyro z, so this does not matter here.
-
-On the built robot (2026-10-31), a hand-turned 360° read −360.2° on the gyro
-integral, within 0.06 %. `gyro_scale_z` therefore stays 1.0 (one run). The fitted
-`gyro_var` is 1e-4, about 60 times the at-rest variance as margin
-(test log 2026-10-31, 4.4).
-
-### 2.3 Camera
-
-The UGREEN 2K USB camera is for live viewing only; SLAM does not use it. The Pi
-decodes its MJPEG in software on one core, so the delivered rate is capped at about
-11.6 Mpixel/s:
-- 1280x720 at 10 fps delivers 10.0 Hz;
-- 1920x1080 delivers only 4.5–5.7 Hz.
-
-Under SLAM replay load, the camera made the EKF miss its update deadline 8–26 times
-in 65 s, against 0 without it (test log 2026-10-31). Keep the camera off while
-mapping.
-
-## 3. Setup and wiring
-
-**Power.** There are two supplies with one shared ground (`docs/wiring.md`):
-- the Pi, lidar and camera run from a 5 V 3 A power bank;
-- the motors run from a 2×18650 pack, through the kill switch, into the L298N 12 V
-  input.
-
-L298N GND goes to Pi pin 34. The L298N 5 V jumper is on, but its +5 V terminal is
-left unconnected, so nothing feeds back into the Pi. The ENA/ENB jumpers are removed
-so that PWM sets the speed.
-
-The kill switch is the motor battery switch: software cannot override a stuck L298N
-channel.
-
-**Pin map (BCM).**
-
-| Signal | GPIO |
-| --- | --- |
-| Left ENA / IN1 / IN2 | 12 / 5 / 6 |
-| Right ENB / IN3 / IN4 | 13 / 20 / 21 |
-
-The MPU6050 is on 3.3 V, I2C bus 1, address `0x68`.
-
-**Mounting (measured 2026-10-31, tape, from the midpoint of the four wheels).**
-- Lidar: 2 cm forward, centred, 12 cm up.
-- IMU: 2.3 cm forward, 5.5 cm right, 7 cm up.
-- Wheel base: 0.156 m.
-- Robot radius: about 0.12 m.
-
-The wheel radius, 0.0325 m, is the TT default and has not been measured. The robot
-has four wheels and steers by skidding, so 0.156 m is only a first guess for the
-effective track width. All of these values are in the URDF.
-
-**`mask_deg`.** On the old mounting, a 0.23 m return at raw 230–250° was a candidate
-for masking. After the re-mount, the near returns followed the scene (Section 2.1),
-so no mask is set (OI-5, resolved).
-
-**Ubuntu deviations from the plan (D1).** The build target runs Ubuntu 24.04, not
-Raspberry Pi OS, so `raspi-config`, `/boot/firmware/config.txt` and apt `gpiozero`
-are not available. `motor_node` uses gpiozero with `LGPIOFactory`; `lgpio` is in
-`/usr/lib/python3/dist-packages`, and `RPi.GPIO` is absent on aarch64. There is no
-venv, because the apt ROS stack covers the dependencies (`docs/system/02_pi_setup.md`).
-
-**Brown-outs.** The portable power bank has caused real faults:
-- the lidar hung at start (OI-6);
-- a bag was lost when the battery went flat (2026-11-01);
-- the Pi read `throttled=0x50005`, under-voltage, on 2026-11-02.
-
-The motors have not yet been driven by us (P2 belongs to the teammate).
-
-## 4. Odometry and fusion
-
-- `rf2o` planar odometry on sparse scans; outlier/gate behaviour.
-- `robot_localization` 2D EKF with gyro-z only: 3 spins, heading error vs rf2o alone.
-
-## 5. Mapping
-
-**Run.** The robot was pushed by hand around the room from a taped start mark and
-back to it, with `slam_toolbox` in mapping mode on top of the base stack
-(rf2o → EKF), recorded to `~/bags/2026-10-31_map_200956`. The map was saved with
-`map_saver_cli` and serialised as a pose graph for localisation (test log 2026-10-31,
-5.4).
-
-**Result.** `results/maps/2026-10-31_room2.png`: 317 x 233 cells at 0.05 m, 65.5 m²
-free, 4375 occupied cells. Walls and furniture are recognisable. The regular grid of
-star-shaped dots on the floor is office chair bases and table legs, which Nav2
-should treat as obstacles; at first these were wrongly taken for the person pushing.
-On one tape gap the map read 1.00 m against 1.05 m (−5 cm, one cell). The second gap
-has not been read from the map yet, so 5.4 stays open.
-
-**The first attempt failed.** It came out as a 184 x 112 fan because of the varying
-beam count (Section 2.1). This was the most useful single fix of the SLAM work.
-
-**Parameter sweep (5.5).** Five replays of the map bag, changing one parameter each
-time (test log 2026-10-31). Closure is the distance between the first and last poses
-of the 42 m route, which starts and ends on the same mark.
-
-| Variant | Closure | Occupied cells |
-| --- | --- | --- |
-| Baseline (`min_laser_range` 0.15, loop closing on, `minimum_travel_distance` 0.1) | 0.109 m | 4087 |
-| `min_laser_range` 0 | 0.123 m | 3721 |
-| Loop closing off | 0.658 m | 4285 |
-| `minimum_travel_distance` 0.05 | 0.186 m | 4169 |
-| `minimum_travel_distance` 0.2 | 0.113 m | 3468 |
-
-Loop closing is the only setting that matters (×6 closure error without it). The
-others land within about 1–8 cm on one run each, which is not a difference.
-`slam_mapping.yaml` is frozen at the baseline (commit 6484678). A rerun at EKF 20 Hz
-gave 0.115 m, inside the ~1 cm run-to-run spread, but that run was confounded by
-stale processes and needs repeating on a quiet Pi.
-
-**Caveat (OI-8).** rf2o later under-read straight pushes by 76 % on bags recorded
-after the 720-beam change. Whether the map run was affected is not known. If it was,
-slam_toolbox's scan matching and loop closure corrected for it: the map scale agrees
-with tape to one cell. The cause is still under test (`docs/test_log.md`, 2026-11-02
-rows).
-
-**Localisation on the saved map** (`navigation.launch.py`, 2026-11-01). The live scan
-sits on the saved map. A 30 cm / 20° wrong start converged after a short push; a
-30 cm / 31° start did not. That fits the matcher's 20° coarse heading window
-(`coarse_search_angle_offset` 0.349 rad). This belongs to Section 7 once Nav2 runs.
-
-## 6. Control and safety
-
-- Motion calibration curves; 1 m straight-line test.
-- Safety stop zone, watchdogs, kill switch; evidence that each actually fires.
-
-## 7. Navigation and delivery
-
-- Nav2 (RPP + Collision Monitor): 5 goals, error distribution, no collisions.
-- Home → seat → home, repeatability.
-
-## 8. What went wrong
-
-> Draft by Claude from `notes/notes.md`, `docs/test_log.md` and `docs/CA3.md`
-> (2026-11-03), to be rewritten in the author's words. Ordered roughly by cost.
-
-**The brief's Pi went offline (OI-1).** `robot` @ 100.73.7.24 stopped answering on
-2026-10-21. Its venv, scripts and udev rule were lost with it.
-- Cost: P0 was redone on `sherm-raspi` (D1), and every lidar number from the first
-  session became "not re-verified".
-- Lesson: keep the code in git and clone it on the robot (D6), so no machine holds
-  the only copy.
-
-**Ubuntu, not Raspberry Pi OS (D1).** `sherm-raspi` runs Ubuntu 24.04. The plan's
-`raspi-config`, `config.txt` and apt `gpiozero`/`lgpio` paths do not exist there.
-- Cost: the GPIO library choice stayed open until `motor_node` settled on gpiozero
-  with `LGPIOFactory`.
-- Gain: ROS 2 Jazzy installs from apt. That made the standard package stack (D7)
-  cheap, and that stack replaced most of the planned own maths.
-
-**sshd starved of memory (2026-10-22).** SSH stalled at the banner while ping and
-port 22 still answered. A `colcon build` on 4 GB RAM with no swap left sshd unable
-to start a session.
-- Fix: a 2 GB swapfile, persisted in `/etc/fstab`.
-- Lesson: long builds on the Pi need swap, and are run under `tmux` or `setsid`.
-
-**Lidar echo rate (OI-4).** On the first Pi, 33–35 % of pings returned a distance.
-- Cost: a day of diagnosis, and a lingering doubt over every scan.
-- Outcome: on the second mounting, gaps followed the room, not the lidar, and the
-  map was made anyway (Section 2.1). The cause is still not explained, and the 50 cm
-  white-box control was never run.
-
-**`min_len=100` rate artefact.** The brief's `iter_scans` dropped every sparse
-revolution, so the rate read 0.9 Hz when the true rate was 5–7 Hz.
-- Cost: briefly suggested the lidar was failing.
-- Lesson: check a diagnostic's own filter before blaming the sensor.
-
-**Varying beam count broke the first map.** With `angle_compensate` off,
-slam_toolbox rejected 223 scans (`expected 931`) and drew a fan. Fixed with a fixed
-720-beam scan (Section 5).
-- Lesson: one log line explained a failure that looked like bad odometry.
-
-**rf2o under-reads (OI-8), open.** Two hand pushes on 2026-11-01 read 24 % of the
-true travel, against −3.8 % the day before.
-- What was tried: an offline replay setup. It needed three fixes to run at all:
-  - rcl rejected the empty-string parameter;
-  - a script path was hard-coded;
-  - a `pkill` pattern never matched.
-- Then its "forward leg" measure turned out to project onto the heading from before
-  an 83° turn, which made 0.962 m read as 0.429 m.
-- With the window and the measure matched, the replay still reads 0.681 m against
-  0.962 m live.
-- Current lead: CPU or power. The Pi read under-voltage (`0x50005`) during the
-  replays.
-- Lessons:
-  - Validate a test setup against a known answer before using it to judge anything.
-  - Measure straight-line displacement over an explicit window, not a projection.
-
-**Power on a portable bank.** Under-voltage and throttling (2026-11-02), a bag lost
-when the battery went flat mid-recording (2026-11-01), and lidar start-up hangs that
-may be USB power (OI-6).
-- Cost: lost runs, plus a suspected effect on OI-8.
-- Lesson: log `vcgencmd get_throttled` with every run.
-
-**Stale processes confounded measurements.** Orphaned nodes from earlier runs were
-still running during the EKF 20 Hz check (load 5) and a 5.3 rerun. They inflated the
-late-update counts, and one stale slam_toolbox made a failed lifecycle look active.
-- Fix: `robot_control.py`'s `/stack/stop` kills strays and reports them.
-- Lesson: check `pgrep` before trusting a count.
-
-**Shell gotchas over SSH.**
-- `pkill -f` with a pattern that appears in the SSH command line kills the SSH
-  session itself.
-- A backgrounded `ros2 bag record` ignores SIGINT from a non-interactive shell.
-- A Pi reboot clears `/tmp`.
-
-Each cost a run before it was written down. The first two are in
-`docs/system/06_troubleshooting.md`; the third is only in the 2026-10-31 notes entry.
+# CA3 report: detailed outline (plan C+)
+
+**Tentative title.** Re-evaluating EKF-Fused 2D LiDAR SLAM on a Low-Cost Indoor Delivery Robot: Repeatability, Inertial Contribution and the Effect of Dynamic Human Obstacles
+
+**Fallback title** (use if E1 to E4 do not run in time). Localisation and Safety Lessons for Autonomous Vehicles from a Low-Cost Indoor Delivery Robot
+
+**Framing.** Re-evaluation against published baselines, not replication: E3 partially
+replicates [K26], E2 is an analogue of [M26], E4 extends [Y21]. Comparisons are directional.
+
+Plan, schedule and experiment table: [`../docs/report_plan.md`](../docs/report_plan.md)
+(being written in parallel; if a link there disagrees with this file, the plan wins).
+Brief: one group report, NTULearn template is a formatting reference only, no length
+limit, due end of Week 13. Rubric: content 40 %, conclusions 25 %, presentation 20 %,
+peer 15 %. The slides follow the same section order.
+
+## Writing rules
+
+- **Provenance label on every number**: *brief default*, *measured*, *fitted* or
+  *target* (AGENTS rule 4). A MEASURE value is not a result until measured on the robot.
+- **Numbers travel with the command that produced them** (AGENTS rule 6): give the test
+  log row or note, with the date and commit, beside the number.
+- **Pending results** are written `RESULT: pending E1` (or E2, E3, E4) and nothing else.
+  No estimate, no "about", no expected value.
+- **Citation keys** are those in [`../docs/slam.md`](../docs/slam.md) References: [R25],
+  [K26], [M26], [J16], [MJ21], [H22], [Y21], [S23], [F17], [EXP], [EVO]. Do not cite
+  anything not in that table until it is added there. Product facts and standards
+  (SOTIF, ISO 13482) are "to check" until a source is found.
+- Plain prose, British spelling (localisation, characterisation). Links relative to this
+  file. Every slide headline and every section end carries a claim, not a topic.
+- Owners: Sherman (SLAM, localisation, lidar and IMU), motor teammate (drive, Nav2 goals,
+  delivery script), A and B (placeholders: background, products, hazard table, people runs).
+
+## Abstract
+
+- **Purpose**: five sentences a marker can quote: problem, the robot as a scaled AV,
+  which published results were re-evaluated, the main finding, what it means for real AVs.
+- **Rubric**: content 40 %, conclusions 25 %.
+- **Goes in**: write last. Sentence 4 states the finding that the data supports, including
+  "did not transfer" if E2 or E3 say so. Every number in it carries a pointer to section 5.
+- **Evidence**: sections 5 to 8 of this report.
+- **Owner**: A (draft), Sherman (check numbers).
+
+## 1 Introduction
+
+- **Purpose**: frame indoor delivery as an AV problem, state the RQs and contributions.
+- **Rubric**: content 40 % (in-depth thinking), presentation 20 % (logical flow).
+- **Goes in**:
+  - Last-metre delivery robots and full-size AVs share one loop: sense, localise, map,
+    plan, act, stay safe. One paragraph, sources "to check".
+  - The question: published 2D SLAM results were measured under conditions a cheap
+    delivery robot never sees (replay, better sensors, wheel encoders, no people). Do
+    they hold, and what changes? (slide hook.)
+  - RQ1 repeatability on a cheap lidar and a Raspberry Pi 4 [K26]; RQ2 IMU contribution
+    [M26]; RQ3 people in the room [Y21]; RQ4 the delivery mission (home to seat to home, 5
+    runs in a row, within 15 cm, no human touch; *target*, phase 7 in
+    [`../docs/plan.md`](../docs/plan.md)).
+  - Contributions, in one list: a live re-evaluation on low-cost hardware with tape-measured
+    ground truth (which [K26] lacks), the before/after-SLAM IMU test, an extension to people,
+    an open record of failures (OI-4, OI-8), a working integrated robot.
+  - Scope: what is out (camera localisation, wheel encoders, multi-room maps) goes to
+    section 8.
+  - **Contribution table per member** (Sherman: lidar, IMU, rf2o, EKF, slam_toolbox,
+    localisation, E2, E3; motor teammate: motors, Nav2 goals, delivery script, E1; A, B:
+    products, hazard table, E4, background). Peer assessment (15 %) reads this table.
+- **Evidence**: [`../docs/CA3.md`](../docs/CA3.md) decisions D5, D7, D8;
+  [`../docs/plan.md`](../docs/plan.md); [`../docs/slam.md`](../docs/slam.md) References.
+- **Owner**: A, with Sherman and the motor teammate for their rows.
+
+## 2 Background and state of the art
+
+- **Purpose**: show the research effort and place the work against papers and products.
+- **Rubric**: content 40 % ("extensive research effort").
+- **Goes in**:
+  - 2.1 2D lidar SLAM families: filter, graph, learned. Why graph SLAM suits a small
+    room [R25]; the package we used [MJ21]; wrong loop closures as a failure mode [H22].
+  - 2.2 Scan-matching odometry for sparse scans: range flow [J16], de-skewing for slow
+    lidars [S23].
+  - 2.3 Published baselines, stated precisely: what [K26] measured and how, what [M26]
+    measured and how (IMU ablation design), what [Y21] adds (people). For each, a row
+    "their setup / their metric / their finding / what we copy / what differs". Fill
+    from [`literature_notes.md`](literature_notes.md), which corrects two assumptions:
+    [K26] compares AMCL feedback on/off (IMU fused in both), mostly by offline replay of
+    an Ouster OS-1 cut to 2D, with no ground truth (its "ATE" is run-to-run spread);
+    [M26] ablates wheel odometry vs wheel odometry + IMU yaw on the MIT Stata dataset.
+    So E3 replicates K26's "AMCL off" condition; E2 is an analogue of M26, not a copy.
+    Our 9.1 checkpoints give the ground truth K26 lacks: say so as a contribution.
+  - 2.3b How the field evaluates 2D SLAM, critically: pairwise ATE without ground truth,
+    offline replay instead of live runs, covariances fitted on the evaluation data
+    ([M26] lists this as its own limitation). One paragraph ending in an **Our take**.
+  - 2.4 Evaluation tools and metrics: APE and RPE with [EVO], map quality without ground
+    truth [F17].
+  - 2.5 AV localisation in industry (HD-map lidar matching, camera-led, GNSS/INS plus
+    wheel odometry): sources to find, one short paragraph each, no unsourced claims.
+  - 2.6 **Product comparison** (table below), with one paragraph on what each product
+    simplifies about its world (mapped site, fixed routes, slow speed, remote operator).
+    Aethon TUG is a hospital cart robot; Amazon Scout was shut down in 2022. Both are
+    *to check* before they are written as facts.
+- **Product table skeleton** (every cell "to check" except our robot):
+
+| Product | Setting | Main sensors | Localisation approach | Price class | Status | Source |
+| --- | --- | --- | --- | --- | --- | --- |
+| Pudu BellaBot | to check | to check | to check | to check | to check | to check |
+| Keenon (delivery models) | to check | to check | to check | to check | to check | to check |
+| Aethon TUG | to check | to check | to check | to check | to check | to check |
+| Starship | to check | to check | to check | to check | to check | to check |
+| Amazon Scout | to check | to check | to check | to check | to check (plan notes a 2022 shutdown) | to check |
+| Our robot | one small indoor room, taped home mark | RPLidar A1M8, MPU6050 gyro, USB camera (not used for localisation) | rf2o scan odometry + IMU in a `robot_localization` EKF, `slam_toolbox` on a saved map | consumer parts (cost: to sum from the build) | research build, motors pending (see 5.1) | [`../docs/system/01_hardware.md`](../docs/system/01_hardware.md) |
+
+- **Evidence**: [`../docs/slam.md`](../docs/slam.md) References and its literature
+  sections; [`../docs/system/07_ros_stack.md`](../docs/system/07_ros_stack.md) for the
+  stack choice (D5, D7 in [`../docs/CA3.md`](../docs/CA3.md)).
+- **Owner**: A (2.5, 2.6 products), B (2.6 products, split with A), Sherman (2.1 to 2.4).
+
+## 3 System
+
+- **Purpose**: a reader can rebuild the robot and see what is ours and what is bought.
+- **Rubric**: content 40 %, presentation 20 %.
+- **Goes in**:
+  - Hardware: Raspberry Pi 4B, RPLidar A1M8, MPU6050, L298N and TT motors, USB camera;
+    power split and kill switch (motor switch, not software).
+  - ROS 2 Jazzy stack: `rplidar_ros`, `rf2o_laser_odometry` (`publish_tf: false`),
+    `robot_localization` (sole publisher of `odom to base_footprint`), `slam_toolbox`,
+    Nav2. We write only the motor node, IMU node, URDF and delivery script (D5, D7).
+  - One diagram of the TF tree and topic graph (reuse
+    [`../docs/img/pipeline-flow.png`](../docs/img/pipeline-flow.png) if it is current;
+    otherwise redraw).
+  - Safety design as structure: motors only through the watchdog (`stop_dist_m`,
+    `watchdog_s`, SIGINT zeroes PWM), `dry_run` default, `v_max` 0.15 m/s (*brief default*).
+    Describe it; do not design motor code (motor teammate owns it).
+  - Operations: Foxglove for live view and buttons, rosbag2 MCAP for every run, config
+    YAML copied back per run.
+  - Discussion hook for section 6: buy the estimation maths, write only the glue.
+- **Evidence**: [`../docs/system/01_hardware.md`](../docs/system/01_hardware.md),
+  [`../docs/system/04_architecture.md`](../docs/system/04_architecture.md),
+  [`../docs/system/05_config_reference.md`](../docs/system/05_config_reference.md),
+  [`../docs/system/07_ros_stack.md`](../docs/system/07_ros_stack.md),
+  [`../docs/wiring.md`](../docs/wiring.md), [`../docs/CA3.md`](../docs/CA3.md) D5 to D7.
+- **Owner**: Sherman (sensing, SLAM, TF), motor teammate (drive, safety node), B (diagram).
+
+## 4 Method
+
+- **Purpose**: make E1 to E4 repeatable and show exactly where we differ from [K26] and [M26].
+- **Rubric**: content 40 %.
+- **Goes in**:
+  - The shared driven protocol: five tape-measured checkpoints (slam_build_path Stage 9.1),
+    config frozen on one date, commit hash recorded per run, battery charged before each
+    run (the Pi read `throttled=0x50005` on 2026-11-02, measured, test log).
+  - E1 delivery mission: 5 runs, home to seat to home. Metrics: success %, arrival error
+    at checkpoints, time.
+  - E2 IMU ablation: E1 bags replayed with the EKF with and without the IMU, plus one
+    live run each. Metrics: ATE, RPE, heading error with [EVO]. Calibrate variances on a
+    run that is not used for evaluation [M26].
+  - E3 repeatability: the same five runs, pairwise ATE and map IoU [K26].
+  - E4 people in the room: 5 runs with 1 to 2 people walking, plus one person stepping
+    in front. Metrics: arrival error against E1, localisation failures, stop distance,
+    contacts.
+  - S hazard table: 6 to 8 hazards, mitigation, the test that proves it.
+  - Differences from [K26] and [M26] in a table: lidar (A1M8, 7.05 Hz, 26 to 29 % no-echo,
+    *measured*), no wheel encoders, Pi 4, room size, human presence, run count.
+  - Threats to validity: ruler-and-eye ground truth in the early tests, hand-pushed
+    runs, five runs only, one room.
+  - Optional: echo rate by material with `tools/probe_echo_rate.py` (first to drop if
+    time runs out).
+- **Evidence**: [`../docs/slam_build_path.md`](../docs/slam_build_path.md) Stage 9;
+  [`../docs/slam.md`](../docs/slam.md) evaluation sections;
+  [`../docs/plan.md`](../docs/plan.md) phase 7; [`../tools/analysis/`](../tools/analysis/);
+  [`../docs/system/05_config_reference.md`](../docs/system/05_config_reference.md).
+- **Owner**: Sherman (E2, E3, metrics), motor teammate (E1 protocol), B (E4, hazard table).
+
+## 5 Results
+
+- **Purpose**: present measured results only, each with its provenance.
+- **Rubric**: content 40 %.
+- **Goes in**: 5.1 to 5.7 below. Figures carry the commit hash and bag name in the caption.
+  Where nothing is measured yet, write the `RESULT: pending` line and keep the table.
+
+### 5.1 Platform characterisation (already measured)
+
+- Lidar: A1M8 at 7.05 Hz; 26 to 29 % no-echo on this Pi; gaps follow the room, not the
+  lidar. *measured.* Figure:
+  [`../evidence/lidar/2026-10-21_composite_20revs.png`](../evidence/lidar/2026-10-21_composite_20revs.png).
+  Source: OI-4 in [`../docs/CA3.md`](../docs/CA3.md) and the P1 row of
+  [`../docs/test_log.md`](../docs/test_log.md).
+- IMU at rest: 100 Hz, gyro z std 0.00175 rad/s. *measured*, 2026-10-30,
+  [`../docs/test_log.md`](../docs/test_log.md) and [`../notes/notes.md`](../notes/notes.md).
+- Gyro on a hand-turned full turn reads 360.2 degrees against a true 360. *measured*,
+  2026-10-31 (3.2 in [`../docs/test_log.md`](../docs/test_log.md)).
+- Power: `throttled=0x50005` (under-voltage) read on 2026-11-02 and 2026-11-03.
+  *measured*; see [`../docs/system/06_troubleshooting.md`](../docs/system/06_troubleshooting.md).
+- Motors and drive: RESULT: pending motor teammate (motors due 2026-11-04 per the plan).
+
+### 5.2 Scan odometry and its failure (already measured)
+
+- rf2o by hand on 2026-10-31: turn read 352.9 degrees for 360 (-2 %), 1 m push read
+  0.962 m (-3.8 %). *measured*, 3.2 in [`../docs/test_log.md`](../docs/test_log.md).
+- OI-8: two pushes on 2026-11-01 read about 24 % of true travel (-76 %). *measured*;
+  cause open. Leads: scan format (`angle_compensate`), a person behind the robot.
+  Offline rig results in the 2026-11-02 and 2026-11-03 test log rows (replay is
+  not repeatable and is not yet a clean control). State this as open unless Tuesday's
+  live pushes close it.
+- Figure: rf2o distance per run, good bag against bad bag (script in
+  [`../tools/analysis/`](../tools/analysis/)).
+
+### 5.3 Mapping and localisation on the saved map (already measured)
+
+- First room map and frozen `slam_mapping.yaml` (5.4, 5.5 in the test log). Figure:
+  [`../results/maps/2026-10-31_room2.png`](../results/maps/2026-10-31_room2.png).
+- Wrong-start recovery: a 30 cm / 20 degree wrong start recovers after a push; 31 degrees
+  does not (6.4, 2026-11-01). *measured, ruler-and-eye truth.* Figure:
+  [`../results/maps/2026-11-01_room2_home_pose.png`](../results/maps/2026-11-01_room2_home_pose.png).
+  Gives the convergence basin; one case per angle, so state that.
+
+### 5.4 E3 Repeatability (RQ1)
+
+RESULT: pending E3. Table skeleton: run pair, ATE, map IoU, against [K26] value
+(to check from the paper).
+
+### 5.5 E2 IMU contribution (RQ2)
+
+RESULT: pending E2. Table skeleton: EKF with IMU / without IMU, ATE, RPE, heading error,
+measured **before SLAM (`/odometry/filtered`) and after SLAM (map pose)**. [M26] found the
+EKF cut translational APE RMSE by 60–75 % before SLAM but changed it by only −2.6 to +1.6 %
+after SLAM with SLAM Toolbox ([`literature_notes.md`](literature_notes.md)): test whether the
+same holds here. Fallback if OI-8 is not closed: run offline on the good
+2026-10-31 bag and say so.
+
+### 5.6 E4 People in the room (RQ3)
+
+RESULT: pending E4. Table skeleton: condition (empty, 1 to 2 walking, step-in), arrival
+error, localisation failures, stop distance, contacts.
+
+### 5.7 E1 Delivery mission (RQ4) and hazard table
+
+RESULT: pending E1. Table skeleton: run 1 to 5, success, arrival error at each checkpoint,
+time. Hazard table skeleton: hazard, mitigation (structural), test, pass or fail,
+RESULT: pending S. Hazard framing from SOTIF (ISO 21448) and ISO 13482: to check before citing.
+
+- **Evidence**: [`../docs/test_log.md`](../docs/test_log.md),
+  [`../notes/notes.md`](../notes/notes.md), [`../results/`](../results/),
+  [`../evidence/`](../evidence/), [`../tools/analysis/`](../tools/analysis/),
+  [`../docs/CA3.md`](../docs/CA3.md) OI-4, OI-6, OI-8.
+- **Owner**: Sherman (5.1 to 5.5), motor teammate (5.7 E1, drive), B (5.6, hazard table).
+
+## 6 Discussion
+
+- **Purpose**: compare ours with the papers per RQ, say why, state limits.
+- **Rubric**: content 40 % (in-depth thinking), conclusions 25 %.
+- **Goes in**: one subsection per RQ, then limits. Each subsection: what we found, what
+  the paper found, the most likely reason for any gap, then the Our take box. Write the
+  box as a hypothesis until the experiment has run, then keep it, revise it or replace it
+  with what the data said.
+- **Limits**: five runs, one room, hand ground truth in early tests, cheap lidar, Pi
+  under-voltage, motor timing.
+
+### 6.1 RQ1 Repeatability
+
+> **Our take.** *Hypothesis:* the [K26] result transfers to our stack in rank order
+> (small run-to-run spread) but not in absolute value, because a 26 to 29 % no-echo rate
+> and 7 Hz scans give rf2o less to match. *Confirmed by:* E3 pairwise ATE and map IoU
+> within a stated factor of [K26]. *Killed by:* spread much larger than [K26], or
+> repeatability that depends on who pushes, not on the stack.
+> RESULT: pending E3.
+
+### 6.2 RQ2 IMU contribution
+
+> **Our take.** *Hypothesis:* the gyro earns its place mainly in heading, not position,
+> because the hand-turned gyro read is close to truth (360.2 degrees, *measured*) while
+> rf2o's turn read is further off (352.9 degrees, *measured*). *Confirmed by:* E2 heading
+> error clearly lower with the IMU and position error about equal. *Killed by:* no
+> difference, or the IMU making position worse (bias, variance fit).
+> RESULT: pending E2.
+
+### 6.3 RQ3 People
+
+> **Our take.** *Hypothesis:* the customer is the obstacle: people in the scan degrade
+> localisation and are the main safety hazard, and the safety stop matters more than the
+> localiser. *Confirmed by:* E4 arrival error and localisation failures clearly worse than
+> E1, with contacts or near-misses only in the step-in case. *Killed by:* no change from
+> E1, in which case a person behind the robot is also unlikely to explain OI-8.
+> RESULT: pending E4.
+
+### 6.4 RQ4 Mission
+
+> **Our take.** *Hypothesis:* the robot succeeds because the world is simplified (taped
+> home mark, mapped room, 0.15 m/s), not because the localiser is strong; the limiting
+> factor is integration (motors, power, start-up), not algorithms. *Confirmed by:* E1
+> failures traced to power, start-up or calibration rather than pose error. *Killed by:*
+> failures traced to localisation drift.
+> RESULT: pending E1.
+
+- **Evidence**: section 5; [`../docs/CA3.md`](../docs/CA3.md) OI-4, OI-6, OI-8;
+  [`../docs/system/06_troubleshooting.md`](../docs/system/06_troubleshooting.md);
+  [`../docs/slam_journal.md`](../docs/slam_journal.md).
+- **Owner**: Sherman (6.1, 6.2), B (6.3), motor teammate (6.4), A (limits, edit).
+
+## 7 Our position
+
+- **Purpose**: 3 to 5 opinions, each backed by data, for the "your unique thoughts" criterion.
+- **Rubric**: content 40 %, conclusions 25 %.
+- **Goes in**: each position as a short paragraph (claim, the data behind it, the
+  real-AV consequence) followed by an Our take box. A position without a measurement
+  behind it is deleted, not softened.
+
+> **Our take (how 2D SLAM should be evaluated).** *Hypothesis:* pairwise ATE and replay
+> hide errors that live runs against ground truth show. *Confirmed by:* E3 checkpoint
+> error against pairwise ATE; live E2 runs against replays (RESULT: pending E2, E3).
+> *Killed by:* both metrics tell the same story.
+
+> **Our take (transfer gap).** *Hypothesis:* results from [K26] and [M26] transfer to
+> a lidar with a much lower echo rate only for the ranking of methods, not for absolute
+> accuracy. *Confirmed by:* E3 and E2 (RESULT: pending E2, E3). *Killed by:* absolute
+> numbers within the papers' range.
+
+> **Our take (the customer is the obstacle).** *Hypothesis:* people are both the
+> localisation problem and the safety problem; real AVs and delivery robots should
+> spend their redundancy there. *Confirmed by:* E4 (RESULT: pending E4). *Killed by:* no
+> degradation with people present.
+
+> **Our take (redundancy earns its cost).** *Hypothesis:* the IMU bought a measurable
+> heading improvement; wheel encoders or a camera would buy the next step, because
+> scan-only odometry failed on 2026-11-01 (OI-8, *measured*). *Confirmed by:* E2 plus the
+> OI-8 outcome. *Killed by:* IMU gives no gain, or OI-8 is traced to a setting, not to
+> the method.
+
+> **Our take (simplify the world).** *Hypothesis:* delivery robots ship indoors because
+> the world is simplified (mapped site, home mark, slow speed), which is why the same
+> approach stalls on pavements. *Confirmed by:* E1 failures that disappear when the world
+> is simpler, plus sourced product facts from section 2 (to check). *Killed by:* E1
+> failures that are algorithmic.
+
+> **Our take (integration is the hard part).** *Hypothesis:* the faults that cost most
+> time were integration faults that looked like sensor faults: OI-8, the lidar start hang
+> (OI-6), under-voltage. (Two transform publishers spinning the map is a risk we designed
+> out with rf2o `publish_tf: false`, not a fault we hit; cite it as prevention only.) *Confirmed by:* a
+> tally of lost hours by cause from [`../notes/notes.md`](../notes/notes.md) and
+> [`../docs/system/06_troubleshooting.md`](../docs/system/06_troubleshooting.md) (to
+> compile). *Killed by:* most time lost to genuine algorithm limits.
+
+- **Evidence**: sections 5 and 6; [`../docs/system/06_troubleshooting.md`](../docs/system/06_troubleshooting.md);
+  [`../notes/notes.md`](../notes/notes.md).
+- **Owner**: all; Sherman and A write, B and the motor teammate review their rows.
+
+## 8 Conclusions and future work
+
+- **Purpose**: numbered findings tied to results, then a costed roadmap and trends.
+- **Rubric**: conclusions 25 % (explains conclusions and elaborates on future work).
+- **Goes in**:
+  - 3 to 5 numbered conclusions, one per RQ, each citing the table or figure in section
+    5. If a result contradicts a paper, it is a conclusion, not a footnote.
+    RESULT: pending E1 to E4.
+  - Honest status: what was not done and why (named blockers, e.g. Nav2, OI-8).
+  - Future work roadmap (table below). Option F (camera localisation against lidar) is
+    the best idea and was dropped for timing; say so.
+  - Trends: solid-state lidar cost, learned SLAM, fleet map sharing, people-aware SLAM
+    [Y21]. Sourced or marked "to check".
+- **Costed roadmap skeleton**:
+
+| Item | Fixes which failure | Rough cost | Effort |
+| --- | --- | --- | --- |
+| Wheel encoders as a third EKF input | scan-only odometry failure (OI-8) | to check | to estimate |
+| Camera fusion (option F: camera localisation vs lidar) | low echo rate (OI-4), glass and dark surfaces | to check | to estimate |
+| People filtering in the scan [Y21] | people degrading rf2o and the map | to check | to estimate |
+| Simulation regression (Gazebo) | integration faults found late | to check | to estimate |
+| Higher-rate or higher-echo lidar | 7.05 Hz, 26 to 29 % no-echo (*measured*) | to check | to estimate |
+| Stable power (battery, regulator) | under-voltage, lidar start hang (OI-6) | to check | to estimate |
+| Global relocalisation | wrong start beyond about 30 degrees (6.4, *measured*) | to check | to estimate |
+
+- **Evidence**: [`../docs/CA3.md`](../docs/CA3.md) open issues; [`../docs/plan.md`](../docs/plan.md);
+  section 5 results; [`../docs/test_log.md`](../docs/test_log.md).
+- **Owner**: A (draft), Sherman (SLAM rows), motor teammate (drive and power rows).
+
+## References
+
+One consistent style, as the NTULearn template asks. Start from the keys in
+[`../docs/slam.md`](../docs/slam.md) (R25, K26, M26, J16, MJ21, H22, Y21, S23, F17, EXP,
+EVO). Add datasheets (A1M8, MPU6050), package documentation (`rplidar_ros`,
+`robot_localization`, Nav2) and product and standards sources only once each is found
+and checked. Owner: A.
+
+## Appendix
+
+- A. Test log extract, with the command per row: [`../docs/test_log.md`](../docs/test_log.md).
+- B. Frozen config YAML: `delivery_bot_bringup/config/` and
+  `delivery_bot_drivers/config/` as run, plus
+  [`../docs/system/05_config_reference.md`](../docs/system/05_config_reference.md).
+- C. Open issues table (OI-1 to OI-8): [`../docs/CA3.md`](../docs/CA3.md).
+- D. Hazard table in full; per-member contribution detail.
+- E. Repository link (public as of 2026-11-01, OI-7) and commit hash of each reported run.
+- Owner: Sherman (A to C, E), B (D).
 
 ---
 
-Captions and figures go in [`figures/`](figures/); one line per figure in
-`captions.md`, matching CA2's convention.
+Figures go in [`figures/`](figures/); one line per figure in `captions.md`, matching CA2's
+convention, each with the bag name and commit hash.

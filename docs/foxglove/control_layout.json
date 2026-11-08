@@ -72,10 +72,10 @@
       "layout": "vertical",
       "editingMode": false,
       "timeoutSeconds": 15,
-      "buttonText": "Stream on",
+      "buttonText": "Video + audio on",
       "buttonTooltip": "/stream/start",
       "buttonColor": "#2e7d32",
-      "foxglovePanelTitle": "Stream on"
+      "foxglovePanelTitle": "Video + audio on"
     },
     "CallService!stream_stop": {
       "serviceName": "/stream/stop",
@@ -167,6 +167,17 @@
       "buttonTooltip": "/stop_motor",
       "buttonColor": "#c62828",
       "foxglovePanelTitle": "Lidar spin off"
+    },
+    "CallService!stream_audio": {
+      "serviceName": "/stream/audio",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Audio only on",
+      "buttonTooltip": "/stream/audio",
+      "buttonColor": "#2e7d32",
+      "foxglovePanelTitle": "Audio only on"
     }
   },
   "globalVariables": {},
@@ -177,29 +188,30 @@
   "layout": {
     "first": {
       "first": {
-        "first": {
-          "first": "CallService!stack_base",
+        "first": "CallService!stack_base",
+        "second": {
+          "first": "CallService!stack_mapping",
           "second": {
-            "first": "CallService!stack_mapping",
-            "second": {
-              "first": "CallService!stack_localisation",
-              "second": "CallService!stack_stop",
-              "direction": "row",
-              "splitPercentage": 50.0
-            },
+            "first": "CallService!stack_localisation",
+            "second": "CallService!stack_stop",
             "direction": "row",
-            "splitPercentage": 33.333333333333336
+            "splitPercentage": 50.0
           },
           "direction": "row",
-          "splitPercentage": 25.0
+          "splitPercentage": 33.333333333333336
         },
-        "second": {
-          "first": {
-            "first": "CallService!camera_start",
+        "direction": "row",
+        "splitPercentage": 25.0
+      },
+      "second": {
+        "first": {
+          "first": "CallService!camera_start",
+          "second": {
+            "first": "CallService!camera_stop",
             "second": {
-              "first": "CallService!camera_stop",
+              "first": "CallService!stream_start",
               "second": {
-                "first": "CallService!stream_start",
+                "first": "CallService!stream_audio",
                 "second": "CallService!stream_stop",
                 "direction": "row",
                 "splitPercentage": 50.0
@@ -210,41 +222,45 @@
             "direction": "row",
             "splitPercentage": 25.0
           },
+          "direction": "row",
+          "splitPercentage": 20.0
+        },
+        "second": {
+          "first": {
+            "first": "CallService!bag_start",
+            "second": {
+              "first": "CallService!bag_stop",
+              "second": "CallService!run_save",
+              "direction": "row",
+              "splitPercentage": 50.0
+            },
+            "direction": "row",
+            "splitPercentage": 33.333333333333336
+          },
           "second": {
-            "first": {
-              "first": "CallService!bag_start",
+            "first": "CallService!start_motor",
+            "second": {
+              "first": "CallService!stop_motor",
               "second": {
-                "first": "CallService!bag_stop",
-                "second": {
-                  "first": "CallService!run_save",
-                  "second": "CallService!imu_node_recalibrate",
-                  "direction": "row",
-                  "splitPercentage": 50.0
-                },
+                "first": "CallService!imu_node_recalibrate",
+                "second": "CallService!control_status",
                 "direction": "row",
-                "splitPercentage": 33.333333333333336
+                "splitPercentage": 50.0
               },
               "direction": "row",
-              "splitPercentage": 25.0
+              "splitPercentage": 33.333333333333336
             },
-            "second": "CallService!control_status",
-            "direction": "column",
-            "splitPercentage": 50.0
+            "direction": "row",
+            "splitPercentage": 25.0
           },
           "direction": "column",
-          "splitPercentage": 33.333333333333336
+          "splitPercentage": 50.0
         },
         "direction": "column",
-        "splitPercentage": 25.0
-      },
-      "second": {
-        "first": "CallService!start_motor",
-        "second": "CallService!stop_motor",
-        "direction": "row",
-        "splitPercentage": 50
+        "splitPercentage": 33.333333333333336
       },
       "direction": "column",
-      "splitPercentage": 85
+      "splitPercentage": 25.0
     },
     "second": "RawMessages!resp",
     "direction": "column",

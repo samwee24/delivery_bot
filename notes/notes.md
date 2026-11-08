@@ -5,6 +5,52 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-03 (Mac) · CA3 report framing chosen (tentative)
+
+Read the MA4890 brief (presentation 40 %, CA3 report 20 %, both due end of Week 13; rubric content 40, conclusions 25, presentation 20, peer 15; the lecturer weights own insights highest). Compared six framings (survey, build report, replication, mission matrix, safety case, lidar vs camera); chose replication and extension of [K26]/[M26] on the delivery robot, extended to people [Y21] (D8). Wrote `docs/report_plan.md`, `report/slides_outline.md`, `report/literature_notes.md`, rewrote `report/CA3_report.md`, aligned `docs/plan.md` and build-path Stage 9. No robot runs. After reading the papers (K26 is replay without ground truth and tests AMCL, not the IMU; M26 ablates the IMU on wheel odometry), the framing word became *re-evaluation against published baselines* and the title *Re-evaluating EKF-Fused 2D LiDAR SLAM on a Low-Cost Indoor Delivery Robot: Repeatability, Inertial Contribution and the Effect of Dynamic Human Obstacles*.
+Next: tape the checkpoints (9.1), then motors 2026-11-04 (OI-8 was closed later the same day, entry below: a person behind the robot). Replay noise of about 12 % (entry below) means offline E2 ablation needs several replays per condition, or live runs.
+
+## 2026-11-03 (Pi, live) · OI-8: live push, nobody in the scan
+
+Two stick pushes of a 1 m tape line on a charged battery (`get_throttled` 0x0 throughout), same start mark and heading, only `angle_compensate` changed (code 766511d, `tools/analysis/push_start.sh`; pushwall as in `docs/test_log.md`).
+
+| Run | angle_compensate | beams | tape m | wall change m | rf2o m | ratio | rear pts median/max | throttled before/after |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| A | true | 720 | 1.00 | 1.007 | 1.008 | 1.008 | 18 / 37 | 0x0 / 0x0 |
+| B | false | 1022 | 1.01 | 1.023 | 0.971 | 0.961 | 16 / 61 | 0x0 / 0x0 |
+
+**Verdict:** both at or above the 0.87 line, so the scan format is cleared; the 2026-11-01 failure points at the person behind the robot (suspect b). Cause identified, not fixed, and not reproduced here: no person walked behind in these runs.
+
+Caveats. The stick end sat about 0.3 m behind the robot in both runs (rear points up to 37 and 61); it moves with the robot, which should bias rf2o low, and it still read the full metre. Run B started recording about 1 s into the push, so about 2 cm is missing from its rf2o and wall numbers. Run A's first start failed IMU calibration (robot touched) and was redone once. The battery was first read under-voltage (0x50005) and was charged before the runs.
+
+**Cause confirmed in the old bags.** `pushwall.py` on the two bad 2026-11-01 bags (rows in `docs/test_log.md`): during the push the range straight behind stayed at 0.35-0.94 m and 105-158 rear points sat there (stick runs today: median 16-18); at push end the back range jumped to 3.4 m and 5.26 m and the rear points fell to 43 and 12. rf2o read 0.242 m of 0.862 m (0.28) and 0.307 m of 1.222 m (0.25) by the front wall. So a person walking behind the robot, in the scan the whole push, is what pulled rf2o down: it assumes a still room. Evidence `evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`. This is also a measured result for experiment E4 (people in the room).
+
+Next: no config change made. `angle_compensate:=true` read best and `slam_mapping.yaml` was frozen with it, so it stays; the planner confirms. rf2o needs nobody near the robot on hand pushes; motor-driven runs do not have this problem.
+
+---
+
+## 2026-11-03 (Pi, remote) · OI-8: beam-format stats and the push3-5 bags
+
+Two offline checks, nothing run live (code 2f62989: `tools/analysis/beamstats.py`, `pushwall.py`).
+
+**Beam format.** The 720-beam bags do not show more non-finite slots or binning duplicates than the 1046-beam bags: bad (inf/nan/0) median 5.8-11 % against 9-13 %, equal adjacent ranges 20-31 % against 22-27 %, longest bad run median 8-21 against 18. The two bad 2026-11-01 bags are at the low end (bad 5.8 and 8.7 %). Suspect (a) gets no support from the slot statistics, though this does not rule out the gradients themselves.
+
+**push3-5 (2026-11-02).** No push in any of them. Front wall 2.932-2.936 m and back wall 2.136-2.140 m in every second, rf2o 0.000 m over the marker window (push5) and over the whole bag (push3, push4). Real travel 0 m, so no ratio; rear points constant at about 111 (static room, nobody walking). They cannot separate the two suspects.
+
+**Classification:** format suspect: not supported by the slot statistics, not tested by these bags. Person suspect: not tested. Overall inconclusive; a bag with a real push after `angle_compensate` is still needed (live push, no one behind, charged battery).
+
+Rows in `docs/test_log.md`.
+
+---
+
+## 2026-11-03 (Pi, remote) · OI-8: replay repeatability and rate
+
+Verdict: replay is **not repeatable** and **not rate-sensitive** (code e6792e8, rows in `docs/test_log.md`). Three identical rate-1.0 runs on the good bag read 0.679, 0.592 and 0.531 m over 39-50 s (mean 0.601 m, spread about 12 %; live is 0.962 m): `bash /tmp/rf2o_rate.sh ~/bags/2026-10-31_push_195343 orig 39 50 1.0`. Rates 0.5 and 0.25 read 0.689 and 0.681 m, and the bad bag reads max x 0.291 m at rate 1.0 and 0.289 m at 0.25 (`bash /tmp/rf2o_rate.sh ~/bags/2026-11-01_push_230535 orig 0 0 0.25`), so slowing playback does not recover the travel and CPU speed alone is not the cause. The arm clock did not track the distance either (600 MHz gave 0.679 m, 1500 MHz gave 0.592 and 0.531 m).
+Run-to-run noise of 0.15 m means single replay numbers, including the earlier 0.681 and 0.786 m, cannot separate orig from resampled. Before this the live mapping stack was stopped (map saved as `~/maps/2026-11-03_0014.*`) so no live rf2o ran during the replays.
+Next: nothing applied. Open points: why the replay differs run to run when the input bag is identical, and the live `angle_compensate:=false` push on a charged battery.
+
+---
+
 ## 2026-11-02 (Pi, remote) · OI-8: replay window by sim time
 
 `push_an.py` now has `window(P, t0, t1)` (straight-line distance and yaw change, odom frame) and `--sim`; `rf2o_fmt.sh` records with `--use-sim-time` and takes `[t0 t1]` (code ae9cef6). The old 0.429 m "live" number was a projection onto the first heading after an 83 degree turn; over the push window 39-50 s the live odom travels **0.962 m** (`python3 /tmp/push_an.py ~/bags/2026-10-31_push_195343 39 50 --sim`), the 2026-10-31 value.

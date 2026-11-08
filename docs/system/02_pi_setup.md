@@ -6,7 +6,7 @@
 Target: `robot@sherm-raspi`, Raspberry Pi 4B Rev 1.4 (4 GB), Ubuntu 24.04.5 LTS,
 kernel `6.8.0-1065-raspi`, Python 3.12.3, 32 GB card (3.6 GB used).
 
-## State as of 2026-10-22
+## State (2026-10-22, rows updated from later log entries where dated)
 
 | Item | State |
 | --- | --- |
@@ -20,11 +20,11 @@ kernel `6.8.0-1065-raspi`, Python 3.12.3, 32 GB card (3.6 GB used).
 | venv | none — **not required** by the D5 stack (ROS runs from `/opt/ros/jazzy`); only needed for ad-hoc diagnostics |
 | ROS stack | installed: `rplidar_ros 2.1.0`, `slam_toolbox 2.8.5`, `nav2_bringup 1.3.13`, `robot_localization 3.8.3`, `xacro 2.1.1`, `tf2_ros` ✅ |
 | Serial access | `robot` **in `dialout`** (active after the 2026-10-22 reboot) ✅ |
-| udev rule | rule written and reloaded; **`/dev/rplidar` still does not appear** ❌ — driver falls back to `/dev/ttyUSB0` |
-| I2C | `/dev/i2c-1`, `-20`, `-21` present; MPU6050 **not yet probed**, `i2c-tools` not installed ⏸ |
+| udev rule | rule written and reloaded; `/dev/rplidar` exists ✅ (notes 2026-10-30 evening) |
+| I2C | `/dev/i2c-1`, `-20`, `-21` present; `imu_node` reads the MPU6050 at 100.04 Hz ✅ (test_log 2026-10-30). `i2c-tools` installed per `docs/CA3.md`; no log entry for the install or an `i2cdetect` run |
 | GPIO/PWM | **resolved**: `motor_node` uses gpiozero + `LGPIOFactory`; `lgpio` present in `/usr/lib/python3/dist-packages`, `RPi.GPIO` absent (by design on aarch64) ✅ |
 | Swap | **2.0 GiB** `/swapfile`, persisted in `/etc/fstab` ✅ (added after an SSH outage, see notes) |
-| Cooling / throttle | 40.4 °C idle; `vcgencmd` unavailable (needs `libraspberrypi-bin`), use `vcgencmd` from `raspi-utils` or read `/sys/class/thermal` ⚠️ |
+| Cooling / throttle | 40.4 °C idle (2026-10-22). `vcgencmd get_throttled` now runs and read `throttled=0x50005` (under-voltage now and since boot) on 2026-11-02 ⚠️ (notes 2026-11-02, offline rig) |
 
 ## To-do (P0)
 
@@ -36,13 +36,13 @@ Run as `robot` unless noted; `sudo` needs the owner's password (not stored here)
   echo 'SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="rplidar", MODE="0666"' \
     | sudo tee /etc/udev/rules.d/99-rplidar.rules          # written
   sudo udevadm control --reload-rules && sudo udevadm trigger
-  ls -l /dev/rplidar    # ❌ still absent — try: sudo udevadm trigger -c add -s tty, else replug the adapter
+  ls -l /dev/rplidar    # ❌ absent on 2026-10-22; exists by 2026-10-30 (notes 2026-10-30 evening)
   ```
 - [x] **Python tooling** (2026-10-22)
   ```bash
   sudo apt install python3-pip python3-venv python3-dev build-essential cmake i2c-tools
   ```
-  All present except **`i2c-tools`** — install it before the IMU probe.
+  All present except **`i2c-tools`** on 2026-10-22; since installed (`docs/CA3.md`).
 - [x] **Swap** (2026-10-22) — required before any large build; its absence took the
   machine off the network during a parallel `colcon build`.
   ```bash
@@ -63,19 +63,19 @@ Run as `robot` unless noted; `sudo` needs the owner's password (not stored here)
   ```
   Result: 5 packages, 3 min 43 s; `rf2o` alone 3 min 17 s. Build **one job at a time**
   on this Pi even with swap.
-- [ ] **venv** — only for the two custom nodes (GPIO + I2C); no `--system-site-packages`
+- [ ] **venv** — not used: the apt stack covers the dependencies (`docs/CA3.md`, D1/D7). Kept for reference; no `--system-site-packages`
   ```bash
   python3 -m venv ~/botenv && ~/botenv/bin/pip install -U pip
   ~/botenv/bin/pip install numpy smbus2 lgpio
   ```
-- [ ] **GPIO** — plan's `python3-lgpio` is Raspberry-Pi-OS-only. On Ubuntu use `lgpio` via pip,
-  or `Adafruit-Blinka` + `adafruit-circuitpython-motorkit`. Decide before P1 motors; record in [01_hardware.md](01_hardware.md).
-- [ ] **I2C probe** — `i2cdetect -y 1` must show `68` (MPU6050). Plan's `dtparam=i2c_arm_baudrate=400000`
+- [x] **GPIO** — settled 2026-10-22: `motor_node` uses `gpiozero` with `LGPIOFactory`, `lgpio` is in
+  `/usr/lib/python3/dist-packages` (notes 2026-10-22, rf2o built). That is the node's docstring contract; its body is still the skeleton.
+- [x] **I2C probe** — MPU6050 read by `imu_node` at 100.04 Hz (test_log 2026-10-30); `i2cdetect -y 1` output not logged. Plan's `dtparam=i2c_arm_baudrate=400000`
   lives in `/boot/firmware/config.txt` on Pi OS; on Ubuntu 24.04 the Pi 4 path is the same file, but check
   `grep -i i2c /boot/firmware/config.txt` before editing.
-- [ ] **ROS side** — custom package in `~/ros2_ws/src/` for the motor node, IMU node and URDF (see [07_ros_stack.md](07_ros_stack.md)); the rest comes from apt.
+- [x] **ROS side** — `delivery_bot` packages in `~/ros2_ws/src/` (D6); IMU node run on the Pi (test_log 2026-10-30), URDF with measured mounting (notes 2026-10-31); `motor_node` is still the skeleton (its functions raise `NotImplementedError`), see [07_ros_stack.md](07_ros_stack.md)).
 - [ ] **Shell** — `.bashrc` already sources `/opt/ros/jazzy/setup.bash` and `~/ros2_ws/install/setup.bash`.
-  Add `source ~/botenv/bin/activate` after them (venv last, so ROS packages stay visible).
+  No venv, so nothing else to source.
 
 ## Networking notes
 

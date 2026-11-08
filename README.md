@@ -5,13 +5,15 @@ taped home mark to named seats and back. Lidar-only odometry (no wheel encoders)
 RPLidar A1M8 + MPU6050 gyro, fused by `robot_localization`, mapped and localised by
 `slam_toolbox`, driven by Nav2 at 0.15 m/s.
 
-> **This repository is a rebuild skeleton (2026-10-22).**
-> Structure, configs, docs and `package.xml` files are complete, but every node,
-> every launch file and the URDF body has been emptied down to its docstring and
-> `NotImplementedError`. Write them yourself: each docstring states the contract
-> that file must satisfy, and `docs/` describes the system it belongs to. The
-> finished implementation is the tag `reference-v1` (`git checkout reference-v1`)
-> if you want to compare once yours runs.
+> **Started as a rebuild skeleton (2026-10-22).**
+> Every node, launch file and the URDF body were emptied down to a docstring and
+> `NotImplementedError`. Since rebuilt and run on the Pi: `imu_node` (test_log
+> 2026-10-30), the URDF with measured mounting (notes 2026-10-31), and
+> `base.launch.py`, `mapping.launch.py`, `navigation.launch.py` (test_log 2026-11-01).
+> Still skeleton: `motor_node` (the teammate's) and `delivery_bot_mission`'s
+> `scan_stats`, `save_goal`, `deliver`. Each docstring states the contract that file
+> must satisfy. The finished implementation is the tag `reference-v1`
+> (`git checkout reference-v1`) if you want to compare.
 
 ## Hardware
 
@@ -170,6 +172,7 @@ systemctl --user daemon-reload && systemctl --user enable --now robot-control.se
 ```
 
 3. In Foxglove, add one Call Service panel per button and Publish panels for the markers, then export the layout to `docs/foxglove/control_layout.json`.
+4. Or import `docs/foxglove/cockpit_layout.json` (2026-11-03): one layout with a status strip on `/robot/status/*` and tabs Map, Localise, Debug, Camera and Power; see [`docs/foxglove/README.md`](docs/foxglove/README.md).
 
 **Other extras** (`tools/streams/`):
 - `bash tools/streams/start_streams.sh` starts the camera, the bridge, the microphone stream and the runner; `bash tools/streams/start_streams.sh av` starts one combined picture-and-sound stream (`vlc http://100.83.14.99:8090/stream.mkv`, 1280x720 at 30 fps). Needs `robot` in the `audio` group.
@@ -186,6 +189,8 @@ systemctl --user daemon-reload && systemctl --user enable --now robot-control.se
   can override a stuck L298N.
 - The motor node stops both channels if no `/cmd_vel` arrives for 0.5 s, on Ctrl+C,
   and on any exception.
+- **Nobody within 1 m of the robot during odometry runs; push it with a stick** (OI-8: a person
+  walking behind it pulled rf2o down to 24 % of the true distance).
 - `v_max` is 0.15 m/s. Do not raise it casually: the planner, the smoother and the
   controller are all tuned to it.
 
@@ -229,7 +234,7 @@ Recorded here because they change how you use the repo:
 This repository is also the assessed CA3 project for MA4890. The record lives beside
 the code so it cannot drift from it:
 
-- [`docs/CA3.md`](docs/CA3.md) — target machine, decisions D1–D6, phase status, open issues OI-1…OI-5
+- [`docs/CA3.md`](docs/CA3.md) — target machine, decisions D1–D7, phase status, open issues OI-1…OI-8
 - [`notes/notes.md`](notes/notes.md) — dated lab notebook, newest first, append-only
 - [`docs/design-plan.md`](docs/design-plan.md) — the Oct 8 design plan (superseded in part by D5)
 - [`docs/system/`](docs/system/) — hardware, Pi setup, bring-up, architecture, config, troubleshooting, ROS stack
