@@ -24,8 +24,9 @@ healthy, and publishes no /map, no map -> odom and no error. Pass
 `use_lifecycle_manager: false` and forward `use_sim_time` to the slam_toolbox node.
 Background: docs/slam.md §3.1.
 
-Status: base + slam_toolbox localisation only (build path 6.2); Nav2 is added in
-stage 7/8 when motor_node exists.
+Nav2 starts only once slam_toolbox is `active`, so its costmaps find /map and
+map -> odom. `nav:=false` gives the localisation-only stack (build path 6.2).
+Nav2 runs without composition (no container to load into) and autostarts.
 
 Build path: task 6.2 in docs/slam_build_path.md
 """
@@ -69,9 +70,22 @@ def generate_launch_description() -> LaunchDescription:
         entities=[EmitEvent(event=ChangeState(
             lifecycle_node_matcher=launch.events.matches_action(slam),
             transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVATE))]))
+    nav2 = RegisterEventHandler(OnStateTransition(
+        target_lifecycle_node=slam, goal_state='active',
+        entities=[IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(
+                get_package_share_directory('nav2_bringup'),
+                'launch', 'navigation_launch.py')),
+            launch_arguments={
+                'params_file': os.path.join(bringup, 'config', 'nav2_params.yaml'),
+                'use_sim_time': use_sim_time,
+                'autostart': 'true',
+                'use_composition': 'False'}.items(),
+            condition=launch.conditions.IfCondition(LaunchConfiguration('nav')))]))
 
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false'),
+        DeclareLaunchArgument('nav', default_value='true'),
         DeclareLaunchArgument('bridge', default_value='true'),
         DeclareLaunchArgument('include_base', default_value='true'),
         DeclareLaunchArgument('map', default_value=os.path.expanduser(
@@ -83,7 +97,7 @@ def generate_launch_description() -> LaunchDescription:
                               'bridge': LaunchConfiguration('bridge')}.items(),
             condition=launch.conditions.IfCondition(
                 LaunchConfiguration('include_base'))),
-        slam, activate,
+        slam, activate, nav2,
         # configure is not retried if sent before the lifecycle services exist
         TimerAction(period=5.0, actions=[configure]),
     ])

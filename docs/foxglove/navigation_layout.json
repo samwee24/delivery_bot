@@ -1,0 +1,275 @@
+{
+  "configById": {
+    "3D!nav3d": {
+      "followTf": "base_footprint",
+      "followMode": "follow-pose",
+      "layers": {
+        "grid": {
+          "layerId": "foxglove.Grid",
+          "visible": true
+        }
+      },
+      "topics": {
+        "/map": {
+          "visible": true
+        },
+        "/global_costmap/costmap": {
+          "visible": true,
+          "colorMode": "costmap"
+        },
+        "/local_costmap/costmap": {
+          "visible": true,
+          "colorMode": "costmap"
+        },
+        "/plan": {
+          "visible": true,
+          "lineWidth": 0.04,
+          "gradient": [
+            "#00e676",
+            "#00e676"
+          ]
+        },
+        "/received_global_plan": {
+          "visible": false
+        },
+        "/scan": {
+          "visible": true
+        },
+        "/stop": {
+          "visible": true,
+          "color": "#c62828",
+          "lineWidth": 0.03
+        },
+        "/slowdown": {
+          "visible": true,
+          "color": "#f9a825",
+          "lineWidth": 0.03
+        },
+        "/approach": {
+          "visible": true,
+          "color": "#1565c0",
+          "lineWidth": 0.03
+        },
+        "/local_costmap/published_footprint": {
+          "visible": true,
+          "color": "#ffffff",
+          "lineWidth": 0.03
+        },
+        "/lookahead_collision_arc": {
+          "visible": true
+        }
+      },
+      "transforms": {},
+      "scene": {
+        "enableStats": false
+      },
+      "publish": {
+        "type": "pose",
+        "poseTopic": "/goal_pose",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26
+      },
+      "cameraState": {
+        "distance": 8,
+        "perspective": false,
+        "phi": 0,
+        "thetaOffset": 0,
+        "targetOffset": [
+          0,
+          0,
+          0
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      }
+    },
+    "Plot!cmd": {
+      "paths": [
+        {
+          "value": "/cmd_vel.linear.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/cmd_vel.angular.z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/cmd_vel_smoothed.linear.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/odometry/filtered.twist.twist.linear.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showLegend": true,
+      "isSynced": true
+    },
+    "Indicator!Stack": {
+      "path": "/robot/status/stack.data",
+      "style": "background",
+      "fallbackColor": "#616161",
+      "fallbackLabel": "NO STACK",
+      "rules": [
+        {
+          "operator": "=",
+          "rawValue": "base",
+          "color": "#2e7d32",
+          "label": "BASE"
+        },
+        {
+          "operator": "=",
+          "rawValue": "localisation",
+          "color": "#2e7d32",
+          "label": "LOCALISE"
+        },
+        {
+          "operator": "=",
+          "rawValue": "navigation",
+          "color": "#2e7d32",
+          "label": "NAVIGATION"
+        }
+      ],
+      "foxglovePanelTitle": "Stack"
+    },
+    "Indicator!Collision": {
+      "path": "/collision_monitor_state.action_type",
+      "style": "background",
+      "fallbackColor": "#2e7d32",
+      "fallbackLabel": "CLEAR",
+      "rules": [
+        {
+          "operator": "=",
+          "rawValue": "1",
+          "color": "#c62828",
+          "label": "STOP"
+        },
+        {
+          "operator": "=",
+          "rawValue": "2",
+          "color": "#f9a825",
+          "label": "SLOWDOWN"
+        },
+        {
+          "operator": "=",
+          "rawValue": "3",
+          "color": "#1565c0",
+          "label": "APPROACH"
+        }
+      ],
+      "foxglovePanelTitle": "Collision"
+    },
+    "Indicator!Undervolt": {
+      "path": "/robot/status/undervolt.data",
+      "style": "background",
+      "fallbackColor": "#2e7d32",
+      "fallbackLabel": "POWER OK",
+      "rules": [
+        {
+          "operator": "=",
+          "rawValue": "true",
+          "color": "#c62828",
+          "label": "UNDER-VOLTAGE"
+        }
+      ],
+      "foxglovePanelTitle": "Undervolt"
+    },
+    "CallService!navigation": {
+      "serviceName": "/stack/navigation",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Navigation",
+      "buttonTooltip": "/stack/navigation",
+      "buttonColor": "#2e7d32",
+      "foxglovePanelTitle": "Navigation"
+    },
+    "CallService!localisation": {
+      "serviceName": "/stack/localisation",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Localisation",
+      "buttonTooltip": "/stack/localisation",
+      "buttonColor": "#2e7d32",
+      "foxglovePanelTitle": "Localisation"
+    },
+    "CallService!stopall": {
+      "serviceName": "/stack/stop",
+      "request": "{}",
+      "layout": "vertical",
+      "editingMode": false,
+      "timeoutSeconds": 15,
+      "buttonText": "Stop all",
+      "buttonTooltip": "/stack/stop",
+      "buttonColor": "#616161",
+      "foxglovePanelTitle": "Stop all"
+    },
+    "RawMessages!feedback": {
+      "topicPath": "/navigate_to_pose/_action/feedback"
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "first": "3D!nav3d",
+    "second": {
+      "first": {
+        "first": "Indicator!Stack",
+        "second": {
+          "first": "Indicator!Collision",
+          "second": "Indicator!Undervolt",
+          "direction": "row"
+        },
+        "direction": "row"
+      },
+      "second": {
+        "first": {
+          "first": "CallService!navigation",
+          "second": {
+            "first": "CallService!localisation",
+            "second": "CallService!stopall",
+            "direction": "row"
+          },
+          "direction": "row"
+        },
+        "second": {
+          "first": "Plot!cmd",
+          "second": "RawMessages!feedback",
+          "direction": "column",
+          "splitPercentage": 55
+        },
+        "direction": "column",
+        "splitPercentage": 12
+      },
+      "direction": "column",
+      "splitPercentage": 10
+    },
+    "direction": "row",
+    "splitPercentage": 68
+  }
+}

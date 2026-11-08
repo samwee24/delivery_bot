@@ -105,3 +105,34 @@ def test_bridge_argument_gates_the_foxglove_node() -> None:
     found = nodes(generate(LAUNCH_DIRS[0] / 'base.launch.py'))
     bridge = next(n for n in found if n.node_executable == 'foxglove_bridge')
     assert isinstance(bridge.condition, IfCondition)
+
+
+NAV = LAUNCH_DIRS[0] / 'navigation.launch.py'
+
+
+def test_navigation_nav_argument_defaults_true() -> None:
+    assert declared('navigation.launch.py')['nav'] == 'true'
+
+
+def test_navigation_nav2_include_is_gated_by_nav_and_starts_on_slam_active() -> None:
+    # The event handler hides its entities from walk(), so this reads the source.
+    m = re.search(r"goal_state='active',\s*entities=\[IncludeLaunchDescription\("
+                  r'(.*?)\)\]\)\)', NAV.read_text(), re.S)
+    assert m, 'Nav2 include must sit in the slam-active OnStateTransition'
+    body = m.group(1)
+    assert "'navigation_launch.py'" in body
+    assert "IfCondition(LaunchConfiguration('nav'))" in body
+
+
+def test_navigation_nav2_uses_our_params_without_composition() -> None:
+    text = NAV.read_text()
+    assert "'nav2_params.yaml'" in text
+    assert "'use_composition': 'False'" in text
+    assert "'autostart': 'true'" in text
+
+
+def test_navigation_does_not_start_amcl_or_map_server() -> None:
+    # slam_toolbox supplies /map and map -> odom; bringup_launch.py would add both.
+    text = NAV.read_text()
+    assert "bringup_launch.py'" not in text
+    assert not {'amcl', 'map_server'} & {n.node_executable for n in nodes(generate(NAV))}
