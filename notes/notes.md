@@ -5,6 +5,28 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-08 (Pi, offline) · Nav2 planner checked alone on the room map
+
+Why alone: the teammate's `base.launch.py` was running live on the Pi with `motor_node` (no dry run), so a full Nav2 stack at rest could have driven the wheels. Planner only, in ROS domain 42 (`tools/analysis/planonly.sh`): `map_server` on `~/maps/2026-10-31_room2.yaml`, a static map -> base_footprint at home, `planner_server` on our `nav2_params.yaml`, then `plan_check.py`.
+
+| Goal (map x, y) | Result |
+| --- | --- |
+| (1, 0) | path 1.18 m, 46 poses, 5 ms |
+| (0, 1) | path 1.30 m |
+| (1, 1) | path 2.70 m (detour round furniture; straight line 1.41 m) |
+| (-1, 0) | path 1.43 m |
+| (2, -1) | path 2.34 m |
+| (-9, -3) | error 208, no valid path |
+| (0, 20) | error 204, goal outside map |
+
+Picture: `results/maps/2026-11-08_planner_paths.png`. Costmap config in use: `robot_radius` 0.12 (approx, never measured), inflation 0.25 m. Load 2.3-2.8, `get_throttled` 0x0. Paths are raw NavFn, grid-snapped by a few cm; not smoothed, since the smoother server did not run here.
+
+Not tested: controller and `/cmd_vel`, smoother, collision monitor, slam_toolbox together with Nav2, the `/stack/navigation` button, `save_goal` and `deliver` on a live stack (branch `nav/nav2-glue`, unit tests and lint only).
+
+Next: measure the robot (length, width, lidar position) and set the footprint; check the home mark's clearance from furniture on the map; run the full stack when the Pi is free or the motor switch is off.
+
+---
+
 ## 2026-11-03 (Mac) · CA3 report framing chosen (tentative)
 
 Read the MA4890 brief (presentation 40 %, CA3 report 20 %, both due end of Week 13; rubric content 40, conclusions 25, presentation 20, peer 15; the lecturer weights own insights highest). Compared six framings (survey, build report, replication, mission matrix, safety case, lidar vs camera); chose replication and extension of [K26]/[M26] on the delivery robot, extended to people [Y21] (D8). Wrote `docs/report_plan.md`, `report/slides_outline.md`, `report/literature_notes.md`, rewrote `report/CA3_report.md`, aligned `docs/plan.md` and build-path Stage 9. No robot runs. After reading the papers (K26 is replay without ground truth and tests AMCL, not the IMU; M26 ablates the IMU on wheel odometry), the framing word became *re-evaluation against published baselines* and the title *Re-evaluating EKF-Fused 2D LiDAR SLAM on a Low-Cost Indoor Delivery Robot: Repeatability, Inertial Contribution and the Effect of Dynamic Human Obstacles*.
