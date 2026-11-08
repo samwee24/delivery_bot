@@ -70,10 +70,15 @@ def test_no_command_can_turn_off_dry_run():
 
 
 def test_stack_entries_leave_the_bridge_to_the_runner():
-    for name in ('base', 'mapping', 'localisation'):
+    for name in ('base', 'mapping', 'localisation', 'navigation'):
         command, group = rc.PROCS[name]
         assert 'bridge:=false' in command, name
         assert group == 'stack', name
+
+
+def test_navigation_starts_nav2_and_localisation_does_not():
+    assert 'nav:=true' in rc.PROCS['navigation'][0]
+    assert 'nav:=false' in rc.PROCS['localisation'][0]
 
 
 def test_every_held_by_and_foreign_group_exists():
@@ -153,6 +158,7 @@ def test_stack_and_video_state_ignore_dead_and_unrelated_procs():
     live, dead = (FakeProc(), 0.0), (FakeProc(False), 0.0)
     assert rc.stack_state({}) == 'none'
     assert rc.stack_state({'mapping': live, 'camera': live}) == 'mapping'
+    assert rc.stack_state({'navigation': live}) == 'navigation'
     assert rc.stack_state({'base': dead, 'bag': live}) == 'none'
     assert rc.stack_state({'camera': live, 'bag': live}) == 'none'
     assert rc.video_state({}) == 'off'
