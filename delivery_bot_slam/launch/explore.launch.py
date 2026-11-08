@@ -60,6 +60,8 @@ Launch arguments
     ``use_sim_time``  default false, forwarded to base, slam_toolbox, Nav2 and
                       explore_lite
     ``dry_run``       default true, forwarded to base.launch.py
+    ``bridge``        default true; robot_control.py passes false when it runs
+                      the one bridge on 8765
 
 Acceptance test
     ``ros2 lifecycle get /slam_toolbox`` reports ``active``;
@@ -72,8 +74,75 @@ Acceptance test
 Build path: task 8.3 in docs/slam_build_path.md
 """
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
+import launch
 from launch import LaunchDescription
+from launch.actions import (DeclareLaunchArgument, EmitEvent,
+                            IncludeLaunchDescription, RegisterEventHandler,
+                            TimerAction)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import LifecycleNode, Node
+from launch_ros.event_handlers import OnStateTransition
+from launch_ros.events.lifecycle import ChangeState
+import lifecycle_msgs.msg
 
 
 def generate_launch_description() -> LaunchDescription:
-    return LaunchDescription([])
+    bringup = get_package_share_directory('delivery_bot_bringup')
+    slam_pkg = get_package_share_directory('delivery_bot_slam')
+    use_sim_time = LaunchConfiguration('use_sim_time')
+
+    slam = LifecycleNode(
+        package='slam_toolbox', executable='async_slam_toolbox_node',
+        name='slam_toolbox', namespace='', output='screen',
+        parameters=[
+            os.path.join(bringup, 'config', 'slam_mapping.yaml'),
+            {'map_update_interval': 2.0,  # frontiers need a fresher /map
+             'use_lifecycle_manager': False, 'use_sim_time': use_sim_time}])
+    configure = EmitEvent(event=ChangeState(
+        lifecycle_node_matcher=launch.events.matches_action(slam),
+        transition_id=lifecycle_msgs.msg.Transition.TRANSITION_CONFIGURE))
+    activate = RegisterEventHandler(OnStateTransition(
+        target_lifecycle_node=slam, start_state='configuring',
+        goal_state='inactive',
+        entities=[EmitEvent(event=ChangeState(
+            lifecycle_node_matcher=launch.events.matches_action(slam),
+            transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVATE))]))
+    # Nav2 and the explorer wait for slam_toolbox `active`: before that there is
+    # no /map and no map -> odom for the costmaps to start from.
+    nav2_and_explore = RegisterEventHandler(OnStateTransition(
+        target_lifecycle_node=slam, goal_state='active',
+        entities=[
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(os.path.join(
+                    get_package_share_directory('nav2_bringup'),
+                    'launch', 'navigation_launch.py')),
+                launch_arguments={
+                    'params_file': os.path.join(bringup, 'config', 'nav2_params.yaml'),
+                    'use_sim_time': use_sim_time,
+                    'autostart': 'true',
+                    'use_composition': 'False'}.items()),
+            Node(package='explore_lite', executable='explore', name='explore_node',
+                 output='screen',
+                 parameters=[os.path.join(slam_pkg, 'config', 'explore.yaml'),
+                             {'use_sim_time': use_sim_time}])]))
+
+    return LaunchDescription([
+        DeclareLaunchArgument('use_sim_time', default_value='false'),
+        DeclareLaunchArgument('dry_run', default_value='true'),
+        DeclareLaunchArgument('bridge', default_value='true'),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(bringup, 'launch', 'base.launch.py')),
+            launch_arguments={'use_sim_time': use_sim_time,
+                              'dry_run': LaunchConfiguration('dry_run'),
+                              'bridge': LaunchConfiguration('bridge')}.items()),
+        slam, activate, nav2_and_explore,
+        # /run/save: map + pose graph + configs under one dated name
+        Node(package='delivery_bot_slam', executable='run_save', output='screen'),
+        # configure is not retried if sent before the lifecycle services exist
+        TimerAction(period=5.0, actions=[configure]),
+    ])

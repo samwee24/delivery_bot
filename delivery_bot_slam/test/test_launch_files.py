@@ -14,7 +14,7 @@ import pytest
 LAUNCH_DIRS = [Path(get_package_share_directory(p)) / 'launch'
                for p in ('delivery_bot_bringup', 'delivery_bot_slam')]
 LAUNCH_FILES = sorted(f for d in LAUNCH_DIRS for f in d.glob('*.launch.py'))
-STUBS = {'explore.launch.py'}
+EXPLORE = LAUNCH_DIRS[1] / 'explore.launch.py'
 REPLAY = LAUNCH_DIRS[1] / 'slam_replay.launch.py'
 
 
@@ -44,15 +44,6 @@ def test_launch_files_were_found() -> None:
 @pytest.mark.parametrize('path', LAUNCH_FILES, ids=lambda p: p.name)
 def test_launch_file_loads(path) -> None:
     assert isinstance(generate(path), launch.LaunchDescription)
-
-
-@pytest.mark.xfail(strict=True, reason='stub, build path 8.3')
-@pytest.mark.parametrize('name', sorted(STUBS))
-def test_stub_launch_files_are_filled_in(name) -> None:
-    # Fails while the file is empty. When someone fills one in this XPASSes, which
-    # strict xfail reports as a failure: drop the name from STUBS and test it properly.
-    path = next(f for f in LAUNCH_FILES if f.name == name)
-    assert generate(path).entities
 
 
 def test_replay_has_one_ekf_and_the_relay() -> None:
@@ -180,3 +171,30 @@ def test_base_identity_tf_replaces_the_ekf_when_ekf_false() -> None:
     assert len(tf) == 1 and isinstance(tf[0].condition, UnlessCondition)
     text = (LAUNCH_DIRS[0] / 'base.launch.py').read_text()
     assert "'--frame-id', 'odom', '--child-frame-id', 'base_footprint'" in text
+
+
+def test_explore_dry_run_defaults_true() -> None:
+    # explore_lite drives the moment it starts; live motors stay a deliberate act.
+    args = {e.name: ''.join(t.text for t in e.default_value)
+            for e in generate(EXPLORE).entities if isinstance(e, DeclareLaunchArgument)}
+    assert args['dry_run'] == 'true'
+    assert args['bridge'] == 'true'
+
+
+def test_explore_slam_is_a_mapping_lifecycle_node() -> None:
+    slam = [n for n in nodes(generate(EXPLORE)) if n.node_package == 'slam_toolbox']
+    assert len(slam) == 1
+    assert isinstance(slam[0], LifecycleNode)
+    assert slam[0].node_executable == 'async_slam_toolbox_node'
+
+
+def test_explore_nav2_and_explorer_start_on_slam_active() -> None:
+    # The event handler hides its entities from walk(), so this reads the source.
+    text = EXPLORE.read_text()
+    m = re.search(r"goal_state='active',\s*entities=\[(.*?)\]\)\)", text, re.S)
+    assert m, 'Nav2 and explore must sit in the slam-active OnStateTransition'
+    body = m.group(1)
+    assert "'navigation_launch.py'" in body
+    assert "package='explore_lite'" in body
+    assert "'use_composition': 'False'" in body
+    assert "bringup_launch.py'" not in text  # no AMCL / map_server: slam owns /map
