@@ -22,12 +22,11 @@ import os
 import sys
 import time
 
-import rclpy
+from delivery_bot_mission.goals import load_goals, pick_goals, pose_fields
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
+import rclpy
 from rclpy.utilities import remove_ros_args
-
-from delivery_bot_mission.goals import load_goals, pick_goals, pose_fields
 
 DEFAULT_FILE = os.path.expanduser(
     '~/ros2_ws/src/delivery_bot/delivery_bot_mission/config/goals.yaml')

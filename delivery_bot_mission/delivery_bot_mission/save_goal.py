@@ -17,12 +17,11 @@ from __future__ import annotations
 import os
 import sys
 
+from delivery_bot_mission.goals import save_goal, yaw_from_quaternion
 import rclpy
 from rclpy.node import Node
 from rclpy.utilities import remove_ros_args
 from tf2_ros import Buffer, TransformListener
-
-from delivery_bot_mission.goals import save_goal, yaw_from_quaternion
 
 DEFAULT_FILE = os.path.expanduser(
     '~/ros2_ws/src/delivery_bot/delivery_bot_mission/config/goals.yaml')
