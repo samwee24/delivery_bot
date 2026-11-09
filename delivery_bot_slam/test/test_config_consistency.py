@@ -149,3 +149,14 @@ def test_motor_safety_limits_do_not_grow() -> None:
     assert motor['max_duty'] <= MAX_DUTY
     assert motor['watchdog_s'] <= MAX_WATCHDOG_S
     assert isinstance(motor['dry_run'], bool)   # launch overrides it to true
+
+
+STAMPED_NODES = ('controller_server', 'behavior_server', 'velocity_smoother',
+                 'collision_monitor', 'docking_server')
+
+
+@pytest.mark.parametrize('node', STAMPED_NODES)
+def test_nav2_publishes_twist_stamped(node: str) -> None:
+    # Jazzy defaults enable_stamped_cmd_vel to false (plain Twist); motor_node
+    # only subscribes TwistStamped, so a missing flag means the wheels never move.
+    assert params('delivery_bot_bringup', 'nav2_params.yaml', node)['enable_stamped_cmd_vel'] is True

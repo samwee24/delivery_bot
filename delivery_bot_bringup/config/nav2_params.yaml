@@ -5,6 +5,8 @@
 #   * controller 10 Hz, RPP replacing MPPI, 0.15 m/s cap, 10 cm goal tolerance
 #   * velocity smoother clamped to the same envelope
 #   * Collision Monitor: 0.20 m x +-35 deg stop wedge on /scan
+#   * enable_stamped_cmd_vel: true on every node that sends or takes velocity
+#     commands, so /cmd_vel is TwistStamped (motor_node and teleop -p stamped:=true)
 # AMCL is removed: slam_toolbox localization provides map + map->odom.
 
 bt_navigator:
@@ -36,6 +38,8 @@ bt_navigator:
 
 controller_server:
   ros__parameters:
+    # Jazzy defaults to plain Twist; motor_node subscribes TwistStamped (2026-11-09)
+    enable_stamped_cmd_vel: true
     controller_frequency: 10.0
     costmap_update_timeout: 0.30
     min_x_velocity_threshold: 0.001
@@ -198,6 +202,8 @@ smoother_server:
 
 behavior_server:
   ros__parameters:
+    # Jazzy defaults to plain Twist; motor_node subscribes TwistStamped (2026-11-09)
+    enable_stamped_cmd_vel: true
     local_costmap_topic: local_costmap/costmap_raw
     global_costmap_topic: global_costmap/costmap_raw
     local_footprint_topic: local_costmap/published_footprint
@@ -259,6 +265,8 @@ route_server:
 
 velocity_smoother:
   ros__parameters:
+    # Jazzy defaults to plain Twist; motor_node subscribes TwistStamped (2026-11-09)
+    enable_stamped_cmd_vel: true
     smoothing_frequency: 20.0
     stamp_smoothed_velocity_with_smoothing_time: False
     scale_velocities: False
@@ -274,6 +282,8 @@ velocity_smoother:
 
 collision_monitor:
   ros__parameters:
+    # Jazzy defaults to plain Twist; motor_node subscribes TwistStamped (2026-11-09)
+    enable_stamped_cmd_vel: true
     base_frame_id: "base_footprint"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
@@ -321,6 +331,8 @@ collision_monitor:
 
 docking_server:
   ros__parameters:
+    # Jazzy defaults to plain Twist; motor_node subscribes TwistStamped (2026-11-09)
+    enable_stamped_cmd_vel: true
     controller_frequency: 50.0
     initial_perception_timeout: 5.0
     wait_charge_timeout: 5.0
