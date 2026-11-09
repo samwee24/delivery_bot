@@ -149,3 +149,18 @@ def test_motor_safety_limits_do_not_grow() -> None:
     assert motor['max_duty'] <= MAX_DUTY
     assert motor['watchdog_s'] <= MAX_WATCHDOG_S
     assert isinstance(motor['dry_run'], bool)   # launch overrides it to true
+
+
+STAMPED_NODES = ['controller_server', 'velocity_smoother', 'collision_monitor', 'behavior_server']
+
+
+def test_nav2_nodes_that_set_stamped_cmd_vel_set_it_true(nav2) -> None:
+    # motor_node subscribes /cmd_vel as TwistStamped only
+    for node, block in nav2.items():
+        value = block.get('ros__parameters', {}).get('enable_stamped_cmd_vel', True)
+        assert value is True, f'{node}: enable_stamped_cmd_vel must be true'
+
+
+@pytest.mark.parametrize('node', STAMPED_NODES)
+def test_nav2_cmd_vel_chain_is_stamped(nav2, node) -> None:
+    assert nav2[node]['ros__parameters']['enable_stamped_cmd_vel'] is True
