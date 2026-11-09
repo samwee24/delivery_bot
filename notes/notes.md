@@ -5,6 +5,19 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-09 (Pi, live, night) · root cause of the overshoot: software PWM under load; then the battery ran out
+
+Branch `fix/motor-gains` (c01fb04 to fd7a1d9). Rows in `docs/test_log.md`.
+
+- Overshoot reproduced under the launched stack at load 22 to 30 (0.30 m/s pulse: 1.29 m, rf2o peak 0.74 m/s). Direct script at duty 0.30: 0.85 m idle, 1.46 m with 32 burners (33 runnable threads). The 8-burner test in the block below was too light. At 100 Hz: 0.90 m idle and loaded. `pwm_hz` is now 100, gains 0.44/0.44.
+- At the speed cap (0.15 m/s, duty 0.176) the robot does not start. Added a kick-start to `motor_node` (`kick_duty` 0.30 for `kick_s` 0.15 s from rest), 5 pytests.
+- Nav2 shuts itself down under load: `CRITICAL FAILURE: SERVER smoother_server IS DOWN after not receiving a heartbeat for 4000 ms` (also `route_server`), twice, both during a `timed_move` run. The collision monitor goes with it, so commands stop mid-run.
+- The motor battery then died within minutes of each power cycle, so the kick-start runs are invalid.
+
+Next: charge the motor battery (check the pack voltage), then direct test, then the 3 straights with kick-start, and the 100 Hz rewrite case (untested). Raise Nav2 `bond_timeout` or cut load (camera, Foxglove) before the Nav2 goals.
+
+---
+
 ## 2026-11-09 (Pi, live, evening) · speed overshoot not reproduced; gains 0.44/0.44 work
 
 Code 8153ab6, Pi rebooted (uptime 0 min at the start), motor battery restarted, `drivers.yaml` on the Pi restored to main. Rows in `docs/test_log.md`.
