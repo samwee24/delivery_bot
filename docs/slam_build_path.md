@@ -32,9 +32,9 @@ A checkpoint is a state the project can be in, checked by one observable test.
 | CP0 | Platform up | `/scan`, `/imu/data` and TF stream on the Pi; robot built and measured into the URDF | 2026-10-31 | **done** 2026-10-31 | [`evidence/lidar/2026-10-21_composite_20revs.png`](../evidence/lidar/2026-10-21_composite_20revs.png) · test_log 2026-10-30 "IMU at rest" · notes 2026-10-31 "robot built: mounting, rf2o hand tests, variances, first room map" |
 | CP1 | Map and localisation | Room map saved; `slam_toolbox` localisation recovers a 30 cm / 20° wrong start | 2026-11-01 | **done** 2026-11-01 | [`results/maps/2026-10-31_room2.png`](../results/maps/2026-10-31_room2.png), [`results/maps/2026-11-01_room2_home_pose.png`](../results/maps/2026-11-01_room2_home_pose.png) · test_log 2026-11-01 "6.4 wrong start, 30 cm / 20 deg" · notes 2026-11-01 "base/mapping/localisation launch files, 6.2 localisation on the room graph" |
 | CP2 | OI-8 explained | Cause of rf2o reading 24 % of a push found by a live test | 2026-11-03 | **done** 2026-11-03 (a person behind the robot) | [`evidence/lidar/2026-11-03_oi8_live_push.txt`](../evidence/lidar/2026-11-03_oi8_live_push.txt), [`evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`](../evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt) · test_log 2026-11-03 "OI-8 live push A", "OI-8 bad bags of 2026-11-01 re-read" · notes 2026-11-03 "OI-8: live push, nobody in the scan" |
-| CP3 | Plan H agreed | People as the axis, every method live, empty vs people, in `docs/report_plan.md`; outlines rewritten | 2026-11-09 | [~] PR 31 open | PR 31 · notes 2026-11-09 "CA3 plan widened to a method × condition matrix" (evening addendum) |
-| CP4 | Ready to drive the matrix | Motor safety fixed and merged; live switches (`ekf_params_file`, `ekf:=false`, `localizer:=amcl`) and the run sheet tested; checkpoints and people paths taped | 2026-11-09 | [ ] | test_log rows for each switch; Progress 9.2 |
-| CP5 | Robot drives | Wheels raised, then a 1 m straight on the floor with the switch in reach | 2026-11-10 | [ ] motors on `feat/motors`, not merged; review findings in §5.1 | needs a test_log row (none on `feat/motors`) |
+| CP3 | Plan H agreed | People as the axis, every method live, empty vs people, in `docs/report_plan.md`; outlines rewritten | 2026-11-09 | **done** 2026-11-09 (PR 31 merged) | PR 31 · notes 2026-11-09 "CA3 plan widened to a method × condition matrix" (evening addendum) |
+| CP4 | Ready to drive the matrix | Motor safety fixed and merged; live switches (`ekf_params_file`, `ekf:=false`, `localizer:=amcl`) and the run sheet tested; checkpoints and people paths taped | 2026-11-09 | [~] switches merged (PR 33) and verified live (PR 35); motor safety fixed into `feat/motors` (PR 34) but `feat/motors` not on `main`; 9.1 taping open | test_log 2026-11-09 smoke and live rows for each switch; Progress 9.2 |
+| CP5 | Robot drives | Wheels raised, then a 1 m straight on the floor with the switch in reach | 2026-11-10 | [ ] motors and safety fixes on `feat/motors` (PR 34 merged into it), not on `main`; wheels-raised test is MT's | PR 34 dry-run smoke rows in test_log 2026-11-09; first-drive row still needed |
 | CP6 | Driven data recorded | E2 48 runs, E3 12 loops + 16 wrong starts, E4 step-ins, E1 5 runs, all live and bagged, tape numbers written down | 2026-11-10 | [ ] | will be `~/bags/2026-11-10_<exp>_<cell>_run<N>`, one test_log row per run |
 | CP7 | Results and slides | Every RQ has a figure and an Our take; no `[if ...]` text left on slides; rehearsal 1 done | 2026-11-11 | [ ] | `report/figures/`, `report/slides_outline.md` |
 | CP8 | Presentation | Delivered | Thu 2026-11-12 | [ ] | — |
@@ -52,15 +52,15 @@ Every open task of the project, in one list. Stages 0–9 are the SLAM build pat
 - **Stage 5 Mapping:** [ ] 5.1 pose graphs · [ ] 5.2 lifecycle nodes · [x] 5.3 mapping.launch.py · [ ] 5.4 map the room (second tape gap left) · [x] 5.5 tune and freeze
 - **Stage 6 Localisation:** [ ] 6.1 mapping vs localisation · [x] 6.2 · [x] 6.3 · [x] 6.4 wrong start ⇢ E3
 - **Stage 7 Foxglove:** [x] 7.1 trajectory recorder · [ ] 7.2 layout (navigation layout merged in PR 27; SLAM layout to confirm) · [ ] 7.3 control SLAM from Foxglove (buttons run; owner steps left, §5)
-- **Stage 8 Autonomous mapping:** [ ] 8.1 frontier theory · [x] 8.2 build explore_lite · [~] 8.3 explore.launch.py (PR 30) · [ ] 8.4 first supervised run (needs motors) · [ ] 8.5 compare with manual mapping
+- **Stage 8 Autonomous mapping:** [ ] 8.1 frontier theory · [x] 8.2 build explore_lite · [x] 8.3 explore.launch.py (PR 30, merged 2026-11-08) · [ ] 8.4 first supervised run (needs motors) · [ ] 8.5 compare with manual mapping
 - **Stage 9 Experiments (plan H)** — the how-to is Stage 9 below; design in [`report_plan.md`](report_plan.md) §3–4
   - [ ] 9.1 Survey floor checkpoints and tape the two people paths — **S**, **B**
-  - [ ] 9.2 Live switches and run sheet (CP4) — **S** → `delegate-live-switches.md` (worker running 2026-11-09)
-    - [ ] EKF variants (`ekf_variants/`), `ekf_params_file`, `ekf:=false` in `base.launch.py`
-    - [ ] `localizer:=slam|amcl` in `navigation.launch.py` (AMCL + `map_server`, `amcl.yaml`)
-    - [ ] `tools/timed_move.py` (publishes on `cmd_vel_smoothed`, through the collision monitor)
-    - [ ] `tools/run_cell.py` (starts a cell, records the bag, prints the test_log row)
-    - [ ] Motor safety on `feat/motors` (R.1) — **MT** review → `delegate-motor-safety.md`
+  - [x] 9.2 Live switches and run sheet (CP4) — **S**, PR 33 merged 2026-11-09, verified live in PR 35 · test_log 2026-11-09 · notes 2026-11-09 "PR 33 verified live"
+    - [x] EKF variants (`ekf_variants/`), `ekf_params_file`, `ekf:=false` in `base.launch.py`
+    - [x] `localizer:=slam|amcl` in `navigation.launch.py` (AMCL + `map_server`, `amcl.yaml`); AMCL only seen on its initial pose so far
+    - [x] `tools/timed_move.py` (publishes on `cmd_vel_smoothed`, through the collision monitor; slowdown zone cuts it to 0.3 x near walls)
+    - [x] `tools/run_cell.py` (starts a cell, records the bag, prints the test_log row; use a delay of 75 s or more)
+    - [x] Motor safety on `feat/motors` (R.1): PR 34 merged into `feat/motors`; **MT** to review and open the PR to `main`
   - [ ] 9.3 Driven session, Tue 2026-11-10 (CP5, CP6) — **MT** drives, **S** runs the sheet, **B** people
     - [ ] Charged battery and a spare, `vcgencmd get_throttled` = `0x0`; robot still for 3 s at every start (IMU calibration)
     - [ ] Wheels raised, then one 1 m straight with the switch in reach (CP5)
@@ -110,15 +110,15 @@ Every open task of the project, in one list. Stages 0–9 are the SLAM build pat
 ### R. Robot, integration and housekeeping
 
 #### R.1 Motors and navigation — **MT** unless marked
-- [~] Motors and rough gains on `feat/motors` (3d295f7, 3fed2ff); open a PR to `main`. Review of 2026-11-09 (not yet sent to MT):
-  - [ ] Fixes for the items below are a worker prompt, `delegate-motor-safety.md` (PR into `feat/motors` for MT to review)
-  - [ ] Dry run removed: `base.launch.py` always starts `motor_node` live, so the mapping, localisation and navigation stacks, the Foxglove stack buttons and PR 30's explore all drive the wheels whenever anything publishes `/cmd_vel`. Restore `dry_run` (default `true`) in the node; the test `test_base_declares_dry_run_true_by_default` was edited to expect `false` and should go back
-  - [ ] No lidar stop (`stop_dist_m`): only the 0.5 s watchdog and Nav2's collision monitor; teleop has no obstacle stop (AGENTS rule 1)
-  - [~] `/cmd_vel` type: Nav2 Jazzy defaulted to plain `Twist`, `motor_node` takes `TwistStamped` only. Fixed in PR 32 (`enable_stamped_cmd_vel: true` on 5 Nav2 nodes), checked on the Pi 2026-11-09: all `/cmd_vel*` endpoints TwistStamped · test_log 2026-11-09 "Nav2 `/cmd_vel` message type" · notes 2026-11-09 "Nav2 now publishes TwistStamped". Merge PR 32
-  - [ ] No tests for `_duty_for` and the wheel split (definition of done); no test_log row for the first drive
+- [~] Motors and rough gains on `feat/motors` (3d295f7, 3fed2ff, safety fixes 3b1980e); **MT** reviews, runs wheels raised, opens a PR to `main`. Review of 2026-11-09:
+  - [x] Fixes for the items below: PR 34 into `feat/motors`, merged 2026-11-09 (dry-run smoke rows in test_log 2026-11-09)
+  - [x] Dry run removed: `base.launch.py` always starts `motor_node` live, so the mapping, localisation and navigation stacks, the Foxglove stack buttons and PR 30's explore all drive the wheels whenever anything publishes `/cmd_vel`. Restore `dry_run` (default `true`) in the node; the test `test_base_declares_dry_run_true_by_default` was edited to expect `false` and should go back
+  - [x] No lidar stop (`stop_dist_m`): only the 0.5 s watchdog and Nav2's collision monitor; teleop has no obstacle stop (AGENTS rule 1). Fixed in PR 34: linear zeroed inside 0.20 m within ±35° of travel, stale scan stops all
+  - [x] `/cmd_vel` type: Nav2 Jazzy defaulted to plain `Twist`, `motor_node` takes `TwistStamped` only. Fixed in PR 32 (`enable_stamped_cmd_vel: true` on 5 Nav2 nodes), checked on the Pi 2026-11-09: all `/cmd_vel*` endpoints TwistStamped · test_log 2026-11-09 "Nav2 `/cmd_vel` message type" · notes 2026-11-09 "Nav2 now publishes TwistStamped". PR 32 merged 2026-11-09
+  - [~] No tests for `_duty_for` and the wheel split (definition of done): `test_motor_node.py` added in PR 34; no test_log row for the first drive yet
   - [ ] Gains left 3.0 vs right 1.0 ("rough"): label E1 arrival error accordingly; calibrate with a 1 m straight
-- [~] Nav2 glue: navigation button, `save_goal`, `deliver`, planner check (PR 29); live test of `save_goal` and `deliver` still to do
-- [~] `explore.launch.py` (PR 30) — **S**
+- [~] Nav2 glue: navigation button, `save_goal`, `deliver`, planner check (PR 29, merged 2026-11-08); live test of `save_goal` and `deliver` still to do
+- [x] `explore.launch.py` (PR 30, merged 2026-11-08) — **S**; first supervised run is 8.4
 - [ ] Calibration: dead zone, per-side gain, 1 m straight
 - [ ] Save seat goals with `save_goal` once driving works
 
@@ -129,8 +129,10 @@ Every open task of the project, in one list. Stages 0–9 are the SLAM build pat
 - [ ] EKF late-update count at 20 Hz on a quiet Pi (camera off), against closure 0.115 m vs 0.109 m
 
 #### R.3 Repo
-- [~] Merge PR 31 (this plan) — **S**
-- [ ] Commit or delete the untracked files in the Mac checkout: `delegate-navigation-phase1.md`, `delegate-oi8-live-push.md` (both done), `delegate-replay-matrix.md` (shelved by plan H), `reports/`, `research_notes/`
+- [x] Merge PR 31 (this plan) — **S**, merged 2026-11-09
+- [ ] Commit or delete the untracked files in the Mac checkout: `delegate-navigation-phase1.md`, `delegate-oi8-live-push.md`, `delegate-live-switches.md`, `delegate-live-verify.md`, `delegate-motor-safety.md` (all done), `delegate-replay-matrix.md` (shelved by plan H), `reports/`, `research_notes/`
+- [ ] Delete the merged remote branch `nav/live-switches`
+- [ ] Pi power: `get_throttled` read `0x50000` after the 2026-11-09 runs (under-voltage since boot); check the supply before the driven session
 - [ ] Two sessions share the Mac checkout and switch its branches: use a worktree per session
 - [ ] Back up `~/bags` and `~/maps` to `../delivery_bot_pi_backup/` after the driven session
 
