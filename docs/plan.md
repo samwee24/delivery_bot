@@ -45,7 +45,7 @@ and [`system/04_architecture.md`](system/04_architecture.md) (pipeline and contr
 
 The SLAM work is done in the order of [`slam_build_path.md`](slam_build_path.md), not
 straight down this table: the path splits each phase into the small tasks that actually
-teach it, keeps its own Progress list, and records answers and numbers in
+teach it (and holds the project's whole task tree), and records answers and numbers in
 [`slam_journal.md`](slam_journal.md). The two plans line up as follows.
 
 | Plan phase | Build-path stages |

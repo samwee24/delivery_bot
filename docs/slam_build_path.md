@@ -1,8 +1,177 @@
-# SLAM build path
+# Task tree and SLAM build path
 
-A step-by-step path for building the SLAM section, written so each step teaches what the next one needs. Every task has: why it matters, what to do, how you know it's done, and an **explain it back** question. Don't tick a task until you can answer its question in your own words; write the answer in `docs/slam_journal.md` under the task's ID.
+**The one document for the project's work**: checkpoints, every open task (SLAM, experiments,
+robot, report), measured findings, and the step-by-step how-to for each SLAM task. Tick a
+box when it is done, with the date and a pointer to its proof. Add new tasks here.
 
-Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan.md](plan.md) (project phases) · [docs/test_log.md](test_log.md) (numbers).
+Each SLAM task below has: why it matters, what to do, how you know it's done, and an
+**explain it back** question (answers go in `docs/slam_journal.md` under the task's ID;
+optional since 2026-10-30).
+
+Related: [report_plan.md](report_plan.md) (CA3 experiment design) · [slam.md](slam.md) (architecture, fixes, references) · [plan.md](plan.md) (project phases) · [test_log.md](test_log.md) (numbers) · [CA3.md](CA3.md) (decisions, open issues).
+
+**Pointers.** Every checkpoint and finding names where its proof lives:
+- **Log** = a row in [`docs/test_log.md`](test_log.md), cited as *date · first words of
+  the Test column* (search for them), and the matching block in
+  [`notes/notes.md`](../notes/notes.md), cited as *date · block title*.
+- **Evidence** = a file in [`evidence/`](../evidence/) or [`results/`](../results/) (raw artefacts,
+  append-only), or a bag on the Pi (`~/bags/<name>`, backed up by hand to
+  `../delivery_bot_pi_backup/`).
+A finding with no log row is not a finding yet. When you tick a task, add its pointer.
+
+Legend: `[x]` done · `[ ]` open · `[~]` in progress or in an open PR · **owner** in bold. Owners: **S** Sherman, **MT** motor teammate (Chloe), **A**, **B** (placeholders until named). `⇢ E2` marks a learning task an experiment also needs.
+
+Last compiled: 2026-11-09.
+
+## Checkpoints
+
+A checkpoint is a state the project can be in, checked by one observable test.
+
+| # | Checkpoint | Done when | Target | State | Evidence · log |
+| --- | --- | --- | --- | --- | --- |
+| CP0 | Platform up | `/scan`, `/imu/data` and TF stream on the Pi; robot built and measured into the URDF | 2026-10-31 | **done** 2026-10-31 | [`evidence/lidar/2026-10-21_composite_20revs.png`](../evidence/lidar/2026-10-21_composite_20revs.png) · test_log 2026-10-30 "IMU at rest" · notes 2026-10-31 "robot built: mounting, rf2o hand tests, variances, first room map" |
+| CP1 | Map and localisation | Room map saved; `slam_toolbox` localisation recovers a 30 cm / 20° wrong start | 2026-11-01 | **done** 2026-11-01 | [`results/maps/2026-10-31_room2.png`](../results/maps/2026-10-31_room2.png), [`results/maps/2026-11-01_room2_home_pose.png`](../results/maps/2026-11-01_room2_home_pose.png) · test_log 2026-11-01 "6.4 wrong start, 30 cm / 20 deg" · notes 2026-11-01 "base/mapping/localisation launch files, 6.2 localisation on the room graph" |
+| CP2 | OI-8 explained | Cause of rf2o reading 24 % of a push found by a live test | 2026-11-03 | **done** 2026-11-03 (a person behind the robot) | [`evidence/lidar/2026-11-03_oi8_live_push.txt`](../evidence/lidar/2026-11-03_oi8_live_push.txt), [`evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`](../evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt) · test_log 2026-11-03 "OI-8 live push A", "OI-8 bad bags of 2026-11-01 re-read" · notes 2026-11-03 "OI-8: live push, nobody in the scan" |
+| CP3 | Plan H agreed | People as the axis, every method live, empty vs people, in `docs/report_plan.md`; outlines rewritten | 2026-11-09 | [~] PR 31 open | PR 31 · notes 2026-11-09 "CA3 plan widened to a method × condition matrix" (evening addendum) |
+| CP4 | Ready to drive the matrix | Motor safety fixed and merged; live switches (`ekf_params_file`, `ekf:=false`, `localizer:=amcl`) and the run sheet tested; checkpoints and people paths taped | 2026-11-09 | [ ] | test_log rows for each switch; Progress 9.2 |
+| CP5 | Robot drives | Wheels raised, then a 1 m straight on the floor with the switch in reach | 2026-11-10 | [ ] motors on `feat/motors`, not merged; review findings in §5.1 | needs a test_log row (none on `feat/motors`) |
+| CP6 | Driven data recorded | E2 48 runs, E3 12 loops + 16 wrong starts, E4 step-ins, E1 5 runs, all live and bagged, tape numbers written down | 2026-11-10 | [ ] | will be `~/bags/2026-11-10_<exp>_<cell>_run<N>`, one test_log row per run |
+| CP7 | Results and slides | Every RQ has a figure and an Our take; no `[if ...]` text left on slides; rehearsal 1 done | 2026-11-11 | [ ] | `report/figures/`, `report/slides_outline.md` |
+| CP8 | Presentation | Delivered | Thu 2026-11-12 | [ ] | — |
+| CP9 | Report submitted | Report, slides, peer assessment in | end of Week 13 | [ ] | — |
+
+## Progress
+
+Every open task of the project, in one list. Stages 0–9 are the SLAM build path and the experiments (how-to below); D and R are the rest of the project.
+
+- **Stage 0 Foundations:** [x] 0.1 ROS 2 picture · [ ] 0.2 frames and transforms · [x] 0.3 what SLAM is
+- **Stage 1 Sensor:** [x] 1.1 · [x] 1.2 · [x] 1.3 · [x] 1.4 · [x] 1.5
+- **Stage 2 Frames:** [x] 2.1 measure · [x] 2.2 URDF
+- **Stage 3 rf2o:** [ ] 3.1 how rf2o works · [x] 3.2 push by hand · [ ] 3.3 break it on purpose (OI-8 covered the "person in the scan" case) · [x] 3.4 startup race
+- **Stage 4 EKF:** [ ] 4.1 Kalman intuition · [ ] 4.2 zero-covariance bug · [x] 4.3 covariance relay · [x] 4.4 variances · [ ] 4.5 show that fusion helps ⇢ E2
+- **Stage 5 Mapping:** [ ] 5.1 pose graphs · [ ] 5.2 lifecycle nodes · [x] 5.3 mapping.launch.py · [ ] 5.4 map the room (second tape gap left) · [x] 5.5 tune and freeze
+- **Stage 6 Localisation:** [ ] 6.1 mapping vs localisation · [x] 6.2 · [x] 6.3 · [x] 6.4 wrong start ⇢ E3
+- **Stage 7 Foxglove:** [x] 7.1 trajectory recorder · [ ] 7.2 layout (navigation layout merged in PR 27; SLAM layout to confirm) · [ ] 7.3 control SLAM from Foxglove (buttons run; owner steps left, §5)
+- **Stage 8 Autonomous mapping:** [ ] 8.1 frontier theory · [x] 8.2 build explore_lite · [~] 8.3 explore.launch.py (PR 30) · [ ] 8.4 first supervised run (needs motors) · [ ] 8.5 compare with manual mapping
+- **Stage 9 Experiments (plan H)** — the how-to is Stage 9 below; design in [`report_plan.md`](report_plan.md) §3–4
+  - [ ] 9.1 Survey floor checkpoints and tape the two people paths — **S**, **B**
+  - [ ] 9.2 Live switches and run sheet (CP4) — **S** → `delegate-live-switches.md` (worker running 2026-11-09)
+    - [ ] EKF variants (`ekf_variants/`), `ekf_params_file`, `ekf:=false` in `base.launch.py`
+    - [ ] `localizer:=slam|amcl` in `navigation.launch.py` (AMCL + `map_server`, `amcl.yaml`)
+    - [ ] `tools/timed_move.py` (publishes on `cmd_vel_smoothed`, through the collision monitor)
+    - [ ] `tools/run_cell.py` (starts a cell, records the bag, prints the test_log row)
+    - [ ] Motor safety on `feat/motors` (R.1) — **MT** review → `delegate-motor-safety.md`
+  - [ ] 9.3 Driven session, Tue 2026-11-10 (CP5, CP6) — **MT** drives, **S** runs the sheet, **B** people
+    - [ ] Charged battery and a spare, `vcgencmd get_throttled` = `0x0`; robot still for 3 s at every start (IMU calibration)
+    - [ ] Wheels raised, then one 1 m straight with the switch in reach (CP5)
+    - [ ] Freeze config; record the commit
+    - [ ] 9.4 runs (48), 9.5 loops (12) and wrong starts (16), 9.7 step-ins (3–5), E1 delivery runs (5)
+    - [ ] On every run: failure onset (drift, jump, lost), recovery after people leave, failure position
+    - [ ] Video clips V1–V4
+    - [ ] Fallback if driving fails: stick-pushing for 9.4 (nobody behind the robot except in people runs); 9.5 and E1 partial
+  - [ ] 9.4 Odometry configs, empty vs people (E2, RQ2) ⇢ 4.5
+  - [ ] 9.5 Localiser: `slam_toolbox` vs AMCL (E3, RQ3) ⇢ 6.4
+  - [ ] 9.6 What people do (RQ1): empty-vs-people table and room figure
+  - [ ] 9.7 Step-in safety (E4, RQ4) — **B**
+  - [ ] 9.8 Metrics: tape tables, `evo` on the bags, figures, one Our take per RQ
+  - [ ] 9.9 Measure the Pi's load (full stack, Nav2 included)
+  - [ ] 9.10 Write the SLAM section ⇢ report §5
+  - [ ] Back up the bags to `../delivery_bot_pi_backup/`
+  - Dropped to future work: lidar degradation (simulated, expensive, tied to nothing we discovered); the offline replay matrix on the 10-31 to 11-03 bags (`delegate-replay-matrix.md`, shelved)
+- **Stage X Extensions:** [ ] X.1 deskew · [ ] X.2 people filtering · [ ] X.3 map quality without truth (future work in the report)
+
+### D. CA3 deliverables
+
+#### D.1 Presentation (Thu 2026-11-12) → [`report/slides_outline.md`](../report/slides_outline.md)
+- [ ] Slide skeleton on the storyline (15 slides) — **all**
+- [ ] Product table, slides 2–3 — **A**
+- [ ] System and demo slides 4–5 — **MT**
+- [ ] OI-8, design, RQ1–RQ3 slides 6–10 — **S** (needs CP6)
+- [ ] Step-in, hazards, position slides 11–13 — **B**
+- [ ] Roadmap and verdict slides 14–15 — **A**
+- [ ] Video clips ≤ 120 s, offline copies on two USB sticks (V1–V4) — **MT**, **B**
+- [ ] Q&A answers (10 questions) drafted and drilled — **all**
+- [ ] Rehearsal 1 (Wed 11), rehearsal 2 (Wed 11 evening or Thu morning), timed per presenter — **all**
+- [ ] Confirm date and slot on NTULearn — **S**
+
+#### D.2 Report (end of Week 13) → [`report/CA3_report.md`](../report/CA3_report.md)
+- [ ] Download the NTULearn template — **A**
+- [ ] §1 Introduction and contribution table — **A**
+- [ ] §2 Background, product table, published baselines — **S** (2.1–2.4), **A**/**B** (2.5–2.6)
+- [ ] §3 System — **S**, **MT**
+- [ ] §4 Method and "differences from the paper" table — **S**, **B**
+- [ ] §5 Results, every number with provenance and command — **S**, **B**, **MT**
+- [ ] §6 Discussion, one Our take per RQ — owners per RQ
+- [ ] §7 Our position, §8 conclusions and costed roadmap — **all**, **A** drafts
+- [ ] References checked against [`report/literature_notes.md`](../report/literature_notes.md) — **A**
+- [ ] Final title chosen after E2, E3 — **all**
+- [ ] Peer assessment submitted — **each member**
+
+### R. Robot, integration and housekeeping
+
+#### R.1 Motors and navigation — **MT** unless marked
+- [~] Motors and rough gains on `feat/motors` (3d295f7, 3fed2ff); open a PR to `main`. Review of 2026-11-09 (not yet sent to MT):
+  - [ ] Fixes for the items below are a worker prompt, `delegate-motor-safety.md` (PR into `feat/motors` for MT to review)
+  - [ ] Dry run removed: `base.launch.py` always starts `motor_node` live, so the mapping, localisation and navigation stacks, the Foxglove stack buttons and PR 30's explore all drive the wheels whenever anything publishes `/cmd_vel`. Restore `dry_run` (default `true`) in the node; the test `test_base_declares_dry_run_true_by_default` was edited to expect `false` and should go back
+  - [ ] No lidar stop (`stop_dist_m`): only the 0.5 s watchdog and Nav2's collision monitor; teleop has no obstacle stop (AGENTS rule 1)
+  - [~] `/cmd_vel` type: Nav2 Jazzy defaulted to plain `Twist`, `motor_node` takes `TwistStamped` only. Fixed in PR 32 (`enable_stamped_cmd_vel: true` on 5 Nav2 nodes), checked on the Pi 2026-11-09: all `/cmd_vel*` endpoints TwistStamped · test_log 2026-11-09 "Nav2 `/cmd_vel` message type" · notes 2026-11-09 "Nav2 now publishes TwistStamped". Merge PR 32
+  - [ ] No tests for `_duty_for` and the wheel split (definition of done); no test_log row for the first drive
+  - [ ] Gains left 3.0 vs right 1.0 ("rough"): label E1 arrival error accordingly; calibrate with a 1 m straight
+- [~] Nav2 glue: navigation button, `save_goal`, `deliver`, planner check (PR 29); live test of `save_goal` and `deliver` still to do
+- [~] `explore.launch.py` (PR 30) — **S**
+- [ ] Calibration: dead zone, per-side gain, 1 m straight
+- [ ] Save seat goals with `save_goal` once driving works
+
+#### R.2 Foxglove and Pi — **S**
+- [ ] Owner steps in the README: sudoers rule, linger, systemd unit (power buttons need the sudoers rule)
+- [ ] `/imu_node/recalibrate` with the robot nudged; `/stack/localisation` live
+- [ ] Confirm cockpit tiles change after re-importing `docs/foxglove/cockpit_layout.json`
+- [ ] EKF late-update count at 20 Hz on a quiet Pi (camera off), against closure 0.115 m vs 0.109 m
+
+#### R.3 Repo
+- [~] Merge PR 31 (this plan) — **S**
+- [ ] Commit or delete the untracked files in the Mac checkout: `delegate-navigation-phase1.md`, `delegate-oi8-live-push.md` (both done), `delegate-replay-matrix.md` (shelved by plan H), `reports/`, `research_notes/`
+- [ ] Two sessions share the Mac checkout and switch its branches: use a worktree per session
+- [ ] Back up `~/bags` and `~/maps` to `../delivery_bot_pi_backup/` after the driven session
+
+#### R.4 Open issues → [`docs/CA3.md`](CA3.md)
+- [ ] OI-1 old `robot` box offline: confirm retired
+- [ ] OI-2 `raspberrypi` key rejected: same machine reflashed?
+- [ ] OI-4 echo rate 26–29 % unexplained (mitigated); optional echo-by-material test, first to drop
+- [ ] OI-6 lidar start hang: wait 20 s after a stop; no fix
+- [ ] OI-7 repo public: decide
+- [ ] OI-8 row in `docs/CA3.md` still describes the open state: mark closed 2026-11-03
+
+## Findings (measured)
+
+Only measured results, each with its date and source. Hypotheses live in
+[`report_plan.md`](report_plan.md) §7 until an experiment confirms or kills them.
+
+| Date | Finding | Number | Evidence · log | Feeds |
+| --- | --- | --- | --- | --- | 
+| 2026-10-21 | Lidar rate and echo rate | A1M8 7.05 Hz; 26–29 % of pings return nothing; gaps follow the room, not the lidar | [`evidence/lidar/2026-10-21_composite_20revs.png`](../evidence/lidar/2026-10-21_composite_20revs.png), [`evidence/lidar/2026-10-21_scan_run1.png`](../evidence/lidar/2026-10-21_scan_run1.png) · OI-4 in `docs/CA3.md` · notes 2026-10-20/21 "P1 lidar bring-up on the old Pi", 2026-10-30 "3.4 startup race, near-return ring is the room" | Report §5.1 |
+| 2026-10-30 | IMU at rest | 100 Hz, gyro z std 0.00175 rad/s | test_log 2026-10-30 "IMU at rest" | §5.1 |
+| 2026-10-31 | Gyro on a hand-turned full turn | 360.2° for 360° | `~/bags/2026-10-31_turn_194945` · test_log 2026-10-31 "3.2 spin only" | RQ2 |
+| 2026-10-31 | rf2o by hand, nobody behind | turn 352.9° (−2 %); 1 m push 0.962 m (−3.8 %, window 39–50 s) | `~/bags/2026-10-31_turn_194945`, `~/bags/2026-10-31_push_195343` · test_log 2026-10-31 "3.2 spin only", "3.2 forward move"; 2026-11-02 "live push on the good bag by window" | RQ2 baseline |
+| 2026-10-31 | Variances fitted | rf2o vx var 1.1e-5 / 4.7e-6, wz var 8.5e-4 / 1.8e-3, gyro var 1.7e-6 (rest) | test_log 2026-10-31 "4.4 variances" | EKF config, §4 |
+| 2026-10-31 | First room map; mapping config frozen after the 5.5 sweep | map + `slam_mapping.yaml` | [`results/maps/2026-10-31_room2.png`](../results/maps/2026-10-31_room2.png) · test_log 2026-10-31 "5.4 room map", "5.5 sweep" · notes 2026-10-31 "5.5 sweep done, config frozen, camera stream started" | §5.3 |
+| 2026-10-31 | Camera stream and its cost | 1280x720 at 10 fps; EKF misses 20 Hz with the camera on | [`results/2026-11-02_av_stream_frame.jpg`](../results/2026-11-02_av_stream_frame.jpg) · test_log 2026-10-31 "Camera quality", "Camera under SLAM load"; 2026-11-01 "EKF 20 Hz check" · notes 2026-10-31 (night) "camera quality raised" | Ops rule: camera off while mapping |
+| 2026-11-01 | Wrong-start basin, `slam_toolbox` localisation | 30 cm / 20° recovers after a push; 31° does not (one case per angle) | [`results/maps/2026-11-01_room2_home_pose.png`](../results/maps/2026-11-01_room2_home_pose.png) · test_log 2026-11-01 "6.4 wrong start, 30 cm / 20 deg", "6.4 wrong start, 30 cm / 31 deg" | RQ3 baseline |
+| 2026-11-01 | Lidar start hang | `RPLIDAR running` with no S/N, several retries | OI-6 · `docs/system/06_troubleshooting.md` · test_log 2026-11-01 "6.4 wrong start, 30 cm / 31 deg" (first start hung) | Hazard table, Ops |
+| 2026-11-02 | Pi under-voltage | `throttled=0x50005` on 2026-11-02 and 2026-11-03 | test_log 2026-11-02 "replay, control" · notes 2026-11-02 "OI-8: offline rig fixed, format still undecided; Pi is under-voltage" | Protocol: charged battery |
+| 2026-11-03 | Replay is not repeatable | 3 replays of one bag: 0.679 / 0.592 / 0.531 m (~12 %); good-bag replay 71 % of live | test_log 2026-11-02 "replay, control"; 2026-11-03 "replay repeatability, good bag" · notes 2026-11-03 "OI-8: replay repeatability and rate" | Why plan H uses live runs, not replays |
+| 2026-11-03 | **OI-8: a person behind the robot** | rf2o read 0.242 of 0.862 m and 0.307 of 1.222 m (25–28 %); nobody in the scan reads correctly; scan format cleared | [`evidence/lidar/2026-11-03_oi8_live_push.txt`](../evidence/lidar/2026-11-03_oi8_live_push.txt), [`evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`](../evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt), `~/bags/2026-11-01_push_225752`, `_230535`, `2026-11-03_*_push_ac*` · test_log 2026-11-03 "OI-8 live push A/B", "OI-8 bad bags of 2026-11-01 re-read" · notes 2026-11-03 "OI-8: live push, nobody in the scan" | RQ1, RQ2; the discovery slide |
+| 2026-11-09 | Nav2 Jazzy sends plain `Twist` unless `enable_stamped_cmd_vel: true`; with it, every `/cmd_vel*` endpoint is TwistStamped | 5 nodes set, all endpoints TwistStamped (PR 32) | `/opt/ros/jazzy/include/nav2_util/nav2_util/twist_subscriber.hpp:93` · test_log 2026-11-09 "Nav2 `/cmd_vel` message type" | E1, E3, system slide |
+| 2026-11-09 | IMU start calibration can fail if the robot is not still | gyro z std 0.0257 rad/s vs limit 0.01; `imu_node` exits | `/tmp/stamped_nav.log` on the Pi · test_log 2026-11-09 "Nav2 `/cmd_vel` message type" (Notes) | Run sheet: keep the robot still for 3 s at start |
+| 2026-11-08 | Nav2 planner on the room map (PR 29, unmerged) | 5/5 reachable goals planned, 1.18–2.70 m, 1–5 ms | `results/maps/2026-11-08_planner_paths.png` (on PR 29) · PR 29 test_log row | E1, system slide |
+
+## Open decisions
+
+- [ ] Fifth member? Rebalance presenter timing if so — **all**
+- [ ] OI-7: keep the repo public? — **S**
+- [ ] AI-use declaration, if the module requires one — **all**
+
+---
 
 ## Rules that hold throughout
 
@@ -13,87 +182,6 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 5. Freeze SLAM parameters before evaluation runs (stage 9).
 
 **Tags:** *learn* = read or think, no robot · *bag* = works from a recorded bag · *robot* = needs the robot powered · *build* = you write code or config · *needs Nav2* = waits on the navigation section.
-
-## Progress
-
-**Stage 0: Foundations**
-
-- [x] [0.1 ROS 2 in one picture: nodes, topics, QoS](#01-ros-2-in-one-picture-nodes-topics-qos)
-- [ ] [0.2 Frames and transforms](#02-frames-and-transforms)
-- [x] [0.3 What SLAM is, and which kind you're using](#03-what-slam-is-and-which-kind-youre-using)
-
-**Stage 1: The sensor: /scan**
-
-- [x] [1.1 Read a LaserScan by hand](#11-read-a-laserscan-by-hand)
-- [x] [1.2 See the scan in Foxglove](#12-see-the-scan-in-foxglove)
-- [x] [1.3 Diagnose the missing points](#13-diagnose-the-missing-points)
-- [x] [1.4 Find which way the lidar faces](#14-find-which-way-the-lidar-faces)
-- [x] [1.5 Record and replay your first bag](#15-record-and-replay-your-first-bag)
-
-**Stage 2: The robot's frames**
-
-- [x] [2.1 Measure the robot](#21-measure-the-robot)
-- [x] [2.2 Write the URDF](#22-write-the-urdf)
-
-**Stage 3: Odometry from scans: rf2o**
-
-- [ ] [3.1 How rf2o works](#31-how-rf2o-works)
-- [x] [3.2 Run rf2o alone and push the robot by hand](#32-run-rf2o-alone-and-push-the-robot-by-hand)
-- [ ] [3.3 Break it on purpose](#33-break-it-on-purpose)
-- [x] [3.4 Understand the startup race](#34-understand-the-startup-race)
-
-**Stage 4: Fusing the gyro: the EKF**
-
-- [ ] [4.1 Kalman filter intuition](#41-kalman-filter-intuition)
-- [ ] [4.2 See the zero-covariance bug](#42-see-the-zero-covariance-bug)
-- [x] [4.3 Write the covariance relay](#43-write-the-covariance-relay)
-- [x] [4.4 Calibrate the variances](#44-calibrate-the-variances)
-- [ ] [4.5 Show that fusion helps](#45-show-that-fusion-helps)
-
-**Stage 5: Mapping with slam_toolbox**
-
-- [ ] [5.1 Pose graphs and loop closure](#51-pose-graphs-and-loop-closure)
-- [ ] [5.2 Lifecycle nodes, learned by breaking them](#52-lifecycle-nodes-learned-by-breaking-them)
-- [x] [5.3 Write mapping.launch.py](#53-write-mappinglaunchpy)
-- [ ] [5.4 Map the room](#54-map-the-room)
-- [x] [5.5 Tune on replays, then freeze](#55-tune-on-replays-then-freeze)
-
-**Stage 6: Localisation on the saved map**
-
-- [ ] [6.1 Mapping versus localisation](#61-mapping-versus-localisation)
-- [x] [6.2 Run localisation](#62-run-localisation)
-- [x] [6.3 Set the start pose from Foxglove](#63-set-the-start-pose-from-foxglove)
-- [x] [6.4 Wrong-start test](#64-wrong-start-test)
-
-**Stage 7: Your Foxglove SLAM workspace**
-
-- [x] [7.1 Write the trajectory recorder](#71-write-the-trajectory-recorder)
-- [ ] [7.2 Build and commit the layout](#72-build-and-commit-the-layout)
-- [ ] [7.3 Control SLAM from Foxglove](#73-control-slam-from-foxglove)
-
-**Stage 8: Autonomous mapping**
-
-- [ ] [8.1 How frontier exploration works](#81-how-frontier-exploration-works)
-- [x] [8.2 Build explore_lite](#82-build-explore_lite)
-- [ ] [8.3 Write explore.launch.py](#83-write-explorelaunchpy)
-- [ ] [8.4 First supervised run](#84-first-supervised-run)
-- [ ] [8.5 Compare with manual mapping](#85-compare-with-manual-mapping)
-
-**Stage 9: Evaluation**
-
-- [ ] [9.1 Survey floor checkpoints](#91-survey-floor-checkpoints)
-- [ ] [9.2 Record evaluation runs](#92-record-evaluation-runs)
-- [ ] [9.3 Write the metrics script](#93-write-the-metrics-script)
-- [ ] [9.4 IMU ablation](#94-imu-ablation)
-- [ ] [9.5 Measure the Pi's load](#95-measure-the-pis-load)
-- [ ] [9.6 Write the SLAM section](#96-write-the-slam-section)
-- [ ] [9.7 People in the room, driven (E4)](#97-people-in-the-room-driven-e4)
-
-**Stage X: Extensions**
-
-- [ ] [X.1 Gyro-based scan deskewing](#x1-gyro-based-scan-deskewing)
-- [ ] [X.2 People in the room](#x2-people-in-the-room)
-- [ ] [X.3 Map quality without ground truth](#x3-map-quality-without-ground-truth)
 
 ---
 
@@ -766,17 +854,15 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 ---
 
-## Stage 9: Evaluation
+## Stage 9: Experiments (plan H)
 
-**Goal:** By the end you have honest numbers for how well your SLAM works, and a write-up that ties them to the papers.
+**Goal:** honest numbers for the CA3 questions, from the robot itself: what people do to a
+cheap delivery robot, which part breaks, which localiser holds up, and whether it stops in
+time. Every method runs **live**, once in an empty room and once with 1–2 people walking.
+Design and the reasons for it: [`report_plan.md`](report_plan.md) §2–4 (decision D8b).
 
-> Later: only after parameters are frozen (5.5).
-
-> Report link: Stage 9 now feeds [`report_plan.md`](report_plan.md). The driven runs of
-> 9.2 are experiment E1 (the delivery mission); 9.3 gives E3 (repeatability); 9.4 gives
-> E2 (IMU ablation); 9.7 gives E4 (people). The config is frozen before **2026-11-06**,
-> and the 9.2 runs start only after that. Hand-pushed runs remain the fallback if the
-> robot cannot drive in time.
+> Later: only after parameters are frozen (5.5) and the motors pass the safety review (R.1).
+> Replay of the old bags (10-31 to 11-03) is background only: it reads about 71 % of live.
 
 ### 9.1 Survey floor checkpoints
 
@@ -788,73 +874,143 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 1. Mark 5 crosses with heading lines around the room, including home and each seat.
 2. Measure each from two walls; store them in `checkpoints.yaml`.
+3. Tape the two people paths: one crossing the route, one behind the robot's start. The people walk these every people run, so "people" is one condition.
 
-**Done when:** Each checkpoint measured twice, agreeing within 1 cm.
+**Done when:** Each checkpoint measured twice, agreeing within 1 cm; both paths taped and photographed.
 
 **Explain it back:** *Why measure from two walls rather than one?*
 
-### 9.2 Record evaluation runs
+### 9.2 Live switches and run sheet
 
-*Tags:* robot, bag
+*Tags:* build, robot
 
-**Why it matters.** Several physical runs, not one bag replayed, so results show real variation. These are also the report's E1 delivery runs, so one set of bags feeds E1, E2 and E3.
+**Why it matters.** 50+ live runs only compare if each method starts the same way every time, by one command, with its bag and log row.
 
 **Do:**
 
-1. Five driven runs home → seat → home (the phase 7 delivery route): the robot stops at each checkpoint, publish its ID, end on home. Measure the arrival error at each checkpoint with the tape.
-2. Keep the frozen config; note the commit hash per run.
-3. Fallback if the robot cannot drive in time: the same five runs pushed by hand, labelled as such in `docs/test_log.md`.
+1. EKF variants in `delivery_bot_bringup/config/ekf_variants/` (rf2o + IMU, rf2o only, IMU only) and `ekf:=false` (no EKF, identity `odom → base_footprint`), selectable from `navigation.launch.py`.
+2. `localizer:=slam|amcl` in `navigation.launch.py`: AMCL with `map_server` on the same room map, Nav2 started after localisation is up.
+3. `tools/timed_move.py`: open-loop 1 m straight and 360° spin, published on the collision monitor's input so its obstacle stop still applies.
+4. `tools/run_cell.py`: one cell → launch, bag `~/bags/<date>_<exp>_<cell>_run<N>`, printed test_log row.
 
-**Done when:** Five bags with checkpoint markers, listed in `docs/test_log.md`.
+All four are in the worker prompt `delegate-live-switches.md`.
+
+**Done when:** each switch starts on the Pi with no motion, and its test_log row exists.
+
+**Explain it back:** *Why is the timed move open loop, when everything else on the robot is closed loop?*
+
+### 9.3 Driven session
+
+*Tags:* robot, bag
+
+**Why it matters.** Several physical runs per cell, not one bag replayed, so the results show real variation, on the robot as a customer would meet it.
+
+**Do:**
+
+1. Charged battery and a spare; `vcgencmd get_throttled` = `0x0`; keep the robot still for 3 s at every start (the IMU calibrates then).
+2. Wheels raised first, then one 1 m straight with the motor switch in reach.
+3. Freeze the config; note the commit. Then run the cells of 9.4, 9.5 and 9.7 and the E1 delivery runs from the run sheet, each empty and with people, 3 runs per cell.
+4. On every run note: how a failure starts (drift, jump, lost), whether it recovers once people leave, where in the room it happened.
+5. Fallback if driving fails: 9.4 by pushing with a stick (nobody behind the robot except in people runs); 9.5 and E1 reported as partial.
+
+**Done when:** every cell has its bags and tape numbers, each with a test_log row.
 
 **Explain it back:** *Why does replaying one bag five times measure something different from five physical runs?*
 
 **Read:** [Merrick & Nandikolla 2026, EKF odometry vs SLAM](https://doi.org/10.3390/s26175468)
 
-### 9.3 Write the metrics script
+### 9.4 Odometry configs, empty vs people
 
-*Tags:* build, bag
+*Tags:* robot, bag
 
-**Why it matters.** Turns bags into the numbers in your report.
-
-**Do:**
-
-1. Checkpoint error and return-to-start drift.
-2. Repeatability (report experiment E3, a partial replication of [K26]'s "AMCL off" condition; add checkpoint error from 9.1, the ground truth K26 lacks): pairwise trajectory error (ATE) between runs and map overlap (IoU), as in Kudriashov et al.
-3. Use `evo` for alignment and trajectory error where it fits.
-
-**Done when:** One command prints the metrics table for all five runs.
-
-**Explain it back:** *What does low repeatability error tell you, and what doesn't it tell you?*
-
-**Read:** [Kudriashov et al. 2026, AMCL-EKF benchmark](https://doi.org/10.3390/s26134264) · [evo trajectory evaluation](https://github.com/MichaelGrupp/evo) · [Filatov et al. 2017, 2D SLAM quality metrics](https://arxiv.org/abs/1708.02354)
-
-### 9.4 IMU ablation
-
-*Tags:* bag
-
-**Why it matters.** Answers 'is the gyro worth it?' with your own data. This is report experiment E2, an analogue of [M26] (they ablate the IMU on top of wheel odometry; we have none). Measure before SLAM and after SLAM: M26 saw the gain almost vanish after SLAM.
+**Why it matters.** Report RQ2 (experiment E2): which part breaks when people walk past. OI-8 says scan odometry does; does the gyro rescue it, or does SLAM hide it? An analogue of [M26] (they ablate the IMU on top of wheel odometry; we have none).
 
 **Do:**
 
-1. Replay every 9.2 run with two EKF configs: rf2o only, and rf2o plus gyro. Add one live run per config to check the replay against the real robot.
-2. Measure error before SLAM (odometry alone) and after SLAM: ATE, RPE and heading error (with `evo`).
+1. Per config (rf2o + IMU, rf2o only, IMU only, none) and condition: `timed_move.py straight` ×3 and `spin` ×3.
+2. Measure distance and heading error against the tape and floor marks, before SLAM (`/odometry/filtered`) and after SLAM (map pose).
 
-**Done when:** A table for both configs, before and after SLAM.
+**Done when:** a table of 4 configs × 2 conditions, before and after SLAM.
 
-**Explain it back:** *Merrick & Nandikolla found better odometry barely changed the SLAM result. Did yours, and why might an encoder-free robot differ?*
+**Explain it back:** *Merrick & Nandikolla found better odometry barely changed the SLAM result. Did yours, and did people change that?*
 
 **Read:** [Merrick & Nandikolla 2026, EKF odometry vs SLAM](https://doi.org/10.3390/s26175468)
 
-### 9.5 Measure the Pi's load
+### 9.5 Localiser: slam_toolbox vs AMCL
 
-*Tags:* robot
+*Tags:* robot, bag, needs Nav2
 
-**Why it matters.** Running onboard a Pi 4 is a gap in the published work, so it's worth a number.
+**Why it matters.** Report RQ3 (experiment E3): which localiser a cheap delivery robot should ship. A particle filter and a scan graph should fail differently around moving bodies. [K26] compared AMCL on and off by replay, without ground truth; you have tape.
 
 **Do:**
 
-1. Log CPU and memory per node during mapping and localisation (for example with a small `psutil` logger).
+1. Nav2 drives the same checkpoint loop, 3 loops per localiser per condition, each localiser steering its own runs.
+2. Wrong starts at 10/20/30/40 cm and 10/20/30/40° per localiser, empty room (your `slam_toolbox` baseline: 30 cm / 20° recovers, 31° does not, 6.4).
+3. Stop error at each checkpoint by tape; pairwise trajectory error between loops with `evo` (9.8).
+
+**Done when:** checkpoint error and pairwise ATE per localiser × condition, plus the wrong-start grid.
+
+**Explain it back:** *What does low repeatability error tell you, and what doesn't it tell you?*
+
+**Read:** [Kudriashov et al. 2026, AMCL-EKF benchmark](https://doi.org/10.3390/s26134264) · [Filatov et al. 2017, 2D SLAM quality metrics](https://arxiv.org/abs/1708.02354)
+
+### 9.6 What people do
+
+*Tags:* bag
+
+**Why it matters.** Report RQ1, the headline: how much people cost the robot. A delivery robot's customers are the obstacles. Extends [Y21] from mapping to localisation.
+
+**Do:**
+
+1. Pull the empty-vs-people difference out of 9.4 and 9.5 into one table: method, error empty, error with people, change, failures.
+2. Room figure: where failures happened, against the people paths (from the bags).
+
+**Done when:** the table and the figure, with every number traceable to a test_log row.
+
+**Explain it back:** *Did the people hurt the pose estimate more through the scan matching (rf2o) or through the map matching (slam_toolbox or AMCL)? How would you tell from the bag?*
+
+**Read:** [Ye et al. 2021, mapping with a person tracker](https://doi.org/10.1109/ROBIO54168.2021.9739394)
+
+### 9.7 Step-in safety
+
+*Tags:* robot
+
+**Why it matters.** Report RQ4 (experiment E4): does it stop in time when someone steps in front? The stop zone (0.20 m, ±35°) may be too small at walking pace (`reports/MPC planners for dynamic humans.md`, inference).
+
+**Do:**
+
+1. A person steps in front of the moving robot at walking pace, 3–5 times, collision monitor active.
+2. Record stop distance by tape and any contact. The motor and safety behaviour belong to the teammate; here you need the bag and the distance.
+
+**Done when:** a table of stop distance and contacts against the 0.20 m zone.
+
+**Explain it back:** *Which delay matters most between the person appearing and the wheels stopping: scan rate, costmap, collision monitor or motor watchdog?*
+
+### 9.8 Metrics and figures
+
+*Tags:* build, bag
+
+**Why it matters.** Turns tape numbers and bags into the report's tables and figures.
+
+**Do:**
+
+1. Tape numbers first: checkpoint error, distance and heading error per run.
+2. `evo` (Mac Docker or the Pi) for pairwise ATE and RPE from the bags, where it fits.
+3. One figure per RQ with commit and bag in the caption; one "Our take" per RQ.
+
+**Done when:** one command prints every table; figures are in `report/figures/`.
+
+**Read:** [evo trajectory evaluation](https://github.com/MichaelGrupp/evo)
+
+### 9.9 Measure the Pi's load
+
+*Tags:* robot
+
+**Why it matters.** Running onboard a Pi 4 is a gap in the published work, so it's worth a number; the full stack now includes Nav2.
+
+**Do:**
+
+1. Log CPU and memory per node during localisation with Nav2 (for example with a small `psutil` logger), once per localiser.
 
 **Done when:** Average and peak CPU and RAM recorded for each mode.
 
@@ -862,42 +1018,22 @@ Related: [docs/slam.md](slam.md) (architecture, fixes, references) · [docs/plan
 
 **Read:** [Kudriashov et al. 2026, AMCL-EKF benchmark](https://doi.org/10.3390/s26134264)
 
-### 9.6 Write the SLAM section
+### 9.10 Write the SLAM section
 
 *Tags:* learn
-
-> Do this last, after 9.7 (it was added later, so it sits below).
 
 **Why it matters.** Bring it together: what you built, why, what the numbers say, and what you'd do next.
 
 **Do:**
 
-1. Background (the review), design choices (cited), results tables, limitations.
-2. Future work: deskewing, people filtering, lifelong mapping.
+1. Background (the review), design choices (cited), results tables from 9.4–9.7, limitations.
+2. Future work: people filtering, a larger or predictive stop zone, deskewing, lidar degradation.
 
 **Done when:** Every design decision in the write-up cites its source or says it's your own design.
 
 **Explain it back:** *If you had one more week, which extension would you pick and why?*
 
 **Read:** [Ran et al. 2025, 2D Lidar SLAM review](https://doi.org/10.3390/rs17071214) · [Kudriashov et al. 2026, AMCL-EKF benchmark](https://doi.org/10.3390/s26134264) · [Merrick & Nandikolla 2026, EKF odometry vs SLAM](https://doi.org/10.3390/s26175468)
-
-### 9.7 People in the room, driven (E4)
-
-*Tags:* robot, bag
-
-**Why it matters.** A delivery robot's customers are the obstacles. This is report experiment E4: it measures what people do to localisation on the same route you already measured empty. It extends X.2 from mapping to driving.
-
-**Do:**
-
-1. Repeat the 9.2 route, with the frozen config, with one or two people walking through the room. Five runs, a bag each, commit hash noted.
-2. Compare against the empty-room 9.2 runs: arrival error at each checkpoint, and the number of localisation failures (pose jumps, or a relocalisation needed).
-3. Safety half, if time allows: one person steps in front of the robot. The stop distance and any contact are recorded. The motor and safety behaviour belong to the teammate; here you only need the bag and the tape-measured distance.
-
-**Done when:** A table of arrival error and localisation failures, empty room against people, from bags listed in `docs/test_log.md`.
-
-**Explain it back:** *Did the people hurt the pose estimate more through the scan matching (rf2o) or through the map matching (slam_toolbox)? How would you tell from the bag?*
-
-**Read:** [Ye et al. 2021, mapping with a person tracker](https://doi.org/10.1109/ROBIO54168.2021.9739394)
 
 ---
 
