@@ -11,7 +11,7 @@ motor_node:
     enb_pin: 13          # right PWM
     in3_pin: 26          # right direction A
     in4_pin: 16          # right direction B
-    pwm_hz: 1000
+    pwm_hz: 100          # measured 2026-11-09: lgpio software PWM at 1 kHz overshoots under stack load (duty 0.30, 2 s: 0.85 m idle, 1.46 m at 33 runnable threads); 100 Hz gives 0.90 m both ways (test_log)
     wheel_base: 0.156    # measured 2026-10-31, left-right wheel centres (URDF)
     max_duty: 0.85       # never above this, whatever the controller asks
     min_duty: 0.11        #min duty according to tests with 12v voltage
