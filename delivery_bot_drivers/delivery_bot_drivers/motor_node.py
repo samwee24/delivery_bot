@@ -13,7 +13,7 @@ What it does:
 Safety contract (do not weaken):
   * Dry run is the default (``dry_run`` True): gpiozero is never imported, no
     pin is opened, set_wheel()/stop() only record the last duty and direction
-    per wheel. Live needs ``dry_run:=false`` on the command line.
+    per wheel. Live needs the launch argument dry_run set to false.
   * A command older than ``watchdog_s`` means stop (duty 0, direction pins low).
   * Lidar stop: /scan is kept with its arrival time. If v > 0 and a finite
     range >= range_min lies under ``stop_dist_m`` within +-``stop_half_angle_deg``

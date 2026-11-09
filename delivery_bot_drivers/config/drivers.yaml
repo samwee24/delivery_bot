@@ -32,7 +32,7 @@ motor_node:
     use_gyro_loop: false
     kp_omega: 0.5
     ki_omega: 1.0
-    dry_run: true        # the launch file decides; live needs dry_run:=false on the command line
+    dry_run: true        # the launch file decides; live needs the dry_run launch argument set to false
 
 imu_node:
   ros__parameters:
