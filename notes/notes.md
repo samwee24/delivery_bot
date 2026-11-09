@@ -5,6 +5,16 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-09 (Mac + Pi, dry run) · motor safety fixes on `fix/motor-safety`
+
+Owner-approved one-off fix to the teammate's `motor_node` (branch off `feat/motors`, PR back into it). Code 6b87c15. Dry run back (default true, no gpiozero import), pure `wheel_speeds`/`duty_for`/`blocked` with tests, lidar stop (0.20 m, ±35°, linear only) and stale-scan stop inside `motor_node`, `enable_stamped_cmd_vel: true` in `nav2_params.yaml`. Her duty formula, `min_duty` 0.11, gains and pins unchanged. `laser_forward_rad` is 0.0 (URDF `laser_yaw` 0).
+
+Pi dry-run smoke (rows in `docs/test_log.md`): dry run reads True; front and rear lidar stop trip at 0.155 and 0.151 m; watchdog stops 0.50 s after the publisher; stale scan stops. Not done: Nav2 topic types and `enable_stamped_cmd_vel` on a running node (no Nav2 on `feat/motors`'s launch), stale-scan 0.5 s timing. `imu_node` died once at launch (`gyro z std 0.0257`, robot moved). Residual hazard: no echo counts as free (`docs/system/06_troubleshooting.md`).
+
+Next: the teammate reviews; wheels-raised live test is hers; Nav2 type check on the merged branch.
+
+---
+
 ## 2026-11-09 (Mac + Pi) · PR 33 verified live: slam vs AMCL on the mark, `run_cell.py` runs
 
 Robot on the taped home mark, motor switch OFF, no motor node, `bridge:=false`, stacks started under `set -m` and stopped with `kill -INT`, PR head 6138265 (Pi 66 colcon tests 0 failures 1 skipped, 94 pytest passed). Before starting, two orphan processes from the teammate's `motorfix_ws` (`robot_state_publisher`, `odom_covariance_relay`) were still up on domain 42 and were stopped with SIGINT on the owner's yes.

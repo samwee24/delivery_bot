@@ -62,7 +62,7 @@ below are marked *measured*, *brief default* or MEASURE (not yet done); the URDF
 | Self-occlusion | `lidar.mask_deg` | none needed on current evidence | the 0.23 m returns at raw 230–250° were on the old Pi; on this Pi the near-return bins move between bags, so they follow the scene (notes 2026-10-30 evening); OI-5 resolved after re-mounting (`docs/CA3.md`, 2026-10-31) |
 | IMU offset | `imu_x/y/z` | x 0.023, y -0.055, z 0.07 m, measured 2026-10-31 (z approx) | tape, from the wheel midpoint (notes 2026-10-31) |
 | IMU axis | which board axis is up | z vertical, inferred 2026-10-31 | hand turn of 360° clockwise read -360.2° on integrated gyro z (test_log 2026-10-31, 3.2 spin) |
-| Motor curves | `dead_zone`, `gain` per side | MEASURE | P6 |
+| Motor curves | `min_duty` (both wheels), `gain` per side | `min_duty` 0.11 from the teammate's 12 V test, no `test_log` row yet; `gain` MEASURE | P6 |
 
 ## Known mechanical findings
 

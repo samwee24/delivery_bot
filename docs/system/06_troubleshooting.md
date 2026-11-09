@@ -86,6 +86,12 @@ text of the error, so it is searchable later.
 | --- | --- | --- |
 | **hit** CI build-and-test fails in setup-ros: `curl: (22) The requested URL returned error: 404`, `exit code 22`; a rerun passes | setup-ros reads the ros-apt-source version from the GitHub API without a token; the shared runner IP hits the 60/hour limit, the tag is empty and the .deb URL 404s | fixed 2026-11-02: build-and-test runs in the `ros:jazzy-ros-base` container, no setup-ros |
 
+## Residual hazards
+
+| Hazard | Why | Status |
+| --- | --- | --- |
+| Lidar stop misses obstacles that give no echo | `motor_node` counts `inf` as free. This A1M8 gives 26–29 % no-echo, worse on dark or glass surfaces, so a black or glass obstacle can sit inside `stop_dist_m` unseen | open: not fixed, listed for the report hazard table; the motor switch is the kill switch |
+
 ## Reporting a problem
 
 Put it in [`../notes.md`](../../notes/notes.md) with: date, exact error text, the command
