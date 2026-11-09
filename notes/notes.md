@@ -5,6 +5,12 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-09 (Pi, remote) · Nav2 now publishes TwistStamped
+
+Nav2 Jazzy declares `enable_stamped_cmd_vel` with default `false` (`/opt/ros/jazzy/include/nav2_util/nav2_util/twist_subscriber.hpp:93`), so it sent plain `Twist` on `/cmd_vel` while the teammate's `motor_node` (`feat/motors`) subscribes `TwistStamped` only: under Nav2 the wheels would never have moved, silently. Set `enable_stamped_cmd_vel: true` on controller_server, behavior_server, velocity_smoother, collision_monitor and docking_server in `nav2_params.yaml`, with a config test. Checked on the Pi in an overlay (`~/stamped_ws`, domain 42, no motor node): every publisher and subscriber on `/cmd_vel_nav`, `/cmd_vel_smoothed` and `/cmd_vel` is TwistStamped (test_log row of today). Teleop keeps `-p stamped:=true`.
+Side findings: `imu_node` failed its start calibration (gyro z std 0.0257 rad/s, limit `calib_max_std` 0.01), so the robot was moving or vibrating at start; the navigation launch needed a second stop after Ctrl+C.
+Next: the motor safety PR into `feat/motors` (dry run, lidar stop) no longer needs the cmd_vel step.
+
 ## 2026-11-03 (Mac) · CA3 report framing chosen (tentative)
 
 Read the MA4890 brief (presentation 40 %, CA3 report 20 %, both due end of Week 13; rubric content 40, conclusions 25, presentation 20, peer 15; the lecturer weights own insights highest). Compared six framings (survey, build report, replication, mission matrix, safety case, lidar vs camera); chose replication and extension of [K26]/[M26] on the delivery robot, extended to people [Y21] (D8). Wrote `docs/report_plan.md`, `report/slides_outline.md`, `report/literature_notes.md`, rewrote `report/CA3_report.md`, aligned `docs/plan.md` and build-path Stage 9. No robot runs. After reading the papers (K26 is replay without ground truth and tests AMCL, not the IMU; M26 ablates the IMU on wheel odometry), the framing word became *re-evaluation against published baselines* and the title *Re-evaluating EKF-Fused 2D LiDAR SLAM on a Low-Cost Indoor Delivery Robot: Repeatability, Inertial Contribution and the Effect of Dynamic Human Obstacles*.
