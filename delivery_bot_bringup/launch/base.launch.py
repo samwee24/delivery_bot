@@ -19,7 +19,11 @@ What this file is expected to start (see docs/07_ros_stack.md):
                                  now so callers and mapping.launch.py can pass it
   foxglove_bridge                port 8765
 
-Launch arguments to declare: dry_run (default true), use_sim_time (false).
+Launch arguments to declare: dry_run (default true), use_sim_time (false),
+ekf_params_file (default: installed config/ekf.yaml), ekf (default true).
+ekf:=false starts an identity static odom -> base_footprint instead of the EKF, so
+slam_toolbox does pure scan matching (E2 "none" config). The E2 variants are in
+config/ekf_variants/.
 """
 
 import os
@@ -28,7 +32,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, IncludeLaunchDescription,
                             TimerAction)
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
@@ -52,6 +56,9 @@ def generate_launch_description() -> LaunchDescription:
         # rf2o reads base_footprint -> laser once, on the first scan, so the
         # static tree must be up first (build path 3.4).
         DeclareLaunchArgument('rf2o_delay', default_value='2.0'),
+        DeclareLaunchArgument('ekf_params_file', default_value=os.path.join(
+            bringup, 'config', 'ekf.yaml')),
+        DeclareLaunchArgument('ekf', default_value='true'),
         Node(package='robot_state_publisher', executable='robot_state_publisher',
              parameters=[{'use_sim_time': sim, 'robot_description': ParameterValue(
                  Command(['xacro ', urdf]), value_type=str)}]),
@@ -80,8 +87,15 @@ def generate_launch_description() -> LaunchDescription:
                          {'use_sim_time': sim}]),
         Node(package='robot_localization', executable='ekf_node',
              name='ekf_filter_node', output='screen',
-             parameters=[os.path.join(bringup, 'config', 'ekf.yaml'),
-                         {'use_sim_time': sim}]),
+             parameters=[LaunchConfiguration('ekf_params_file'),
+                         {'use_sim_time': sim}],
+             condition=IfCondition(LaunchConfiguration('ekf'))),
+        Node(package='tf2_ros', executable='static_transform_publisher',
+             name='odom_identity_tf', output='screen',
+             arguments=['--x', '0', '--y', '0', '--z', '0',
+                        '--roll', '0', '--pitch', '0', '--yaw', '0',
+                        '--frame-id', 'odom', '--child-frame-id', 'base_footprint'],
+             condition=UnlessCondition(LaunchConfiguration('ekf'))),
         Node(package='foxglove_bridge', executable='foxglove_bridge',
              parameters=[{'use_sim_time': sim}],
              condition=IfCondition(LaunchConfiguration('bridge'))),

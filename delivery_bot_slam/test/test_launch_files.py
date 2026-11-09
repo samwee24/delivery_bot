@@ -7,7 +7,7 @@ import re
 from ament_index_python.packages import get_package_share_directory
 import launch
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import LifecycleNode, Node
 import pytest
 
@@ -131,8 +131,52 @@ def test_navigation_nav2_uses_our_params_without_composition() -> None:
     assert "'autostart': 'true'" in text
 
 
-def test_navigation_does_not_start_amcl_or_map_server() -> None:
-    # slam_toolbox supplies /map and map -> odom; bringup_launch.py would add both.
+def test_navigation_never_uses_bringup_launch() -> None:
+    # bringup_launch.py would add its own Nav2 and map server on top of ours.
+    assert "bringup_launch.py'" not in NAV.read_text()
+
+
+def test_navigation_localizer_defaults_to_slam() -> None:
+    assert declared('navigation.launch.py')['localizer'] == 'slam'
+
+
+def test_navigation_declares_and_forwards_ekf_arguments() -> None:
+    d = declared('navigation.launch.py')
+    assert d['ekf'] == 'true'
+    assert d['ekf_params_file'].endswith('config/ekf.yaml')
     text = NAV.read_text()
-    assert "bringup_launch.py'" not in text
-    assert not {'amcl', 'map_server'} & {n.node_executable for n in nodes(generate(NAV))}
+    assert "'ekf': LaunchConfiguration('ekf')" in text
+    assert "'ekf_params_file': LaunchConfiguration(" in text
+
+
+def test_navigation_amcl_branch_is_gated_on_localizer() -> None:
+    found = {n.node_executable: n for n in nodes(generate(NAV))}
+    for exe in ('map_server', 'amcl', 'lifecycle_manager'):
+        assert isinstance(found[exe].condition, IfCondition), exe
+    slam = found['localization_slam_toolbox_node']
+    assert isinstance(slam, LifecycleNode) and isinstance(slam.condition, IfCondition)
+    text = NAV.read_text()
+    assert "name='lifecycle_manager_localization'" in text
+    assert "'node_names': ['map_server', 'amcl']" in text
+    assert "' == 'slam'" in text and "' == 'amcl'" in text
+    assert text.count("'navigation_launch.py'") == 2   # one per localiser
+
+
+def test_base_ekf_arguments_and_defaults() -> None:
+    d = declared('base.launch.py')
+    assert d['ekf'] == 'true'
+    assert d['ekf_params_file'].endswith('config/ekf.yaml')
+
+
+def test_base_ekf_node_is_gated_by_ekf() -> None:
+    found = nodes(generate(LAUNCH_DIRS[0] / 'base.launch.py'))
+    ekf = next(n for n in found if n.node_package == 'robot_localization')
+    assert isinstance(ekf.condition, IfCondition)
+
+
+def test_base_identity_tf_replaces_the_ekf_when_ekf_false() -> None:
+    found = nodes(generate(LAUNCH_DIRS[0] / 'base.launch.py'))
+    tf = [n for n in found if n.node_executable == 'static_transform_publisher']
+    assert len(tf) == 1 and isinstance(tf[0].condition, UnlessCondition)
+    text = (LAUNCH_DIRS[0] / 'base.launch.py').read_text()
+    assert "'--frame-id', 'odom', '--child-frame-id', 'base_footprint'" in text
