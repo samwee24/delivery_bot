@@ -159,4 +159,5 @@ STAMPED_NODES = ('controller_server', 'behavior_server', 'velocity_smoother',
 def test_nav2_publishes_twist_stamped(node: str) -> None:
     # Jazzy defaults enable_stamped_cmd_vel to false (plain Twist); motor_node
     # only subscribes TwistStamped, so a missing flag means the wheels never move.
-    assert params('delivery_bot_bringup', 'nav2_params.yaml', node)['enable_stamped_cmd_vel'] is True
+    nav2 = params('delivery_bot_bringup', 'nav2_params.yaml', node)
+    assert nav2['enable_stamped_cmd_vel'] is True
