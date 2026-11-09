@@ -90,6 +90,16 @@ ros2 launch delivery_bot_bringup mapping.launch.py dry_run:=false
 # navigation: base + slam_toolbox localization + Nav2
 ros2 launch delivery_bot_bringup navigation.launch.py map:=$HOME/ros2_ws/src/delivery_bot/delivery_bot_bringup/maps/room
 
+# experiment switches (E2 odometry config, E3 localiser); defaults are unchanged
+ros2 launch delivery_bot_bringup navigation.launch.py localizer:=amcl
+ros2 launch delivery_bot_bringup navigation.launch.py ekf:=false
+ros2 launch delivery_bot_bringup navigation.launch.py ekf_params_file:=<share>/config/ekf_variants/imu_only.yaml
+
+# one experiment run: launch, record bag, print the test_log row (Enter stops it)
+python3 tools/run_cell.py E2 imu_only_empty 1 --dry     # drop --dry to run
+# open-loop 1 m straight or 360 deg spin, through the collision monitor (needs nav:=true)
+python3 tools/timed_move.py straight
+
 # autonomous mapping: frontier exploration, no human driving
 ros2 launch delivery_bot_slam explore.launch.py dry_run:=true   # skeleton: starts driving immediately
 
@@ -221,7 +231,7 @@ Recorded here because they change how you use the repo:
 ## Docs
 
 - [`docs/plan.md`](docs/plan.md) — phases and what "done" means
-- [`docs/slam_build_path.md`](docs/slam_build_path.md) — the SLAM section as 45 ordered tasks, with a Progress list
+- [`docs/slam_build_path.md`](docs/slam_build_path.md) — the project's task tree (checkpoints, every open task, findings) and the SLAM how-to
 - [`docs/slam_journal.md`](docs/slam_journal.md) — answers, numbers and commit hashes per build-path task
 - [`docs/slam.md`](docs/slam.md) — SLAM plan, known issues, evaluation
 - [`docs/foxglove/README.md`](docs/foxglove/README.md) — the SLAM layout and its controls

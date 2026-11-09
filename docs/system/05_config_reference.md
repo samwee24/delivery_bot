@@ -114,6 +114,23 @@ home:    [0, 0, 0]             # the taped home mark is the map origin (test_log
 seat_1:  [x_m, y_m, yaw_deg]   # MEASURE
 ```
 
+## `amcl.yaml` and `ekf_variants/` (E3, E2; `delivery_bot_bringup/config/`)
+
+All *brief default*, none tuned or measured. Selected by launch argument, not edited per run.
+
+| File / key | Value | Meaning |
+| --- | --- | --- |
+| `amcl.yaml` frames | `base_footprint`, `odom`, `map`; `scan_topic: scan` | match the EKF, slam_toolbox and URDF frames |
+| `amcl.yaml` model | `DifferentialMotionModel`, `likelihood_field`, `max_beams 60` | |
+| `amcl.yaml` particles | `min_particles 500`, `max_particles 2000` | |
+| `amcl.yaml` start | `set_initial_pose true`, pose 0, 0, 0, yaw 0 | the taped home mark, as in `goals.yaml` |
+| `amcl.yaml` other | `tf_broadcast true`, `transform_tolerance 1.0`, `update_min_d 0.05`, `update_min_a 0.1` | everything else is Nav2's default |
+| `ekf_variants/rf2o_imu.yaml` | copy of `ekf.yaml` | baseline: rf2o vx, vyaw + IMU vyaw |
+| `ekf_variants/rf2o_only.yaml` | no `imu0` block | `ekf_params_file:=` |
+| `ekf_variants/imu_only.yaml` | no `odom0` block | position never moves in the EKF; scan matching does translation |
+| `ekf:=false` (launch) | identity `odom -> base_footprint` | the "none" config; slam_toolbox does pure scan matching |
+| `localizer:=amcl` (launch) | `map_server` (`map_yaml`, default `~/maps/2026-10-31_room2.yaml`), `amcl`, `lifecycle_manager_localization`; Nav2 starts 5 s later | default stays `slam` |
+
 ## Known config values with evidence behind them
 
 | Key | Value | Source |

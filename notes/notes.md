@@ -5,6 +5,33 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-09 (Mac + Pi) · Live config switches built (plan H); smoke run passes
+
+Branch `nav/live-switches` (code 3ed4bee): E2 EKF variants (`config/ekf_variants/`), `ekf:=false` (identity odom -> base_footprint), `localizer:=slam|amcl` with `config/amcl.yaml`, `tools/timed_move.py`, `tools/run_cell.py`. `colcon test` 62 tests, 0 failures; `pytest tools/tests` 93 passed. Smoke rows in `docs/test_log.md` (robot off the home mark, motor switch off, no motor node on `main`).
+
+AMCL looked broken with Nav2 on (no `map -> odom`) in three runs and fine in two with Nav2 off. Cause was the lidar, not AMCL or Nav2: each run that followed a run whose lidar was scanning got no scan at all (`Got first Laser Scan` never logged), because my background `nohup ... &` launches ignore SIGINT, so `rplidar_node` never ran its shutdown. Stopping a launch with a foreground SIGINT (`timeout -s INT 50 ros2 launch ...`) left no processes and the next start scanned. A 20 s Nav2 delay was tried on the wrong diagnosis and reverted: 5 s works. Not tested: `run_cell.py` itself on the Pi.
+
+After rebasing onto #32 the Nav2 velocity topics are `TwistStamped`, so `timed_move.py` defaults to stamped (checked live: 1.000 m of commands, collision monitor passed 0.03 m/s on). A stack started under `set -m` and stopped with `kill -INT` leaves nothing behind.
+
+Open: slam-vs-AMCL pose comparison needs the robot on the mark; the collision monitor's slowdown zone (0.3 x) will shorten timed straight moves near walls, which matters for E2.
+
+---
+
+## 2026-11-09 (Mac) · CA3 plan widened to a method × condition matrix
+
+The 2026-11-03 questions each checked one paper number (yes/no answers, little insight). Widened D8 to a comparison (D8a): odometry configs × localisers × conditions (empty, people, degraded lidar), new RQ1 lidar spec, RQ2 odometry, RQ3 localiser, RQ4 people, E1 as the demo, new E5 lidar degradation. Inventoried `~/bags` on the Pi (`ls -1t ~/bags`): newest bag is 2026-11-03; only short push, turn and map bags, no driven, people-loop or checkpoint runs, so the 2026-11-03 schedule slipped. Updated `docs/report_plan.md` (§3 questions and storyline, §4 matrix and data status, §6 reset schedule, §7 two new candidate insights) and D8a in `docs/CA3.md`. No robot runs. `report/CA3_report.md` and `report/slides_outline.md` still use the old RQ numbers.
+Later the same day: live runs switched to driven (motors are in, gains rough): driven straights and spins for E2, Nav2 or teleop checkpoint loops for E3 with both localisers replayed offline on the same bags, driven people loops for E4; hand-pushing with a stick is the fallback. Driven and hand-pushed IMU data are not mixed (motor vibration).
+Evening: narrowed to plan H (D8b): people as the axis, every method live on the robot, empty room vs people walking; RQ1 impact of people, RQ2 odometry configs, RQ3 AMCL vs `slam_toolbox`, RQ4 step-in safety. Lidar degradation and the offline replay matrix dropped (simulated; replay reads ~71 % of live). Reviewed `feat/motors` (3d295f7, 3fed2ff): no dry run (base.launch.py always starts motor_node live), no lidar stop, `TwistStamped` only, no tests, gains 3.0/1.0; listed in `docs/slam_build_path.md` R.1, not yet sent to the motor teammate. `TASKS.md` added as the one task tree, then merged the same evening into `docs/slam_build_path.md` (task tree on top, Stage 9 rewritten for plan H), so the project has one task document.
+Next: motor safety fixes, live switches (`ekf_params_file`, `ekf:=false`, `localizer:=amcl`) and the run sheet; driven session Tue 2026-11-10 (wheels raised first, then a 1 m straight with the switch in reach).
+
+## 2026-11-09 (Pi, remote) · Nav2 now publishes TwistStamped
+
+Nav2 Jazzy declares `enable_stamped_cmd_vel` with default `false` (`/opt/ros/jazzy/include/nav2_util/nav2_util/twist_subscriber.hpp:93`), so it sent plain `Twist` on `/cmd_vel` while the teammate's `motor_node` (`feat/motors`) subscribes `TwistStamped` only: under Nav2 the wheels would never have moved, silently. Set `enable_stamped_cmd_vel: true` on controller_server, behavior_server, velocity_smoother, collision_monitor and docking_server in `nav2_params.yaml`, with a config test. Checked on the Pi in an overlay (`~/stamped_ws`, domain 42, no motor node): every publisher and subscriber on `/cmd_vel_nav`, `/cmd_vel_smoothed` and `/cmd_vel` is TwistStamped (test_log row of today). Teleop keeps `-p stamped:=true`.
+Side findings: `imu_node` failed its start calibration (gyro z std 0.0257 rad/s, limit `calib_max_std` 0.01), so the robot was moving or vibrating at start; the navigation launch needed a second stop after Ctrl+C.
+Next: the motor safety PR into `feat/motors` (dry run, lidar stop) no longer needs the cmd_vel step.
+
+---
+
 ## 2026-11-08 (Pi, offline) · Nav2 planner checked alone on the room map
 
 Why alone: the teammate's `base.launch.py` was running live on the Pi with `motor_node` (no dry run), so a full Nav2 stack at rest could have driven the wheels. Planner only, in ROS domain 42 (`tools/analysis/planonly.sh`): `map_server` on `~/maps/2026-10-31_room2.yaml`, a static map -> base_footprint at home, `planner_server` on our `nav2_params.yaml`, then `plan_check.py`.

@@ -70,30 +70,22 @@ The CA3 brief's other machine, `robot` @ `100.73.7.24` (Debian 13), has been
 | P6 localisation | **done by hand** (2026-11-01): `navigation.launch.py` = base + `localization_slam_toolbox_node` on the room graph (no Nav2 yet); a 30 cm / 20° wrong start recovers after a push, 31° does not; Foxglove pose estimate works. `base.launch.py` and `mapping.launch.py` run live from one command |
 | P3–P5 (SLAM side) | rf2o hand tests done (−2 % turn, −3.8 % push); variances fitted; **first room map saved** (`results/maps/2026-10-31_room2.png`); 5.5 sweep done and `slam_mapping.yaml` frozen; USB camera streams to Foxglove (1280x720 at 10 fps) |
 | Foxglove buttons | **done on the Pi** (2026-11-02): `robot_control.py` stacks, bag, camera, stream, power; `/run/save`; `/imu_node/recalibrate`. Power buttons need the sudoers rule (owner step). **2026-11-03:** `robot_control.py` publishes `/robot/status/*` at 1 Hz (running on the Pi at 68b397d; a direct rclpy subscriber read `video: camera` after `/camera/start`), and `docs/foxglove/cockpit_layout.json` is the tabbed layout with a status strip (Indicator paths fixed to `.data` in PR 20; re-import not yet confirmed by eye) |
+| Live switches | **built 2026-11-09** (PR 33): `ekf:=false`, `ekf_params_file:=` (`config/ekf_variants/`), `localizer:=slam\|amcl`, `tools/timed_move.py`, `tools/run_cell.py`; smoke rows in `docs/test_log.md`. Not yet done: slam-vs-AMCL pose comparison on the home mark, `run_cell.py` live. The collision monitor's slowdown zone cuts timed moves to 0.3 x near walls |
 | P2, P6–P8 | not started (motors are the teammate's) |
 
 Known blockers live in [`docs/CA3.md`](docs/CA3.md) as OI-1…OI-5. OI-3 and OI-5 are
 resolved and OI-4 (the 33 % echo rate) is mitigated: the first map is made and gaps
 follow the room, not the lidar. The open risks now are in the next-actions list.
 
-## Next actions, in order
+## Next actions
 
-Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplidar`,
-`i2c-tools`, echo-rate probe, hand-push rf2o/SLAM runs (3.2, 4.4, 5.4), 5.5 sweep with
-`slam_mapping.yaml` frozen. Build path progress (stages 0–9) is in
-`docs/slam_build_path.md`.
-
-0. **CA3 report and presentation (due end of Week 13, presentation est. Thu 2026-11-12).** Tentative plan in [`docs/report_plan.md`](docs/report_plan.md) (D8): experiments E1–E4 and a hazard table, config frozen before 2026-11-06, motors expected 2026-11-04. Robot work below is ordered by what that plan needs; outline in `report/CA3_report.md`, slides in `report/slides_outline.md`, sources in `report/literature_notes.md`.
-1. Stage 6 is done by hand (6.2 to 6.4, 2026-11-01). Left from it: the second tape gap on the map (5.4); the new home mark is taped at the old position (the original tape was lost), so `goals.yaml` home stays 0, 0, 0.
-2. **rf2o under-reads a hand push by 76 % (OI-8).** Two straight pushes on 2026-11-01 read 24 % of the true distance, against −3.8 % on 2026-10-31. Offline work 2026-11-02/03 (rows in `docs/test_log.md`, blocks in `notes/notes.md`): the bad bag replays to the same 24 % every time and at 0.25x playback, so the fault is in the recorded data and CPU speed or under-voltage is not the cause; replays of the good bag vary about 12 % run to run (0.53-0.68 m against 0.962 m live), so the good bag is no control and the old 0.681/0.786 m format comparison means nothing; 720-beam bags have no more empty slots or repeated neighbour ranges than 1046-beam bags; push3-5 (2026-11-02) contain no push. Two suspects left, which offline data cannot separate: the 720-beam scan format and a person walking behind the robot. **Next, live:** charged battery (`/robot/status/undervolt` read true on 2026-11-03), robot pushed with a stick or string so nobody is in the scan, once with `angle_compensate:=false` and once with the current setting, `vcgencmd get_throttled` logged with each.
-3. Keep the camera off while mapping, or accept EKF `Failed to meet update rate`
-   (`frequency` is now 20). The 20 Hz late-update count is still unconfirmed on a quiet Pi (closure 0.115 m against 0.109 m); rerun the check with nothing else running.
-4. Still waiting on the robot: 3.3 failure tests, 4.5 fusion comparison, stages 8.4
-   and 9. Motor-driven work (P2, P6–P8) waits on the teammate.
-5. Foxglove buttons (`tools/robot_control.py`, 2026-11-02) run on the Pi and are logged in `notes/notes.md` and `docs/test_log.md`. Still open: the owner steps in the README (sudoers rule, linger and the systemd unit), `/imu_node/recalibrate` with the robot nudged, `/stack/localisation`, and confirming the cockpit tiles change in Foxglove after re-importing `docs/foxglove/cockpit_layout.json`. Never pass `dry_run:=false` from it.
-6. Analysis scripts that produced the logged numbers are in `tools/analysis/`; bags
-   and maps live only on the Pi (`~/bags`, `~/maps`), backed up by hand to
-   `../delivery_bot_pi_backup/` on the Mac.
+All open tasks, checkpoints, measured findings and the SLAM how-to live in one document,
+**[`docs/slam_build_path.md`](docs/slam_build_path.md)** (task tree on top, build path below).
+Add and tick tasks there, not here. In short (2026-11-09 evening): CA3
+presentation Thu 2026-11-12 on plan H ([`docs/report_plan.md`](docs/report_plan.md)): every
+method runs live on the robot, empty room vs people walking. Today: motor safety fixes on
+`feat/motors`, live config switches and the run sheet (CP4). Tue 2026-11-10: the driven
+session (CP5, CP6). Then results, slides and rehearsals.
 
 ## Conventions
 
@@ -104,6 +96,9 @@ Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplida
 - SSH sessions are non-interactive, so `.bashrc` is not sourced: `source
   /opt/ros/jazzy/setup.bash` and `~/ros2_ws/install/setup.bash` explicitly. There is no
   venv. Use `cat > f << 'EOF'` for file writes over SSH.
+- **Start stacks in the foreground and stop them with SIGINT** (Ctrl+C, or `set -m` then
+  `kill -INT %1`). A launch backgrounded with `nohup ... &` ignores SIGINT, leaves the
+  lidar scanning, and the next start gets no `/scan` (06_troubleshooting.md).
 - Errors we have actually hit live in
   [`docs/system/06_troubleshooting.md`](docs/system/06_troubleshooting.md) with their
   exact text. Add to it when you hit something new.
@@ -158,6 +153,7 @@ notes/notes.md     dated lab notebook, newest first, append-only
 docs/CA3.md        assessed-project record: decisions D1–D6, phases, open issues
 docs/design-plan.md  the Oct 8 design plan (superseded where docs/CA3.md says so)
 docs/plan.md       phase ladder and the definition of "done"
+docs/slam_build_path.md  the task tree (checkpoints, all tasks, findings) + SLAM how-to
 docs/system/       01 hardware · 02 pi setup · 03 bring-up · 04 architecture
                    05 config · 06 troubleshooting · 07 ros stack
 docs/wiring.md     pin map and power

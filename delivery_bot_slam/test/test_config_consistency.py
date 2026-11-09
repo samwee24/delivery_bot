@@ -149,3 +149,53 @@ def test_motor_safety_limits_do_not_grow() -> None:
     assert motor['max_duty'] <= MAX_DUTY
     assert motor['watchdog_s'] <= MAX_WATCHDOG_S
     assert isinstance(motor['dry_run'], bool)   # launch overrides it to true
+
+
+STAMPED_NODES = ('controller_server', 'behavior_server', 'velocity_smoother',
+                 'collision_monitor', 'docking_server')
+
+
+@pytest.mark.parametrize('node', STAMPED_NODES)
+def test_nav2_publishes_twist_stamped(node: str) -> None:
+    # Jazzy defaults enable_stamped_cmd_vel to false (plain Twist); motor_node
+    # only subscribes TwistStamped, so a missing flag means the wheels never move.
+    nav2 = params('delivery_bot_bringup', 'nav2_params.yaml', node)
+    assert nav2['enable_stamped_cmd_vel'] is True
+
+
+# --- E2 EKF variants (config/ekf_variants/) and the AMCL config --------------------
+
+VARIANTS = ('rf2o_imu', 'rf2o_only', 'imu_only')
+
+
+def variant(name: str) -> dict:
+    path = share('delivery_bot_bringup') / 'config' / 'ekf_variants' / f'{name}.yaml'
+    return yaml.safe_load(path.read_text())['ekf_filter_node']['ros__parameters']
+
+
+@pytest.mark.parametrize('name', VARIANTS)
+def test_ekf_variant_parses_and_reads_the_relay(name) -> None:
+    p = variant(name)
+    assert p['base_link_frame'] == 'base_footprint'
+    assert p.get('odom0', '/odom_rf2o_cov') == '/odom_rf2o_cov'
+
+
+def test_ekf_variant_inputs() -> None:
+    assert 'imu0' not in variant('rf2o_only')
+    assert 'odom0' not in variant('imu_only')
+    assert 'imu0' in variant('imu_only')
+    assert 'odom0' in variant('rf2o_only')
+
+
+def test_ekf_variant_rf2o_imu_equals_baseline() -> None:
+    base = yaml.safe_load((share('delivery_bot_bringup') / 'config' / 'ekf.yaml').read_text())
+    assert variant('rf2o_imu') == base['ekf_filter_node']['ros__parameters']
+
+
+def test_amcl_frames_and_initial_pose() -> None:
+    a = params('delivery_bot_bringup', 'amcl.yaml', 'amcl')
+    assert (a['base_frame_id'], a['odom_frame_id'], a['global_frame_id']) == \
+        ('base_footprint', 'odom', 'map')
+    assert a['set_initial_pose'] is True
+    assert {k: float(v) for k, v in a['initial_pose'].items()} == \
+        {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0}
