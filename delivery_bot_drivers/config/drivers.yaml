@@ -21,7 +21,7 @@ motor_node:
     gain_right: 0.41      # fitted 2026-11-09, wheels matched (tape: 3 cm left in 1.23 m)
     min_wheel_speed: 0.01 #min calculated wheel speed
     kick_duty: 0.30      # kick-start from rest: static friction needs ~0.20 duty, 0.15 m/s maps to 0.176 and stalls (test_log 2026-11-09); 0.30 moved 0.85 m in 2 s
-    kick_s: 0.15         # kick length, brief default, not measured
+    kick_s: 0.35         # 2026-11-09: 0.15 s did not break away (straight 1 on base: no motion for 1.5 s, then 0.15 m/s steady, 0.81 m tape); raised, not yet measured
     watchdog_s: 0.5
     # lidar stop, brief default (docs/system/05_config_reference.md)
     stop_dist_m: 0.20
