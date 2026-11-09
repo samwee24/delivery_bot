@@ -5,6 +5,20 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-09 (Mac + Pi) · PR 33 verified live: slam vs AMCL on the mark, `run_cell.py` runs
+
+Robot on the taped home mark, motor switch OFF, no motor node, `bridge:=false`, stacks started under `set -m` and stopped with `kill -INT`, PR head 6138265 (Pi 66 colcon tests 0 failures 1 skipped, 94 pytest passed). Before starting, two orphan processes from the teammate's `motorfix_ws` (`robot_state_publisher`, `odom_covariance_relay`) were still up on domain 42 and were stopped with SIGINT on the owner's yes.
+
+Pose on the mark (four runs, all `scan: 1`, `leftovers: 0`, rows in `docs/test_log.md`): slam_toolbox `map -> base_footprint` (0.034, -0.035) m, yaw 8.2 deg and (0.056, -0.066) m, yaw 4.7 deg, so 0.049 m and 0.087 m from (0, 0); the two runs differ by 0.038 m and 3.5 deg, inside the 0.1 m and 5 deg bar. AMCL (0.01, 0.00) m, yaw about 0, `/amcl_pose` exactly (0, 0): it is sitting on its initial pose, so this shows AMCL runs, not that it localises. slam minus AMCL 0.041 m and 0.080 m.
+
+`run_cell.py` live: E3 `amcl_empty` (run 98, 53 s, `/odometry/filtered` 1010, `/scan` 371, `/tf` 1423) and E2 `none_empty` run 99 (56 s, `/scan` 364, `/tf` 2615, `/imu/data` 4303, `/odom_rf2o` 358, no `/odometry/filtered`) exit 0, mcap, read back, no leftovers; a repeat of an existing bag name prints `refusing:` and exits 1. A first E3 run 99 with a 45 s delay gave a 24 s bag (the delay counts from script start, launch takes about 20 s), and its printed row was lost; use a delay of 75 s or more, and redirect the output to a file. `get_throttled` reads `0x50000` after the runs (under-voltage and throttling have happened since boot).
+
+CI on PR 33 green: `repo-rules`, `secrets`, `build-and-test`, GitGuardian.
+
+Open: slam yaw is 5-9 deg off the mark's 0 deg and the robot's heading on the mark was not measured; AMCL comparison needs the robot moved (the E3 `wrongstart` and `people` cells); smoke bags `E3_amcl_empty_run99`, `E3_amcl_empty_run98`, `E2_none_empty_run99` are left on the Pi in `~/bags`.
+
+---
+
 ## 2026-11-09 (Mac + Pi) · Live config switches built (plan H); smoke run passes
 
 Branch `nav/live-switches` (code 3ed4bee): E2 EKF variants (`config/ekf_variants/`), `ekf:=false` (identity odom -> base_footprint), `localizer:=slam|amcl` with `config/amcl.yaml`, `tools/timed_move.py`, `tools/run_cell.py`. `colcon test` 62 tests, 0 failures; `pytest tools/tests` 93 passed. Smoke rows in `docs/test_log.md` (robot off the home mark, motor switch off, no motor node on `main`).
