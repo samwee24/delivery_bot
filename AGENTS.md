@@ -70,6 +70,7 @@ The CA3 brief's other machine, `robot` @ `100.73.7.24` (Debian 13), has been
 | P6 localisation | **done by hand** (2026-11-01): `navigation.launch.py` = base + `localization_slam_toolbox_node` on the room graph (no Nav2 yet); a 30 cm / 20° wrong start recovers after a push, 31° does not; Foxglove pose estimate works. `base.launch.py` and `mapping.launch.py` run live from one command |
 | P3–P5 (SLAM side) | rf2o hand tests done (−2 % turn, −3.8 % push); variances fitted; **first room map saved** (`results/maps/2026-10-31_room2.png`); 5.5 sweep done and `slam_mapping.yaml` frozen; USB camera streams to Foxglove (1280x720 at 10 fps) |
 | Foxglove buttons | **done on the Pi** (2026-11-02): `robot_control.py` stacks, bag, camera, stream, power; `/run/save`; `/imu_node/recalibrate`. Power buttons need the sudoers rule (owner step). **2026-11-03:** `robot_control.py` publishes `/robot/status/*` at 1 Hz (running on the Pi at 68b397d; a direct rclpy subscriber read `video: camera` after `/camera/start`), and `docs/foxglove/cockpit_layout.json` is the tabbed layout with a status strip (Indicator paths fixed to `.data` in PR 20; re-import not yet confirmed by eye) |
+| Live switches | **built 2026-11-09** (PR 33): `ekf:=false`, `ekf_params_file:=` (`config/ekf_variants/`), `localizer:=slam\|amcl`, `tools/timed_move.py`, `tools/run_cell.py`; smoke rows in `docs/test_log.md`. Not yet done: slam-vs-AMCL pose comparison on the home mark, `run_cell.py` live. The collision monitor's slowdown zone cuts timed moves to 0.3 x near walls |
 | P2, P6–P8 | not started (motors are the teammate's) |
 
 Known blockers live in [`docs/CA3.md`](docs/CA3.md) as OI-1…OI-5. OI-3 and OI-5 are
@@ -95,6 +96,9 @@ session (CP5, CP6). Then results, slides and rehearsals.
 - SSH sessions are non-interactive, so `.bashrc` is not sourced: `source
   /opt/ros/jazzy/setup.bash` and `~/ros2_ws/install/setup.bash` explicitly. There is no
   venv. Use `cat > f << 'EOF'` for file writes over SSH.
+- **Start stacks in the foreground and stop them with SIGINT** (Ctrl+C, or `set -m` then
+  `kill -INT %1`). A launch backgrounded with `nohup ... &` ignores SIGINT, leaves the
+  lidar scanning, and the next start gets no `/scan` (06_troubleshooting.md).
 - Errors we have actually hit live in
   [`docs/system/06_troubleshooting.md`](docs/system/06_troubleshooting.md) with their
   exact text. Add to it when you hit something new.
