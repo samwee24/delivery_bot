@@ -11,6 +11,8 @@ Branch `nav/live-switches` (code 3ed4bee): E2 EKF variants (`config/ekf_variants
 
 AMCL looked broken with Nav2 on (no `map -> odom`) in three runs and fine in two with Nav2 off. Cause was the lidar, not AMCL or Nav2: each run that followed a run whose lidar was scanning got no scan at all (`Got first Laser Scan` never logged), because my background `nohup ... &` launches ignore SIGINT, so `rplidar_node` never ran its shutdown. Stopping a launch with a foreground SIGINT (`timeout -s INT 50 ros2 launch ...`) left no processes and the next start scanned. A 20 s Nav2 delay was tried on the wrong diagnosis and reverted: 5 s works. Not tested: `run_cell.py` itself on the Pi.
 
+After rebasing onto #32 the Nav2 velocity topics are `TwistStamped`, so `timed_move.py` defaults to stamped (checked live: 1.000 m of commands, collision monitor passed 0.03 m/s on). A stack started under `set -m` and stopped with `kill -INT` leaves nothing behind.
+
 Open: slam-vs-AMCL pose comparison needs the robot on the mark; the collision monitor's slowdown zone (0.3 x) will shorten timed straight moves near walls, which matters for E2.
 
 ---
