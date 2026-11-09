@@ -5,7 +5,7 @@ room with people in it, and where do published 2D SLAM results stop applying?
 
 **Tentative title.** Odometry, Localiser and LiDAR Quality Under Dynamic Human Obstacles: A Comparative Study on a Low-Cost Indoor Delivery Robot
 
-**Fallback title** (use if the live session slips). Localisation and Safety Lessons for Autonomous Vehicles from a Low-Cost Indoor Delivery Robot
+**Fallback title** (use if the driven session slips). Localisation and Safety Lessons for Autonomous Vehicles from a Low-Cost Indoor Delivery Robot
 
 **Framing.** A comparison of methods under conditions, with published results as
 reference points inside it: [M26] for odometry (RQ2, analogue: no encoders), [K26] for the
@@ -161,8 +161,11 @@ peer 15 %. The slides follow the same section order.
     frozen on one date, commit hash per run, battery charged before each live run (the
     Pi read `throttled=0x50005` on 2026-11-02, *measured*, test log).
   - Bags used, from the data status table in [`../docs/report_plan.md`](../docs/report_plan.md)
-    §4: 1 m tape pushes and a 360° turn (short range), the hand-pushed checkpoint loop
-    (route scale), person-behind vs nobody pushes (people).
+    §4: existing 1 m tape pushes and a 360° turn; driven 1 m straights, spins and
+    checkpoint loops (route scale, Nav2 waypoints or teleop); person-behind vs nobody
+    pushes and driven loops with people walking (people). Driven and hand-pushed IMU data
+    are not mixed (motor vibration). E3 localisers are replayed offline on the same driven
+    bags, so neither is judged on a route the other steered.
   - E2 odometry comparison (RQ2): ATE, RPE, heading error with [EVO], before SLAM
     (`/odometry/filtered`) and after SLAM (map pose); push ratio against 1.000 m.
     Calibrate variances on a run not used for evaluation [M26].
@@ -177,7 +180,8 @@ peer 15 %. The slides follow the same section order.
   - Differences from [K26] and [M26] in a table: lidar (A1M8, 7.05 Hz, 26 to 29 % no-echo,
     *measured*), no wheel encoders, Pi 4, room size, human presence, run count, live vs
     replay.
-  - Threats to validity: ruler-and-eye ground truth in early tests, hand-pushed runs,
+  - Threats to validity: ruler-and-eye ground truth in early tests, rough motor gains
+    (E1 arrival error labelled as such), hand-pushed fallback runs if driving fails,
     simulated degradation is not a real cheaper lidar (cut beams are clean, a cheap
     lidar's are noisy), few runs, one room.
 - **Evidence**: [`../docs/report_plan.md`](../docs/report_plan.md) §4;

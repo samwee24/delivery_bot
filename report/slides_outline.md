@@ -8,7 +8,7 @@ Companions, both being written in parallel (links may not resolve yet):
 
 Rules that bind this file (AGENTS.md): no value is shown as a result until measured on the robot; each number carries its command and provenance; no live motor commands on slides; nothing about products or papers that is not sourced (write "to check"). Presenters: **A**, **B**, **MT** (motor teammate), **S** (Sherman). Names to fill in.
 
-Claims written as `[if E2 shows X] ... / otherwise ...` are placeholders until the data exists (E1 to E5 and RQ1 to RQ4 as defined in the plan §3–4; offline replays from Mon 2026-11-09, live session Tue 2026-11-10).
+Claims written as `[if E2 shows X] ... / otherwise ...` are placeholders until the data exists (E1 to E5 and RQ1 to RQ4 as defined in the plan §3–4; offline replays from Mon 2026-11-09, driven session Tue 2026-11-10).
 
 **Storyline:** gap (hook) → field and products → what we built → four findings, one per question, each *our result → paper → gap → why → Our take* → OI-8 as the signature slide → our position → future work → verdict.
 
@@ -40,7 +40,7 @@ Timing check: slides 1-15 end at 14:30, leaving 30 s of slack. Per presenter: A 
 
 | Clip | Slide | Seconds | Source (film on) |
 | --- | --- | --- | --- |
-| V1 hook: robot leaves home, serves a seat, returns | 1 | 20 | Tue 2026-11-10, cut from an E1 run (hand-pushed loop if motors slip) |
+| V1 hook: robot leaves home, serves a seat, returns | 1 | 20 | Tue 2026-11-10, cut from an E1 run (stick-pushed loop if driving fails) |
 | V2 delivery run | 5 | 40 | Tue 2026-11-10 (E1 runs; screen-record Foxglove side by side if clean) |
 | V3 robot passes walking people | 11 | 30 | Tue 2026-11-10 (E4 live loop) |
 | V4 step-in stop | 12 | 20 | Tue 2026-11-10 (safety-stop test, motors only) |

@@ -8,7 +8,8 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 ## 2026-11-09 (Mac) · CA3 plan widened to a method × condition matrix
 
 The 2026-11-03 questions each checked one paper number (yes/no answers, little insight). Widened D8 to a comparison (D8a): odometry configs × localisers × conditions (empty, people, degraded lidar), new RQ1 lidar spec, RQ2 odometry, RQ3 localiser, RQ4 people, E1 as the demo, new E5 lidar degradation. Inventoried `~/bags` on the Pi (`ls -1t ~/bags`): newest bag is 2026-11-03; only short push, turn and map bags, no driven, people-loop or checkpoint runs, so the 2026-11-03 schedule slipped. Updated `docs/report_plan.md` (§3 questions and storyline, §4 matrix and data status, §6 reset schedule, §7 two new candidate insights) and D8a in `docs/CA3.md`. No robot runs. `report/CA3_report.md` and `report/slides_outline.md` still use the old RQ numbers.
-Next: build the replay matrix on the existing bags; one live hand-pushed session (checkpoint loop ×3, wrong starts, people walking) on a charged battery.
+Later the same day: live runs switched to driven (motors are in, gains rough): driven straights and spins for E2, Nav2 or teleop checkpoint loops for E3 with both localisers replayed offline on the same bags, driven people loops for E4; hand-pushing with a stick is the fallback. Driven and hand-pushed IMU data are not mixed (motor vibration).
+Next: build the replay matrix on the existing bags; one driven session on Tue 2026-11-10 (wheels raised first, then a 1 m straight with the switch in reach).
 
 ## 2026-11-03 (Mac) · CA3 report framing chosen (tentative)
 

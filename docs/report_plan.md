@@ -46,7 +46,7 @@ one reference point in a comparison instead of the whole question.
 **C+** (2026-11-03) = C, plus B's delivery demo, plus E's hazard table. It is academic by construction (a
 published method, our data, a direct comparison); every gap between our data and the paper
 is a defensible insight; four experiments done well beat eight done thinly; and the SLAM
-half (E2, E3) still works from hand-pushed runs if driving slips.
+half (E2, E3) still works from hand-pushed runs if driving slips. (2026-11-09: driven runs are now the main method, hand-pushing the fallback, §4.)
 
 ## 3. Title and research questions
 
@@ -92,9 +92,9 @@ cell**. Methods are YAML switches; AMCL runs as a separate offline config only
 | # | Experiment | Protocol | Metrics | Target (not a result) | Build path | Owner |
 | --- | --- | --- | --- | --- | --- | --- |
 | E1 | Delivery demo | Driven runs home → seat → home (5 if motors allow) | Success %, arrival error at checkpoints, time | 5/5, ≤ 15 cm | 9.2 | Motor teammate |
-| E2 | Odometry comparison (RQ2) | 4 EKF configs replayed on every bag; the 1 m tape pushes and 360° turn for short-range truth, the hand-pushed loop for route scale | ATE, RPE, heading error ([EVO]), before and after SLAM; push ratio vs 1.000 m | Compare with [M26]: 60–75 % gain before SLAM, −2.6 to +1.6 % after | 9.4 | Sherman |
-| E3 | Localiser comparison (RQ3) | `slam_toolbox` localisation vs AMCL on the saved room map: hand-pushed loop through the checkpoints (×3), plus wrong starts at 10/20/30/40 cm and 10/20/30/40° | Checkpoint error, pairwise ATE between loops, recovery yes/no per wrong start | Compare with [K26]: ~0.20–0.23 m pairwise ATE; our `slam_toolbox` baseline: recovers 30 cm / 20°, not 31° (2026-11-01) | 9.3 | Sherman |
-| E4 | People (RQ4) | Offline: 11-01 (person behind) vs 11-03 (nobody) push bags through E2's configs; live: hand-pushed loop with 1–2 people walking; driven: one person stepping in front, if motors allow | Error vs empty room per method, localisation failures, stop distance, contacts | Zero contacts | 9.7 | B |
+| E2 | Odometry comparison (RQ2) | 4 EKF configs replayed on every bag: the existing 1 m tape pushes and 360° turn, plus **driven** 1 m straights and 360° spins (timed `cmd_vel`, nobody nearby, tape as truth) and the driven checkpoint loop for route scale. Compare driven bags only with driven bags: motor vibration reaches the IMU | ATE, RPE, heading error ([EVO]), before and after SLAM; distance ratio vs tape | Compare with [M26]: 60–75 % gain before SLAM, −2.6 to +1.6 % after | 9.4 | Sherman |
+| E3 | Localiser comparison (RQ3) | Record **driven** loops through the checkpoints (×3, Nav2 waypoints or teleop on the taped route), then replay `slam_toolbox` localisation and AMCL offline on the same bags, so neither is judged on a route the other steered. Wrong starts at 10/20/30/40 cm and 10/20/30/40°: place the robot, then drive a short move or spin to recover | Checkpoint error, pairwise ATE between loops, recovery yes/no per wrong start | Compare with [K26]: ~0.20–0.23 m pairwise ATE; our `slam_toolbox` baseline: recovers 30 cm / 20°, not 31° (2026-11-01, hand-pushed) | 9.3 | Sherman |
+| E4 | People (RQ4) | Offline: 11-01 (person behind) vs 11-03 (nobody) push bags through E2's configs; **driven**: the E3 loop again with 1–2 people walking (clean split: nobody pushes, so empty means empty), and one person stepping in front | Error vs empty room per method, localisation failures, stop distance, contacts | Zero contacts | 9.7 | B |
 | E5 | Lidar degradation (RQ1) | Replay every bag with scans cut to 1/2, 1/3, 1/4 of the beams, every 2nd/3rd scan, range capped at 4/3/2 m (range cut from PR 25), through E2's and E3's methods | Error vs degradation level per method; the knee where each method breaks | — | — | Sherman |
 | S | Hazard table | 6–8 hazards → mitigation → the test that proves it | Pass / fail | All pass | — | B or C |
 | opt | Echo rate by material | Black, glass, white, fabric at fixed range and angle, `tools/probe_echo_rate.py` | Return % | — | — | Anyone, ~2 h |
@@ -118,12 +118,13 @@ cannot separate the two configs; report the mean and the spread, and lean on the
 | `2026-11-01_push_225752`, `_230535` (person behind) | wall-range change (`pushwall.py`) | E4 offline, E2 | **Now, offline** |
 | `2026-11-03_*_push_actrue`, `_acfalse` (nobody in scan) | 1 m tape | E4 control, E2, E5 | **Now, offline** |
 | `2026-10-31_map_200132`, `_200956` | none (map closure only) | E5 mapping, E3 map | Now, closure only |
-| — | — | E3 loops and wrong starts, E4 live, all route-scale cells | **Needs one live session** (hand-pushed, no motors) |
+| — | — | Driven straights/spins (E2), loops and wrong starts (E3), people loop and step-in (E4), E1 | **Needs one driven session** (motors in, rough gains) |
 | — | — | E1, E4 driven step-in | **Needs motors** and PR 29 merged |
 
 Push bags answer "does odometry hold over 1 m?", not "does localisation hold over a
-route?". The live session must record the hand-pushed loop through the taped checkpoints;
-that one bag then serves E2, E3 and E5 at route scale.
+route?". The driven session must record the checkpoint loop; those bags then serve E2, E3
+and E5 at route scale. Arrival error in E1 is labelled "rough gains" (motor gains are not
+tuned); the other experiments take truth from the tape and checkpoints, not from the command.
 
 ### Shared protocol
 
@@ -158,14 +159,16 @@ time on the Pi, so the matrix is a compute job: start it first and let it run.
 | Day | Robot / compute | Others |
 | --- | --- | --- |
 | Mon 9 Nov | Build the replay matrix (E2 configs, E5 degradation, AMCL offline config) and start it on the existing bags | Slide skeleton on the new storyline; product table |
-| Tue 10 | **One live session**, charged battery: hand-pushed loop through the checkpoints ×3, wrong starts (E3), loop with people walking (E4); driven E1 if motors are in | Background, hazard table drafts |
+| Tue 10 | **One driven session**, charged battery. First wheels raised, then one 1 m straight with the motor switch in reach. Then: driven 1 m straights and 360° spins (E2), checkpoint loop ×3 and wrong starts (E3), loop with people walking and one step-in (E4), E1 runs. If driving fails: hand-pushed with a stick, nobody behind the robot (fallback) | Background, hazard table drafts |
 | Wed 11 | Replay the new bags; `evo`; figures; Our take per RQ; rehearsal 1 | Report sections 1–3; rehearsal 1 |
 | Thu 12 | Present (morning) | — |
 | End of Week 13 | Report finished with the full matrix; submit report, slides, peer assessment | — |
 
 | Risk (2026-11-09) | Fallback |
 | --- | --- |
-| No live session by Tue | Present E2, E4-offline and E5 on existing bags only; E3 becomes "baseline wrong-start result + AMCL as future work" |
+| Driving fails on Tue (first floor run of the motors) | Fall back to hand-pushing with a stick, nobody behind the robot; E1 partial with the named blocker. If no live session at all: E2, E4-offline and E5 on existing bags only; E3 becomes "baseline wrong-start result + AMCL as future work" |
+| Driven IMU data differs from hand-pushed (motor vibration) | Compare driven with driven only; list it in "differences from the paper" |
+| Nav2 steers with `slam_toolbox`, biasing E3 | Replay both localisers offline on the same recorded loops, or drive the loop by teleop |
 | Motors not in | E1 reported as partial with the named blocker; E4 driven step-in dropped, stop-wedge argument stays as analysis |
 | Replays too slow on the Pi | Cut replays per cell to 3 and degradation levels to 2 per axis; or run them on the Mac in Docker |
 
@@ -187,7 +190,7 @@ Original schedule (2026-11-03):
 
 | Risk | Fallback |
 | --- | --- |
-| People near the robot during hand-pushed fallback runs | Push with a stick or string, nobody within the scan; OI-8 showed a person behind cuts rf2o to about a quarter |
+| People near the robot during hand-pushed fallback runs (fallback only, 2026-11-09) | Push with a stick or string, nobody within the scan; OI-8 showed a person behind cuts rf2o to about a quarter |
 | Nav2 unreliable by Fri | Teleop on taped routes for E2–E4; E1 reported as partial with the named blocker |
 | Under-voltage, lidar start hang (OI-6) | Charged battery; wait 20 s before a lidar restart |
 | Results contradict the papers | Best slide: explain why |
