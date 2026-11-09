@@ -21,12 +21,18 @@ motor_node:
     gain_right: 1.00      # calibrate (phase 3)
     min_wheel_speed: 0.01 #min calculated wheel speed
     watchdog_s: 0.5
-    # Nav2 Jazzy publishes TwistStamped; teleop needs -p stamped:=true
-    use_stamped: true
+    # lidar stop, brief default (docs/system/05_config_reference.md)
+    stop_dist_m: 0.20
+    stop_half_angle_deg: 35.0
+    scan_timeout_s: 0.5  # no /scan for this long means stop
+    # scan angle (laser frame, rad) that points along base +x. Measured, URDF:
+    # base_link_to_laser has rpy 0 0 laser_yaw, laser_yaw = 0 (box test 1.4,
+    # 2026-10-31), and scan angles are in the laser frame, so forward = -yaw = 0.
+    laser_forward_rad: 0.0
     use_gyro_loop: false
     kp_omega: 0.5
     ki_omega: 1.0
-    dry_run: false       # the launch file overrides this to true by default
+    dry_run: true        # the launch file decides; live needs dry_run:=false on the command line
 
 imu_node:
   ros__parameters:

@@ -92,7 +92,7 @@ def declared(name: str) -> dict:
 
 def test_base_declares_dry_run_true_by_default() -> None:
     # AGENTS rule 1: live motors are a deliberate act, never a launch default.
-    assert declared('base.launch.py')['dry_run'] == 'false'
+    assert declared('base.launch.py')['dry_run'] == 'true'
 
 
 @pytest.mark.parametrize('name', ['base.launch.py', 'mapping.launch.py', 'navigation.launch.py'])

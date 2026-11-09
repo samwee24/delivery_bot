@@ -4,9 +4,9 @@ Order of ownership for tf matters:
   odom -> base_footprint is published by the EKF only (rf2o has publish_tf
   false), because two publishers of one transform make the map spin.
 
-Motors are live: motor_node is always started and drives the wheels from
-/cmd_vel. dry_run (default false) is still passed to it, but motor_node has no
-dry run and ignores it. The motor battery switch is the kill switch.
+Motors default to dry_run: the launch argument exists so live testing is a
+deliberate act, never a default. motor_node in dry run never touches GPIO. The
+motor battery switch is the kill switch.
 
 What this file is expected to start (see docs/07_ros_stack.md):
 
@@ -18,11 +18,10 @@ What this file is expected to start (see docs/07_ros_stack.md):
                                  /odom_rf2o_cov (delivery_bot_slam)
   ekf_filter_node                robot_localization, config/ekf.yaml
   motor_node                     /cmd_vel -> L298N GPIO, config/drivers.yaml,
-                                 20 Hz control, 0.5 s watchdog; always live
+                                 20 Hz control, 0.5 s watchdog, lidar stop
   foxglove_bridge                port 8765
 
-Launch arguments: dry_run (default false, ignored by motor_node), motor
-(default true, not used by any action yet), bridge (true), use_sim_time
+Launch arguments: dry_run (default true), bridge (true), use_sim_time
 (false), serial_port (/dev/rplidar), rf2o_delay (2.0 s).
 """
 
@@ -49,8 +48,7 @@ def generate_launch_description() -> LaunchDescription:
     sim = LaunchConfiguration('use_sim_time')
 
     return LaunchDescription([
-        # motors are ok, no dry run
-        DeclareLaunchArgument('dry_run', default_value='false'),
+        DeclareLaunchArgument('dry_run', default_value='true'),
         # false when robot_control.py already runs the one bridge (port 8765)
         DeclareLaunchArgument('bridge', default_value='true'),
         DeclareLaunchArgument('use_sim_time', default_value='false'),
@@ -58,7 +56,6 @@ def generate_launch_description() -> LaunchDescription:
         # rf2o reads base_footprint -> laser once, on the first scan, so the
         # static tree must be up first (build path 3.4).
         DeclareLaunchArgument('rf2o_delay', default_value='2.0'),
-        DeclareLaunchArgument('motor', default_value='true'),
         Node(package='robot_state_publisher',
              executable='robot_state_publisher',
              parameters=[{'use_sim_time': sim, 'robot_description':
