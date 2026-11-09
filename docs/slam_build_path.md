@@ -34,7 +34,7 @@ A checkpoint is a state the project can be in, checked by one observable test.
 | CP2 | OI-8 explained | Cause of rf2o reading 24 % of a push found by a live test | 2026-11-03 | **done** 2026-11-03 (a person behind the robot) | [`evidence/lidar/2026-11-03_oi8_live_push.txt`](../evidence/lidar/2026-11-03_oi8_live_push.txt), [`evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`](../evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt) · test_log 2026-11-03 "OI-8 live push A", "OI-8 bad bags of 2026-11-01 re-read" · notes 2026-11-03 "OI-8: live push, nobody in the scan" |
 | CP3 | Plan H agreed | People as the axis, every method live, empty vs people, in `docs/report_plan.md`; outlines rewritten | 2026-11-09 | **done** 2026-11-09 (PR 31 merged) | PR 31 · notes 2026-11-09 "CA3 plan widened to a method × condition matrix" (evening addendum) |
 | CP4 | Ready to drive the matrix | Motor safety fixed and merged; live switches (`ekf_params_file`, `ekf:=false`, `localizer:=amcl`) and the run sheet tested; checkpoints and people paths taped | 2026-11-09 | [~] switches merged (PR 33) and verified live (PR 35); motor safety fixed into `feat/motors` (PR 34) but `feat/motors` not on `main`; 9.1 taping open | test_log 2026-11-09 smoke and live rows for each switch; Progress 9.2 |
-| CP5 | Robot drives | Wheels raised, then a 1 m straight on the floor with the switch in reach | 2026-11-10 | [ ] motors and safety fixes on `feat/motors` (PR 34 merged into it), not on `main`; wheels-raised test is MT's | PR 34 dry-run smoke rows in test_log 2026-11-09; first-drive row still needed |
+| CP5 | Robot drives | Wheels raised, then a 1 m straight on the floor with the switch in reach | 2026-11-10 | [~] 1 of 3 straights passed 2026-11-09 on `base.launch.py` (0.96 m, 3 cm left) after the PWM, fit and kick-start fixes (PR 38); motor battery gives about one run per power cycle; Nav2 heartbeat timeout under load still open | test_log 2026-11-09 rows from "direct script, idle Pi" to "same straight with `kick_s` 0.35"; notes 2026-11-09 (late) |
 | CP6 | Driven data recorded | E2 48 runs, E3 12 loops + 16 wrong starts, E4 step-ins, E1 5 runs, all live and bagged, tape numbers written down | 2026-11-10 | [ ] | will be `~/bags/2026-11-10_<exp>_<cell>_run<N>`, one test_log row per run |
 | CP7 | Results and slides | Every RQ has a figure and an Our take; no `[if ...]` text left on slides; rehearsal 1 done | 2026-11-11 | [ ] | `report/figures/`, `report/slides_outline.md` |
 | CP8 | Presentation | Delivered | Thu 2026-11-12 | [ ] | — |
@@ -63,7 +63,9 @@ Every open task of the project, in one list. Stages 0–9 are the SLAM build pat
     - [x] Motor safety on `feat/motors` (R.1): PR 34 merged into `feat/motors`; **MT** to review and open the PR to `main`
   - [ ] 9.3 Driven session, Tue 2026-11-10 (CP5, CP6) — **MT** drives, **S** runs the sheet, **B** people
     - [ ] Charged battery and a spare, `vcgencmd get_throttled` = `0x0`; robot still for 3 s at every start (IMU calibration)
-    - [ ] Wheels raised, then one 1 m straight with the switch in reach (CP5)
+    - [~] Wheels raised, then one 1 m straight with the switch in reach (CP5): 1 of 3 passed 2026-11-09 (0.96 m, 3 cm left), PR 38
+    - [ ] Motor battery charged and its voltage checked: on 2026-11-09 it gave about one run per power cycle
+    - [ ] Nav2 `bond_timeout` raised (or camera and Foxglove off): Nav2 shut down 2-3 s into every timed run at load 20-30 (`CRITICAL FAILURE: SERVER ... IS DOWN after not receiving a heartbeat for 4000 ms`)
     - [ ] Freeze config; record the commit
     - [ ] 9.4 runs (48), 9.5 loops (12) and wrong starts (16), 9.7 step-ins (3–5), E1 delivery runs (5)
     - [ ] On every run: failure onset (drift, jump, lost), recovery after people leave, failure position
@@ -116,10 +118,11 @@ Every open task of the project, in one list. Stages 0–9 are the SLAM build pat
   - [x] No lidar stop (`stop_dist_m`): only the 0.5 s watchdog and Nav2's collision monitor; teleop has no obstacle stop (AGENTS rule 1). Fixed in PR 34: linear zeroed inside 0.20 m within ±35° of travel, stale scan stops all
   - [x] `/cmd_vel` type: Nav2 Jazzy defaulted to plain `Twist`, `motor_node` takes `TwistStamped` only. Fixed in PR 32 (`enable_stamped_cmd_vel: true` on 5 Nav2 nodes), checked on the Pi 2026-11-09: all `/cmd_vel*` endpoints TwistStamped · test_log 2026-11-09 "Nav2 `/cmd_vel` message type" · notes 2026-11-09 "Nav2 now publishes TwistStamped". PR 32 merged 2026-11-09
   - [~] No tests for `_duty_for` and the wheel split (definition of done): `test_motor_node.py` added in PR 34; no test_log row for the first drive yet
-  - [ ] Gains left 3.0 vs right 1.0 ("rough"): label E1 arrival error accordingly; calibrate with a 1 m straight
+  - [x] Gains left 3.0 vs right 1.0 ("rough"): replaced 2026-11-09 by a measured fit, `min_duty` 0.08 and gains 0.41/0.41 at 100 Hz (PR 38, test_log duty staircase rows)
 - [~] Nav2 glue: navigation button, `save_goal`, `deliver`, planner check (PR 29, merged 2026-11-08); live test of `save_goal` and `deliver` still to do
 - [x] `explore.launch.py` (PR 30, merged 2026-11-08) — **S**; first supervised run is 8.4
-- [ ] Calibration: dead zone, per-side gain, 1 m straight
+- [~] Calibration: dead zone, per-side gain, 1 m straight — fit and kick-start done 2026-11-09 (PR 38), 1 of 3 straights passed
+- [ ] Lidar stop sees only +-35 deg of travel: a swerve hit a table and a wall on 2026-11-09 (before the gain fix); add a side check or widen the cone
 - [ ] Save seat goals with `save_goal` once driving works
 
 #### R.2 Foxglove and Pi — **S**

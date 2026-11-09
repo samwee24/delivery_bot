@@ -5,6 +5,12 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-09 (Mac, close) · Pi powered down, docs updated
+
+The owner powered the Pi down after the last straight (it had stopped answering SSH while the stack was being stopped). AGENTS.md (Motors row), `docs/slam_build_path.md` (CP5, 9.3, R.1) and `docs/CA3.md` (P1, OI-9 battery, OI-10 Nav2 heartbeat) updated to the 2026-11-09 motor results. On the next boot: `git pull` on the Pi, then the direct duty test before any driven run.
+
+---
+
 ## 2026-11-09 (Pi, live, late) · low-duty fit at 100 Hz, kick-start, first 1 m straight passes
 
 Branch `fix/motor-gains` (49bcfb1 to 56abb59). Rows in `docs/test_log.md`.

@@ -70,11 +70,12 @@ The CA3 brief's other machine, `robot` @ `100.73.7.24` (Debian 13), has been
 | Phase | State |
 | --- | --- |
 | P0 Setup | **essentially done** (2026-10-22): apt stack, 2 GB swapfile (persisted in `/etc/fstab`), `dialout`, udev rule written, D5 stack installed, `rf2o` built and verified. **Resolved 2026-10-30:** `/dev/rplidar` symlink exists, `i2c-tools` installed, MPU6050 answers at 0x68. **Still open:** no venv |
-| P1 Bring-up | lidar verified on this Pi (A1M8, 7.05 Hz, 26–29 % no-echo, gaps follow the room not the lidar); IMU node written and checked at rest (100 Hz, gyro z std 0.00175 rad/s); motors never driven by us; **robot built 2026-10-31**, lidar and IMU mounting measured into the URDF; gyro reads a hand-turned 360° as 360.2° |
+| P1 Bring-up | lidar verified on this Pi (A1M8, 7.05 Hz, 26–29 % no-echo, gaps follow the room not the lidar); IMU node written and checked at rest (100 Hz, gyro z std 0.00175 rad/s); motors driven live 2026-11-09 (see Motors row); **robot built 2026-10-31**, lidar and IMU mounting measured into the URDF; gyro reads a hand-turned 360° as 360.2° |
 | P6 localisation | **done by hand** (2026-11-01): `navigation.launch.py` = base + `localization_slam_toolbox_node` on the room graph (no Nav2 yet); a 30 cm / 20° wrong start recovers after a push, 31° does not; Foxglove pose estimate works. `base.launch.py` and `mapping.launch.py` run live from one command |
 | P3–P5 (SLAM side) | rf2o hand tests done (−2 % turn, −3.8 % push); variances fitted; **first room map saved** (`results/maps/2026-10-31_room2.png`); 5.5 sweep done and `slam_mapping.yaml` frozen; USB camera streams to Foxglove (1280x720 at 10 fps) |
 | Foxglove buttons | **done on the Pi** (2026-11-02): `robot_control.py` stacks, bag, camera, stream, power; `/run/save`; `/imu_node/recalibrate`. Power buttons need the sudoers rule (owner step). **2026-11-03:** `robot_control.py` publishes `/robot/status/*` at 1 Hz (running on the Pi at 68b397d; a direct rclpy subscriber read `video: camera` after `/camera/start`), and `docs/foxglove/cockpit_layout.json` is the tabbed layout with a status strip (Indicator paths fixed to `.data` in PR 20; re-import not yet confirmed by eye) |
 | Live switches | **built 2026-11-09** (PR 33): `ekf:=false`, `ekf_params_file:=` (`config/ekf_variants/`), `localizer:=slam\|amcl`, `tools/timed_move.py`, `tools/run_cell.py`; smoke rows in `docs/test_log.md`. **Verified live 2026-11-09:** on the home mark slam_toolbox reads 0.049 m and 0.087 m from (0, 0) (yaw 8.2 and 4.7 deg), AMCL sits on its initial pose; `run_cell.py` ran E3 `amcl_empty` and E2 `none_empty` and refuses an existing bag (use a delay of 75 s or more). Heading on the mark not measured. The collision monitor's slowdown zone cuts timed moves to 0.3 x near walls |
+| Motors | **calibrated live 2026-11-09** (PR 38): `pwm_hz` 100 (1 kHz lgpio software PWM overshoots 2-3x at stack load), `min_duty` 0.08, gains 0.41 (fit `speed = 2.46 x (duty - 0.078)`, rolling floor duty 0.12), kick-start 0.30 for 0.35 s from rest. 1 m straight on `base.launch.py` at 0.15 m/s: 0.96 m, 3 cm left (one pass of three). **Open:** motor battery gives about one run per power cycle; Nav2 shuts down on its 4 s heartbeat timeout at load 20-30, so timed moves and Nav2 goals under `navigation.launch.py` stop mid-run |
 | P2, P6–P8 | not started (motors are the teammate's) |
 
 Known blockers live in [`docs/CA3.md`](docs/CA3.md) as OI-1…OI-5. OI-3 and OI-5 are
@@ -85,7 +86,8 @@ follow the room, not the lidar. The open risks now are in the next-actions list.
 
 All open tasks, checkpoints, measured findings and the SLAM how-to live in one document,
 **[`docs/slam_build_path.md`](docs/slam_build_path.md)** (task tree on top, build path below).
-Add and tick tasks there, not here. In short (2026-11-09 evening): CA3
+Add and tick tasks there, not here. Before the driven session: charge the motor battery and
+raise the Nav2 `bond_timeout` (or cut load); see the Motors row above. In short (2026-11-09 evening): CA3
 presentation Thu 2026-11-12 on plan H ([`docs/report_plan.md`](docs/report_plan.md)): every
 method runs live on the robot, empty room vs people walking. Today: motor safety fixes on
 `feat/motors`, live config switches and the run sheet (CP4). Tue 2026-11-10: the driven
