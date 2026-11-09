@@ -5,6 +5,20 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-09 (Pi, live, late) · low-duty fit at 100 Hz, kick-start, first 1 m straight passes
+
+Branch `fix/motor-gains` (49bcfb1 to 56abb59). Rows in `docs/test_log.md`.
+
+- Duty staircase (direct script, rf2o measuring): rolling speed 0.293 m/s at 0.20, 0.213 at 0.16, 0.156 at 0.14, 0.094 at 0.12, stall at 0.10. Fit `speed = 2.46 x (duty - 0.078)`: `min_duty` 0.08, gains 0.41. Rewriting the duty every 50 ms at 100 Hz is harmless.
+- Kick-start needs 0.35 s at duty 0.30: with 0.15 s the robot sat still for 1.5 s.
+- 1 m straight on `base.launch.py` (no Nav2), 0.15 m/s: tape 0.96 m, 3 cm left. One pass, not three.
+- rf2o forward distance is within 5 cm of the tape; its sideways number is not reliable (use the tape).
+- The Pi then stopped answering SSH while the stack was being stopped (probably another reboot); state of the stack unknown.
+
+Open: two more straights; the motor battery gives about one run per power cycle (charge it, check the voltage); Nav2 shuts down on a 4 s heartbeat timeout at load 20 to 30, so Nav2 goals need `bond_timeout` raised or less load first.
+
+---
+
 ## 2026-11-09 (Pi, live, night) · root cause of the overshoot: software PWM under load; then the battery ran out
 
 Branch `fix/motor-gains` (c01fb04 to fd7a1d9). Rows in `docs/test_log.md`.
