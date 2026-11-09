@@ -66,7 +66,8 @@ def duty_for(speed: float, gain: float, min_duty: float, max_duty: float,
 def blocked(ranges, angle_min: float, angle_increment: float,
             range_min: float, v: float, stop_dist: float, half_angle: float,
             forward_angle: float) -> bool:
-    """Return True if v pushes toward a finite range in [range_min, stop_dist).
+    """
+    Return True if v pushes toward a finite range in [range_min, stop_dist).
 
     Looks within +-half_angle (rad) of forward_angle (v > 0) or of the rear
     (v < 0), angles in the scan frame. inf/NaN (no echo) counts as free.
