@@ -11,15 +11,17 @@ motor_node:
     enb_pin: 13          # right PWM
     in3_pin: 26          # right direction A
     in4_pin: 16          # right direction B
-    pwm_hz: 1000
+    pwm_hz: 100          # measured 2026-11-09: lgpio software PWM at 1 kHz overshoots under stack load (duty 0.30, 2 s: 0.85 m idle, 1.46 m at 33 runnable threads); 100 Hz gives 0.90 m both ways (test_log)
     wheel_base: 0.156    # measured 2026-10-31, left-right wheel centres (URDF)
     max_duty: 0.85       # never above this, whatever the controller asks
-    min_duty: 0.11        #min duty according to tests with 12v voltage
+    min_duty: 0.08       # fitted 2026-11-09 at 100 Hz, rolling (after kick): speed = 2.46 x (duty - 0.078), duty 0.12-0.20, rf2o; floor 0.12 (0.094 m/s), 0.10 stalls (test_log)
     #dead_zone_left: 0.35   # dont need dead_zone, determined with min duty
     #dead_zone_right: 0.35  # dont need dead_zone, determined with min duty
-    gain_left: 3.00       # duty per m/s, calibrate (phase 3)
-    gain_right: 1.00      # calibrate (phase 3)
+    gain_left: 0.41       # duty per m/s = 1/2.46, fitted 2026-11-09 (staircase, 100 Hz)
+    gain_right: 0.41      # fitted 2026-11-09, wheels matched (tape: 3 cm left in 1.23 m)
     min_wheel_speed: 0.01 #min calculated wheel speed
+    kick_duty: 0.30      # kick-start from rest: static friction needs ~0.20 duty, 0.15 m/s maps to 0.176 and stalls (test_log 2026-11-09); 0.30 moved 0.85 m in 2 s
+    kick_s: 0.35         # 2026-11-09: 0.15 s did not break away (straight 1 on base: no motion for 1.5 s, then 0.15 m/s steady, 0.81 m tape); raised, not yet measured
     watchdog_s: 0.5
     # lidar stop, brief default (docs/system/05_config_reference.md)
     stop_dist_m: 0.20

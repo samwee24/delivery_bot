@@ -5,6 +5,70 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-09 (Mac, close) · Pi powered down, docs updated
+
+The owner powered the Pi down after the last straight (it had stopped answering SSH while the stack was being stopped). AGENTS.md (Motors row), `docs/slam_build_path.md` (CP5, 9.3, R.1) and `docs/CA3.md` (P1, OI-9 battery, OI-10 Nav2 heartbeat) updated to the 2026-11-09 motor results. On the next boot: `git pull` on the Pi, then the direct duty test before any driven run.
+
+---
+
+## 2026-11-09 (Pi, live, late) · low-duty fit at 100 Hz, kick-start, first 1 m straight passes
+
+Branch `fix/motor-gains` (49bcfb1 to 56abb59). Rows in `docs/test_log.md`.
+
+- Duty staircase (direct script, rf2o measuring): rolling speed 0.293 m/s at 0.20, 0.213 at 0.16, 0.156 at 0.14, 0.094 at 0.12, stall at 0.10. Fit `speed = 2.46 x (duty - 0.078)`: `min_duty` 0.08, gains 0.41. Rewriting the duty every 50 ms at 100 Hz is harmless.
+- Kick-start needs 0.35 s at duty 0.30: with 0.15 s the robot sat still for 1.5 s.
+- 1 m straight on `base.launch.py` (no Nav2), 0.15 m/s: tape 0.96 m, 3 cm left. One pass, not three.
+- rf2o forward distance is within 5 cm of the tape; its sideways number is not reliable (use the tape).
+- The Pi then stopped answering SSH while the stack was being stopped (probably another reboot); state of the stack unknown.
+
+Open: two more straights; the motor battery gives about one run per power cycle (charge it, check the voltage); Nav2 shuts down on a 4 s heartbeat timeout at load 20 to 30, so Nav2 goals need `bond_timeout` raised or less load first.
+
+---
+
+## 2026-11-09 (Pi, live, night) · root cause of the overshoot: software PWM under load; then the battery ran out
+
+Branch `fix/motor-gains` (c01fb04 to fd7a1d9). Rows in `docs/test_log.md`.
+
+- Overshoot reproduced under the launched stack at load 22 to 30 (0.30 m/s pulse: 1.29 m, rf2o peak 0.74 m/s). Direct script at duty 0.30: 0.85 m idle, 1.46 m with 32 burners (33 runnable threads). The 8-burner test in the block below was too light. At 100 Hz: 0.90 m idle and loaded. `pwm_hz` is now 100, gains 0.44/0.44.
+- At the speed cap (0.15 m/s, duty 0.176) the robot does not start. Added a kick-start to `motor_node` (`kick_duty` 0.30 for `kick_s` 0.15 s from rest), 5 pytests.
+- Nav2 shuts itself down under load: `CRITICAL FAILURE: SERVER smoother_server IS DOWN after not receiving a heartbeat for 4000 ms` (also `route_server`), twice, both during a `timed_move` run. The collision monitor goes with it, so commands stop mid-run.
+- The motor battery then died within minutes of each power cycle, so the kick-start runs are invalid.
+
+Next: charge the motor battery (check the pack voltage), then direct test, then the 3 straights with kick-start, and the 100 Hz rewrite case (untested). Raise Nav2 `bond_timeout` or cut load (camera, Foxglove) before the Nav2 goals.
+
+---
+
+## 2026-11-09 (Pi, live, evening) · speed overshoot not reproduced; gains 0.44/0.44 work
+
+Code 8153ab6, Pi rebooted (uptime 0 min at the start), motor battery restarted, `drivers.yaml` on the Pi restored to main. Rows in `docs/test_log.md`.
+
+Both hypotheses from the block below are refuted. Direct script at duty 0.30 for 2 s gave 0.85 m idle, 0.85 m with 8 CPU burners, 0.85 m rewriting the duty every 50 ms, and 0.85 m with the full stack running. The command path is clean (`/cmd_vel` holds 0.13 for 3.31 s for a 66-message pub). Live `motor_node` with `min_duty` 0.11 and gains 0.44/0.44 gave 0.75 m at 0.30 m/s (fit predicts 0.78 m) and 0.59 m at 0.15 m/s (about 0.17 m/s): speed follows the command and holds the `v_max` cap open loop. Drift 3 to 8 cm left per run.
+
+Most likely the earlier overshoot runs were invalid (sagging battery or loose wire, see below) or ran with params from before a YAML edit: params load only at node start. Not proven, the earlier node output was not logged (screen output is not in `launch.log`; set `PYTHONUNBUFFERED=1` and `tee`).
+
+Next: teammate approves gains 0.44/0.44 in `drivers.yaml`; then the 1 m straight three times with `tools/timed_move.py straight` under `navigation.launch.py`, then Nav2 goals to (1, 0) and back. Lateral clearance (lidar cone) still open.
+
+---
+
+## 2026-11-09 (Pi, live) · first live full-stack run: lidar stop, wheel power, 1 m straight
+
+Code 8153ab6. Mac and Pi on main; power under load passed (18/18 samples, low bits 0, 59.9 to 70.1 C).
+
+What passed: lidar stop front and rear on the floor with a box about 0.17 m from the lidar (a box at 10 cm gives no echo on the A1M8, which counts as free), and the watchdog 0.5 s after each command.
+
+What failed: every 1 m straight. Causes found, in order:
+- A loose motor wire rebooted the Pi twice (uptime 1 min each time) and killed the wheels once. The motor battery also sagged: both wheels were dead until it was restarted. Runs taken then are invalid.
+- Gains 3.0/1.0 give 0.41 vs 0.21 duty at 0.10 m/s, so the left wheel runs far faster and the robot curved hard (35 to 40 deg clockwise).
+- With the stack stopped, a direct GPIO sweep (`/tmp/duty_run.py`, 2 s, both wheels) gave: 0.15 and 0.18 no movement, 0.20 unreliable (0.40 m once, then 0), 0.25 0.63 m, 0.30 0.85 m twice. Fit `speed = 2.25 x (duty - 0.11)` m/s; wheels matched (3 cm drift in 0.85 m). Below about 0.20 the wheels stall, so 0.10 m/s cannot be held open loop.
+- Under the stack the same duties ran about 2x faster and did not follow the command: 0.30 m/s for 3.3 s gave 2.37 m, 0.13 m/s gave 3.1 m. Hypothesis (not measured): CPU load (average 27 to 32) and the node rewriting the duty every 50 ms disturb the software PWM.
+- The lidar stop only watches the direction of travel, so a swerve into a wall beside the robot was not caught; the robot hit a table and a wall.
+
+Not done: Nav2 goals (step 5); the 1 m straight never met the bar (1.00 m +- 0.10 m, 10 cm sideways). No gains were committed: `drivers.yaml` is unchanged on this branch. Values tried and `stop_dist_m` 0.50 (requested for safety) are in `docs/test_log.md`.
+
+Next: the teammate decides how to get a slow, controllable speed (pulse the motors, only write the duty when it changes, or the gyro/odom loop) and re-checks PWM with the stack running; keep the motor battery charged and the wiring reseated before every session.
+
+---
+
 ## 2026-11-09 (Mac + Pi, dry run) · motor safety fixes on `fix/motor-safety`
 
 Owner-approved one-off fix to the teammate's `motor_node` (branch off `feat/motors`, PR back into it). Code 6b87c15. Dry run back (default true, no gpiozero import), pure `wheel_speeds`/`duty_for`/`blocked` with tests, lidar stop (0.20 m, ±35°, linear only) and stale-scan stop inside `motor_node`, `enable_stamped_cmd_vel: true` in `nav2_params.yaml`. Her duty formula, `min_duty` 0.11, gains and pins unchanged. `laser_forward_rad` is 0.0 (URDF `laser_yaw` 0).

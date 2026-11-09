@@ -4,7 +4,7 @@ from math import inf, pi, radians
 import sys
 from types import SimpleNamespace
 
-from delivery_bot_drivers.motor_node import blocked, duty_for, MotorNode, wheel_speeds
+from delivery_bot_drivers.motor_node import blocked, duty_for, kick, MotorNode, wheel_speeds
 import pytest
 import rclpy
 
@@ -132,3 +132,26 @@ def test_lidar_stop_zeroes_linear_but_keeps_turning(dry_node) -> None:
     dry_node._control_step()
     # v zeroed: wheels turn opposite ways
     assert dry_node.last['l'][1] == -1 and dry_node.last['r'][1] == 1
+
+
+KICK = {'kick_duty': 0.30, 'kick_s': 0.15}
+
+
+def test_kick_from_rest_raises_duty_to_kick_duty() -> None:
+    assert kick(0.176, 1, (0.0, 1), -inf, 10.0, **KICK) == (0.30, 10.0)
+
+
+def test_kick_ends_after_kick_s() -> None:
+    assert kick(0.176, 1, (0.30, 1), 10.0, 10.2, **KICK) == (0.176, 10.0)
+
+
+def test_kick_never_lowers_a_higher_duty() -> None:
+    assert kick(0.5, 1, (0.0, 1), -inf, 10.0, **KICK) == (0.5, 10.0)
+
+
+def test_kick_restarts_on_reversal() -> None:
+    assert kick(0.176, -1, (0.176, 1), 1.0, 10.0, **KICK) == (0.30, 10.0)
+
+
+def test_kick_skipped_when_stopped() -> None:
+    assert kick(0.0, 1, (0.0, 1), -inf, 10.0, **KICK) == (0.0, -inf)
