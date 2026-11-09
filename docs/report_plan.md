@@ -107,7 +107,7 @@ robot's start; nobody touches the robot; the walker starts when the robot starts
 (static identity `odom → base_footprint`); `navigation.launch.py` takes `localizer:=slam|amcl`
 (AMCL plus `map_server` on `2026-10-31_room2.yaml`; the driving default stays `slam`); EKF
 variants in `delivery_bot_bringup/config/ekf_variants/`; a run-sheet script that starts one
-cell, records the bag and prints the test_log row. Motor safety fixed first (`TASKS.md` §5.1).
+cell, records the bag and prints the test_log row. Motor safety fixed first ([`slam_build_path.md`](slam_build_path.md) R.1).
 
 **Dropped to future work:** lidar degradation (old RQ1/E5): simulated cuts are cleaner than a
 real cheap lidar, the runs are expensive, and it tied to nothing we discovered.
@@ -214,4 +214,4 @@ Hypotheses until the data decides. Never present one as a finding before its exp
 
 ## 8. Deliverables
 
-The deliverables checklist moved to [`../TASKS.md`](../TASKS.md) §2 on 2026-11-09.
+The deliverables checklist is in [`slam_build_path.md`](slam_build_path.md) Progress, section D (2026-11-09).

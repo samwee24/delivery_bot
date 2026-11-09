@@ -183,7 +183,7 @@ peer 15 %. The slides follow the same section order.
     roughly, rough motor gains, hand-pushed fallback runs if driving fails.
 - **Evidence**: [`../docs/report_plan.md`](../docs/report_plan.md) §4;
   [`../docs/slam_build_path.md`](../docs/slam_build_path.md) Stage 9;
-  [`../docs/slam.md`](../docs/slam.md) evaluation sections; [`../TASKS.md`](../TASKS.md) §3;
+  [`../docs/slam.md`](../docs/slam.md) evaluation sections; [`../docs/slam_build_path.md`](../docs/slam_build_path.md) Stage 9;
   [`../docs/system/05_config_reference.md`](../docs/system/05_config_reference.md).
 - **Owner**: Sherman (E2, E3, metrics), motor teammate (E1), B (people protocol, E4, hazard table).
 

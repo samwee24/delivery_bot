@@ -78,8 +78,9 @@ follow the room, not the lidar. The open risks now are in the next-actions list.
 
 ## Next actions
 
-All open tasks, checkpoints and measured findings live in **[`TASKS.md`](TASKS.md)**, the one
-task tree. Add and tick tasks there, not here. In short (2026-11-09 evening): CA3
+All open tasks, checkpoints, measured findings and the SLAM how-to live in one document,
+**[`docs/slam_build_path.md`](docs/slam_build_path.md)** (task tree on top, build path below).
+Add and tick tasks there, not here. In short (2026-11-09 evening): CA3
 presentation Thu 2026-11-12 on plan H ([`docs/report_plan.md`](docs/report_plan.md)): every
 method runs live on the robot, empty room vs people walking. Today: motor safety fixes on
 `feat/motors`, live config switches and the run sheet (CP4). Tue 2026-11-10: the driven
@@ -144,11 +145,11 @@ One repo, three copies. The GitHub repo (public as of 2026-11-01, see OI-7) is t
 ```
 README.md          what the robot is, hardware, stack, common commands
 AGENTS.md          this file — how to work here
-TASKS.md           the task tree: every open task, checkpoint and measured finding
 notes/notes.md     dated lab notebook, newest first, append-only
 docs/CA3.md        assessed-project record: decisions D1–D6, phases, open issues
 docs/design-plan.md  the Oct 8 design plan (superseded where docs/CA3.md says so)
 docs/plan.md       phase ladder and the definition of "done"
+docs/slam_build_path.md  the task tree (checkpoints, all tasks, findings) + SLAM how-to
 docs/system/       01 hardware · 02 pi setup · 03 bring-up · 04 architecture
                    05 config · 06 troubleshooting · 07 ros stack
 docs/wiring.md     pin map and power
