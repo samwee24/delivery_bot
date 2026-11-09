@@ -5,6 +5,16 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-09 (Mac + Pi, dry run) · motor safety fixes on `fix/motor-safety`
+
+Owner-approved one-off fix to the teammate's `motor_node` (branch off `feat/motors`, PR back into it). Code 6b87c15. Dry run back (default true, no gpiozero import), pure `wheel_speeds`/`duty_for`/`blocked` with tests, lidar stop (0.20 m, ±35°, linear only) and stale-scan stop inside `motor_node`, `enable_stamped_cmd_vel: true` in `nav2_params.yaml`. Her duty formula, `min_duty` 0.11, gains and pins unchanged. `laser_forward_rad` is 0.0 (URDF `laser_yaw` 0).
+
+Pi dry-run smoke (rows in `docs/test_log.md`): dry run reads True; front and rear lidar stop trip at 0.155 and 0.151 m; watchdog stops 0.50 s after the publisher; stale scan stops. Not done: Nav2 topic types and `enable_stamped_cmd_vel` on a running node (no Nav2 on `feat/motors`'s launch), stale-scan 0.5 s timing. `imu_node` died once at launch (`gyro z std 0.0257`, robot moved). Residual hazard: no echo counts as free (`docs/system/06_troubleshooting.md`).
+
+Next: the teammate reviews; wheels-raised live test is hers; Nav2 type check on the merged branch.
+
+---
+
 ## 2026-11-03 (Pi, live) · OI-8: live push, nobody in the scan
 
 Two stick pushes of a 1 m tape line on a charged battery (`get_throttled` 0x0 throughout), same start mark and heading, only `angle_compensate` changed (code 766511d, `tools/analysis/push_start.sh`; pushwall as in `docs/test_log.md`).
