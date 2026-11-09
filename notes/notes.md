@@ -5,6 +5,11 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-09 (Mac) · CA3 plan widened to a method × condition matrix
+
+The 2026-11-03 questions each checked one paper number (yes/no answers, little insight). Widened D8 to a comparison (D8a): odometry configs × localisers × conditions (empty, people, degraded lidar), new RQ1 lidar spec, RQ2 odometry, RQ3 localiser, RQ4 people, E1 as the demo, new E5 lidar degradation. Inventoried `~/bags` on the Pi (`ls -1t ~/bags`): newest bag is 2026-11-03; only short push, turn and map bags, no driven, people-loop or checkpoint runs, so the 2026-11-03 schedule slipped. Updated `docs/report_plan.md` (§3 questions and storyline, §4 matrix and data status, §6 reset schedule, §7 two new candidate insights) and D8a in `docs/CA3.md`. No robot runs. `report/CA3_report.md` and `report/slides_outline.md` still use the old RQ numbers.
+Next: build the replay matrix on the existing bags; one live hand-pushed session (checkpoint loop ×3, wrong starts, people walking) on a charged battery.
+
 ## 2026-11-03 (Mac) · CA3 report framing chosen (tentative)
 
 Read the MA4890 brief (presentation 40 %, CA3 report 20 %, both due end of Week 13; rubric content 40, conclusions 25, presentation 20, peer 15; the lecturer weights own insights highest). Compared six framings (survey, build report, replication, mission matrix, safety case, lidar vs camera); chose replication and extension of [K26]/[M26] on the delivery robot, extended to people [Y21] (D8). Wrote `docs/report_plan.md`, `report/slides_outline.md`, `report/literature_notes.md`, rewrote `report/CA3_report.md`, aligned `docs/plan.md` and build-path Stage 9. No robot runs. After reading the papers (K26 is replay without ground truth and tests AMCL, not the IMU; M26 ablates the IMU on wheel odometry), the framing word became *re-evaluation against published baselines* and the title *Re-evaluating EKF-Fused 2D LiDAR SLAM on a Low-Cost Indoor Delivery Robot: Repeatability, Inertial Contribution and the Effect of Dynamic Human Obstacles*.
