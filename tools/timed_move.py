@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Open-loop timed motion for the E2 experiments: 1 m straight or a 360 degree spin.
 
-Usage: python3 tools/timed_move.py straight|spin [--speed V] [--stamped] [--topic T]
+Usage: python3 tools/timed_move.py straight|spin [--speed V] [--no-stamped] [--topic T]
 
 Publishes at 20 Hz, then a zero command, then exits. It publishes on the collision
 monitor's INPUT topic (nav2_params.yaml `cmd_vel_in_topic`), never on /cmd_vel, so the
@@ -50,8 +50,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('kind', choices=['straight', 'spin'])
     ap.add_argument('--speed', type=float, help='m/s for straight, rad/s for spin')
-    ap.add_argument('--stamped', action='store_true',
-                    help='publish TwistStamped (set if the collision monitor input is)')
+    # Nav2 runs with enable_stamped_cmd_vel true (nav2_params.yaml, PR 32), so the
+    # collision monitor input is TwistStamped; --no-stamped is for a plain-Twist stack.
+    ap.add_argument('--stamped', action=argparse.BooleanOptionalAction, default=True,
+                    help='publish TwistStamped (default; the collision monitor input)')
     ap.add_argument('--topic', default=TOPIC)
     args = ap.parse_args()
     cmds = profile(args.kind, args.speed)   # validates the caps before ROS starts

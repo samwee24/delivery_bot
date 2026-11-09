@@ -54,3 +54,12 @@ def test_topic_is_collision_monitor_input_not_cmd_vel():
                                'nav2_params.yaml')).read()
     assert re.search(r'cmd_vel_in_topic:\s*"%s"' % tm.TOPIC, params)
     assert tm.TOPIC != 'cmd_vel'
+
+
+def test_defaults_to_stamped_like_the_collision_monitor_input():
+    params = open(os.path.join(_here, '..', '..', 'delivery_bot_bringup', 'config',
+                               'nav2_params.yaml')).read()
+    cm = params.split('\ncollision_monitor:\n')[1].split('\n\n')[0]
+    assert 'enable_stamped_cmd_vel: true' in cm
+    src = open(os.path.join(_here, '..', 'timed_move.py')).read()
+    assert 'BooleanOptionalAction, default=True' in src
