@@ -60,7 +60,7 @@ touching any filter.
 
 Launches: `base.launch.py` (everything above), `lidar.launch.py`, `mapping.launch.py`,
 `navigation.launch.py`. `base.launch.py` declares `dry_run:=true`, `use_sim_time:=false` and `bridge:=true`;
-`mapping` and `navigation` pass `bridge` through. `robot_control` starts stacks with `bridge:=false` because it owns the one
+`mapping` and `navigation` pass `bridge` through. For the experiments `base.launch.py` also takes `ekf` (`false` = identity `odom -> base_footprint`, no EKF) and `ekf_params_file` (`config/ekf_variants/`), and `navigation.launch.py` forwards both and adds `localizer:=slam|amcl` (AMCL: `map_server` on `map_yaml`, `amcl` from `config/amcl.yaml`, Nav2 5 s later); defaults keep the old behaviour. `robot_control` starts stacks with `bridge:=false` because it owns the one
 Foxglove bridge on port 8765 (two bridges fight for the port). The buttons are tabulated in the README.
 
 ## What the EKF fuses, and why
