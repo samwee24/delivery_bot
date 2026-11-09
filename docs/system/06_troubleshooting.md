@@ -92,6 +92,16 @@ text of the error, so it is searchable later.
 | --- | --- | --- |
 | Lidar stop misses obstacles that give no echo | `motor_node` counts `inf` as free. This A1M8 gives 26–29 % no-echo, worse on dark or glass surfaces, so a black or glass obstacle can sit inside `stop_dist_m` unseen | open: not fixed, listed for the report hazard table; the motor switch is the kill switch |
 
+## Motors
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `timed_move.py` runs, `motor_node` logs only `watchdog: no /cmd_vel for 0.5x s, stop`, wheels do not move, `get_throttled` is `0x0` | motor battery sagging or its protection tripped; looks exactly like a software fault | switch the motor battery off and on (or recharge) and rerun a direct duty test; 2026-11-09 |
+| Pi reboots (`uptime` 1 min, the tmux stack is gone) when the robot is handled | loose motor wire shares the supply with the Pi | reseat the harness, check the common ground; relaunch the stack |
+| Wheels spin lifted but the robot stands still on the floor | wheel stall zone: below duty about 0.20 the wheels do not break away (direct sweep, 2026-11-09; in the evening duty 0.176 did move on a fresh battery, so the edge depends on the battery) | do not command speeds that map to a duty under 0.20; see `docs/test_log.md` |
+| Robot drives much further than commanded, but the direct duty script gives the fitted speed | not CPU load or duty rewrites (both ruled out by direct tests, 2026-11-09 evening); most likely a weak battery or wiring, or params from before a YAML edit (they load only at node start) | restart the stack after every `drivers.yaml` edit and check with `ros2 param get /motor_node gain_left`; log node output with `PYTHONUNBUFFERED=1 ... \| tee` so the run can be checked afterwards |
+| `timed_move.py` gives `ValueError: |v| must be in (0, 0.15] m/s` | speed cap in the script | it is a safety cap; publish with `ros2 topic pub` only as a deliberate, logged deviation |
+
 ## Reporting a problem
 
 Put it in [`../notes.md`](../../notes/notes.md) with: date, exact error text, the command

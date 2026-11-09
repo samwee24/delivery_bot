@@ -46,6 +46,8 @@ motors:
   min_duty: 0.11            # both wheels; replaces dead_zone. Teammate's 12 V test, not yet logged
   min_wheel_speed: 0.01     # m/s, slower wheel commands give duty 0
   gain: {left: 2.0, right: 2.0}          # duty per m/s, FITTED in P6
+  # 2026-11-09 direct sweep (idle Pi, 2 s): speed = 2.25 x (duty - 0.11) m/s, wheels matched, stall below duty ~0.20.
+  # That fit means gain 0.44 both, but a 0.10 m/s command (duty 0.155) stalls, Live motor_node with 0.11 + 0.44 both followed the command on a fresh battery: 0.30 m/s gave 0.75 m in 2.6 s, 0.15 m/s gave 0.59 m in 3.4 s (test_log, evening).
 control:
   v_max: 0.15               # m/s cap — safety, do not raise casually
   omega_max: 1.0            # rad/s

@@ -5,6 +5,37 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-09 (Pi, live, evening) · speed overshoot not reproduced; gains 0.44/0.44 work
+
+Code 8153ab6, Pi rebooted (uptime 0 min at the start), motor battery restarted, `drivers.yaml` on the Pi restored to main. Rows in `docs/test_log.md`.
+
+Both hypotheses from the block below are refuted. Direct script at duty 0.30 for 2 s gave 0.85 m idle, 0.85 m with 8 CPU burners, 0.85 m rewriting the duty every 50 ms, and 0.85 m with the full stack running. The command path is clean (`/cmd_vel` holds 0.13 for 3.31 s for a 66-message pub). Live `motor_node` with `min_duty` 0.11 and gains 0.44/0.44 gave 0.75 m at 0.30 m/s (fit predicts 0.78 m) and 0.59 m at 0.15 m/s (about 0.17 m/s): speed follows the command and holds the `v_max` cap open loop. Drift 3 to 8 cm left per run.
+
+Most likely the earlier overshoot runs were invalid (sagging battery or loose wire, see below) or ran with params from before a YAML edit: params load only at node start. Not proven, the earlier node output was not logged (screen output is not in `launch.log`; set `PYTHONUNBUFFERED=1` and `tee`).
+
+Next: teammate approves gains 0.44/0.44 in `drivers.yaml`; then the 1 m straight three times with `tools/timed_move.py straight` under `navigation.launch.py`, then Nav2 goals to (1, 0) and back. Lateral clearance (lidar cone) still open.
+
+---
+
+## 2026-11-09 (Pi, live) · first live full-stack run: lidar stop, wheel power, 1 m straight
+
+Code 8153ab6. Mac and Pi on main; power under load passed (18/18 samples, low bits 0, 59.9 to 70.1 C).
+
+What passed: lidar stop front and rear on the floor with a box about 0.17 m from the lidar (a box at 10 cm gives no echo on the A1M8, which counts as free), and the watchdog 0.5 s after each command.
+
+What failed: every 1 m straight. Causes found, in order:
+- A loose motor wire rebooted the Pi twice (uptime 1 min each time) and killed the wheels once. The motor battery also sagged: both wheels were dead until it was restarted. Runs taken then are invalid.
+- Gains 3.0/1.0 give 0.41 vs 0.21 duty at 0.10 m/s, so the left wheel runs far faster and the robot curved hard (35 to 40 deg clockwise).
+- With the stack stopped, a direct GPIO sweep (`/tmp/duty_run.py`, 2 s, both wheels) gave: 0.15 and 0.18 no movement, 0.20 unreliable (0.40 m once, then 0), 0.25 0.63 m, 0.30 0.85 m twice. Fit `speed = 2.25 x (duty - 0.11)` m/s; wheels matched (3 cm drift in 0.85 m). Below about 0.20 the wheels stall, so 0.10 m/s cannot be held open loop.
+- Under the stack the same duties ran about 2x faster and did not follow the command: 0.30 m/s for 3.3 s gave 2.37 m, 0.13 m/s gave 3.1 m. Hypothesis (not measured): CPU load (average 27 to 32) and the node rewriting the duty every 50 ms disturb the software PWM.
+- The lidar stop only watches the direction of travel, so a swerve into a wall beside the robot was not caught; the robot hit a table and a wall.
+
+Not done: Nav2 goals (step 5); the 1 m straight never met the bar (1.00 m +- 0.10 m, 10 cm sideways). No gains were committed: `drivers.yaml` is unchanged on this branch. Values tried and `stop_dist_m` 0.50 (requested for safety) are in `docs/test_log.md`.
+
+Next: the teammate decides how to get a slow, controllable speed (pulse the motors, only write the duty when it changes, or the gyro/odom loop) and re-checks PWM with the stack running; keep the motor battery charged and the wiring reseated before every session.
+
+---
+
 ## 2026-11-09 (Mac + Pi, dry run) · motor safety fixes on `fix/motor-safety`
 
 Owner-approved one-off fix to the teammate's `motor_node` (branch off `feat/motors`, PR back into it). Code 6b87c15. Dry run back (default true, no gpiozero import), pure `wheel_speeds`/`duty_for`/`blocked` with tests, lidar stop (0.20 m, ±35°, linear only) and stale-scan stop inside `motor_node`, `enable_stamped_cmd_vel: true` in `nav2_params.yaml`. Her duty formula, `min_duty` 0.11, gains and pins unchanged. `laser_forward_rad` is 0.0 (URDF `laser_yaw` 0).
