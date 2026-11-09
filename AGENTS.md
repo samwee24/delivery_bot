@@ -79,10 +79,11 @@ follow the room, not the lidar. The open risks now are in the next-actions list.
 ## Next actions
 
 All open tasks, checkpoints and measured findings live in **[`TASKS.md`](TASKS.md)**, the one
-task tree. Add and tick tasks there, not here. In short (2026-11-09): CA3 presentation Thu
-2026-11-12 on plan G ([`docs/report_plan.md`](docs/report_plan.md)); offline replay matrix on
-existing bags (CP4, `delegate-replay-matrix.md`); driven session Tue 2026-11-10 (CP5, CP6);
-then results, slides and rehearsals.
+task tree. Add and tick tasks there, not here. In short (2026-11-09 evening): CA3
+presentation Thu 2026-11-12 on plan H ([`docs/report_plan.md`](docs/report_plan.md)): every
+method runs live on the robot, empty room vs people walking. Today: motor safety fixes on
+`feat/motors`, live config switches and the run sheet (CP4). Tue 2026-11-10: the driven
+session (CP5, CP6). Then results, slides and rehearsals.
 
 ## Conventions
 

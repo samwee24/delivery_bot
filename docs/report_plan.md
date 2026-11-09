@@ -1,6 +1,6 @@
 # CA3 report and presentation plan
 
-**Revised 2026-11-09: method-by-condition comparison (option G, §2).** The 2026-11-03 plan checked one number per paper; it is widened to compare alternatives (odometry sources, localisers, lidar quality) under conditions (empty room, people, degraded scans). Schedule reset in §6: no E1–E4 bags existed on 2026-11-09. OI-8 closed 2026-11-03: the scan format is cleared; a person walking behind the robot pulled rf2o to 25–28 % of the real push ([notes](../notes/notes.md), `evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`). That is a first measured data point for E4.
+**Revised 2026-11-09 (evening): plan H, people as the axis, live runs as the results (§2).** Every method runs live on the robot in an empty room and with people walking; replay of existing bags is background only. Plan G of the same morning (method × condition matrix with offline replays and a lidar-degradation axis) is kept in §2 for the record. OI-8 closed 2026-11-03: the scan format is cleared; a person walking behind the robot pulled rf2o to 25–28 % of the real push ([notes](../notes/notes.md), `evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`). That is the first measured data point for RQ1 (people).
 Decision D8 in [CA3.md](CA3.md). Report outline: [../report/CA3_report.md](../report/CA3_report.md).
 Slides: [../report/slides_outline.md](../report/slides_outline.md). Sources:
 [../report/literature_notes.md](../report/literature_notes.md). Robot phases: [plan.md](plan.md);
@@ -38,10 +38,11 @@ of Week 13. Presentation estimated Thu 2026-11-12, 9:30–12:30 (**to check on N
 | D. Mission matrix | Eight mission experiments | Too wide and shallow for 9 days |
 | E. Safety case | SOTIF / ISO 13482 analysis + tests | Too narrow alone; kept as a one-page hazard table |
 | F. Lidar vs camera | Add camera localisation and compare | Strongest idea, worst timing (new build); goes to future work |
-| **G. Method × condition matrix** (2026-11-09) | C widened: compare alternatives (4 odometry configs, 2 localisers, degraded lidar) under conditions (empty, people), papers as reference points inside the matrix | **Chosen**: C's single-number checks gave yes/no answers with little room for insight; most cells are offline replays of bags, YAML switches only |
+| G. Method × condition matrix (2026-11-09 morning) | C widened: compare alternatives (4 odometry configs, 2 localisers, degraded lidar) under conditions (empty, people), mostly by offline replay | Superseded by H the same evening: replay is not the robot, and the degradation axis was simulated and tied to nothing we discovered |
+| **H. People as the axis, live** (2026-11-09 evening) | G's methods (odometry configs, localisers), run **live on the robot**, each in an empty room and with people walking; plus a step-in safety test. Lidar degradation goes to future work | **Chosen**: OI-8 (a person behind the robot cut rf2o to a quarter) is our one real discovery, and customers standing around the robot is the most delivery-specific condition; live closed-loop runs measure the robot, not a replay that reads ~71 % of live |
 
-**G** keeps C+'s parts (delivery demo, hazard table) and C's papers, but each paper becomes
-one reference point in a comparison instead of the whole question.
+**H** keeps C+'s parts (delivery demo, hazard table) and C's papers; each paper anchors one
+question; every result slide shows the same comparison, empty against people.
 
 **C+** (2026-11-03) = C, plus B's delivery demo, plus E's hazard table. It is academic by construction (a
 published method, our data, a direct comparison); every gap between our data and the paper
@@ -50,90 +51,89 @@ half (E2, E3) still works from hand-pushed runs if driving slips. (2026-11-09: d
 
 ## 3. Title and research questions
 
-**Main question (2026-11-09):** *What does a cheap delivery robot need to localise reliably in a real room with people in it, and where do published 2D SLAM results stop applying?*
-**Title (tentative):** *Published SLAM Meets a Cheap Robot and Real People: What Holds, What Breaks, and What a Delivery Robot Needs*
-**Formal title (report):** *Odometry, Localiser and LiDAR Quality Under Dynamic Human Obstacles: A Comparative Study on a Low-Cost Indoor Delivery Robot*
-**Fallback** (if live runs slip): *Localisation and Safety Lessons for Autonomous Vehicles from a Low-Cost Indoor Delivery Robot*
-**Slide hook:** "Published 2D SLAM results were measured under conditions a cheap delivery robot never sees. What changes?"
+**Main question (plan H):** *A cheap delivery robot works in an empty room. What happens when people move around it, which part breaks, and what defends against it?*
+**Title (tentative):** *The Customer Is the Obstacle: Localisation and Safety of a Low-Cost Delivery Robot Among People*
+**Fallback** (if driving fails): *Localisation and Safety Lessons for Autonomous Vehicles from a Low-Cost Indoor Delivery Robot*
+**Slide hook:** "Published 2D SLAM results were measured in empty rooms or on replayed data. Our robot's customers walk around it. What breaks?"
 
 **Storyline** (slides and report): gap (hook) → field and products → what we built →
-four findings, one per presenter, each *our result → paper → gap → why → Our take* →
-OI-8 as the signature slide → our position → conclusions and future work.
+the discovery (OI-8: a person behind the robot) → four findings, each *empty vs people → paper
+→ gap → why → Our take* → our position → future work → verdict.
 
-**Framing word:** *re-evaluation against published baselines*, not "replication". E3 is a
-partial replication of [K26]'s "AMCL off" condition (same stack, but live, cheap lidar, with
-ground truth); E2 is an analogue of [M26] (no wheel encoders). Every comparison is
-**directional** (same trend or not, and why), backed by a "differences from the paper"
-table in the Method section.
-
-RQ numbers changed on 2026-11-09. Old → new: RQ1 repeatability → part of RQ3; RQ2 IMU →
-RQ2 (widened); RQ3 people → RQ4; RQ4 mission → E1 demo. `report/CA3_report.md` and
-`report/slides_outline.md` still use the old numbers until they are rewritten.
+**Framing word:** *re-evaluation against published baselines* stays: K26, M26 and Y21 each
+anchor one question; comparisons with them are directional, backed by a "differences from
+the paper" table. Numbering changed twice on 2026-11-09; `report/` follows plan H.
 
 | RQ | Question | Point it can make (hypothesis) | Anchor |
 | --- | --- | --- | --- |
-| RQ1 Lidar spec | How cheap can the lidar be? Degrade the scans offline (fewer beams, lower rate, shorter range) and find where each method breaks | The minimum sensor spec for a delivery robot, from data | Our A1M8 (7.05 Hz, 26–29 % no-echo, measured) against [K26]'s Ouster cut to 2D |
-| RQ2 Odometry | Which odometry matters, and when? rf2o only, rf2o + IMU, IMU heading only, none (`slam_toolbox` scan matching alone), in an empty room and with people | [M26]'s "the IMU gain vanishes after SLAM" may hold only in easy conditions | [M26], analogue (no encoders) |
-| RQ3 Localiser | Particle filter or graph matching on a cheap lidar? AMCL against `slam_toolbox` localisation: checkpoint error, run-to-run repeatability, wrong-start recovery | Which localiser a low-cost product should ship | [K26] (AMCL on/off; ~0.20–0.23 m pairwise ATE) |
-| RQ4 People | What do people do to it? The RQ2/RQ3 comparisons with people walking, plus stop distance and contacts | "The customer is the obstacle": people are the main localisation fault (OI-8) and the main hazard | [Y21] (5.90 vs 80.24 cm map error, filtered vs unfiltered) |
+| RQ1 Impact | How much do people hurt the robot? Checkpoint error and localisation failures, empty room against 1–2 people walking, for every method below | The headline number: "the customer is the obstacle" | [Y21] (5.90 vs 80.24 cm map error, people filtered vs not); OI-8 |
+| RQ2 Odometry | Which part breaks? Scan odometry against the IMU: rf2o + IMU, rf2o only, IMU only, none (scan matching alone), empty vs people | OI-8 says rf2o breaks; does the IMU hide it, or does SLAM? [M26]'s "the gain vanishes after SLAM" may hold only in an empty room | [M26], analogue (no encoders) |
+| RQ3 Localiser | Which localiser holds up? `slam_toolbox` localisation against AMCL, each steering its own Nav2 loop, empty vs people; plus wrong starts | A particle filter and a scan graph should fail differently around moving bodies; which a product should ship | [K26] (AMCL on/off, ~0.20–0.23 m pairwise ATE) |
+| RQ4 Safety | Does it stay safe? Stop distance and contacts when a person steps in front, against the 0.20 m stop zone | The stop zone, not the localiser, is the safety-critical part | `reports/MPC planners for dynamic humans.md` (zone too small at walking pace, inference) |
 | E1 demo | Home → seat → home, driven: proof the system works end to end, and the video | Not a research question | [plan.md](plan.md) phase 7 |
+
+**Also logged on every run, no extra cost:** how each failure starts (slow drift, sudden
+jump, lost), whether the robot recovers once people leave, and where in the room it happens
+against where people were (failure-mode table and a room figure).
 
 ## 4. Experiments
 
-**The matrix (2026-11-09).** Every method runs on the same bags, offline, **≥ 3 replays per
-cell**. Methods are YAML switches; AMCL runs as a separate offline config only
-(`nav2_params.yaml` for driving keeps AMCL removed).
+**The matrix (plan H).** Every cell is a **live run on the robot**, recorded as a bag.
+Three runs per cell (live runs are slow; report effect sizes and the spread, not
+significance).
 
-| Method ↓ / condition → | Empty room | People walking | Degraded lidar (beams / rate / range) |
-| --- | --- | --- | --- |
-| Odometry: rf2o only · rf2o + IMU · IMU heading only · none | RQ2 | RQ2, RQ4 | RQ1 |
-| Localiser: `slam_toolbox` · AMCL | RQ3 | RQ3, RQ4 | RQ1 |
+| Method ↓ / condition → | Empty room | 1–2 people walking |
+| --- | --- | --- |
+| Odometry: rf2o + IMU · rf2o only · IMU only · none | E2 → RQ2, RQ1 | E2 → RQ2, RQ1 |
+| Localiser: `slam_toolbox` · AMCL | E3 → RQ3, RQ1 | E3 → RQ3, RQ1 |
+| Safety stop | — | E4 step-in → RQ4 |
 
-| # | Experiment | Protocol | Metrics | Target (not a result) | Build path | Owner |
+| # | Experiment | Protocol (live) | Metrics | Target (not a result) | Build path | Owner |
 | --- | --- | --- | --- | --- | --- | --- |
-| E1 | Delivery demo | Driven runs home → seat → home (5 if motors allow) | Success %, arrival error at checkpoints, time | 5/5, ≤ 15 cm | 9.2 | Motor teammate |
-| E2 | Odometry comparison (RQ2) | 4 EKF configs replayed on every bag: the existing 1 m tape pushes and 360° turn, plus **driven** 1 m straights and 360° spins (timed `cmd_vel`, nobody nearby, tape as truth) and the driven checkpoint loop for route scale. Compare driven bags only with driven bags: motor vibration reaches the IMU | ATE, RPE, heading error ([EVO]), before and after SLAM; distance ratio vs tape | Compare with [M26]: 60–75 % gain before SLAM, −2.6 to +1.6 % after | 9.4 | Sherman |
-| E3 | Localiser comparison (RQ3) | Record **driven** loops through the checkpoints (×3, Nav2 waypoints or teleop on the taped route), then replay `slam_toolbox` localisation and AMCL offline on the same bags, so neither is judged on a route the other steered. Wrong starts at 10/20/30/40 cm and 10/20/30/40°: place the robot, then drive a short move or spin to recover | Checkpoint error, pairwise ATE between loops, recovery yes/no per wrong start | Compare with [K26]: ~0.20–0.23 m pairwise ATE; our `slam_toolbox` baseline: recovers 30 cm / 20°, not 31° (2026-11-01, hand-pushed) | 9.3 | Sherman |
-| E4 | People (RQ4) | Offline: 11-01 (person behind) vs 11-03 (nobody) push bags through E2's configs; **driven**: the E3 loop again with 1–2 people walking (clean split: nobody pushes, so empty means empty), and one person stepping in front | Error vs empty room per method, localisation failures, stop distance, contacts | Zero contacts | 9.7 | B |
-| E5 | Lidar degradation (RQ1) | Replay every bag with scans cut to 1/2, 1/3, 1/4 of the beams, every 2nd/3rd scan, range capped at 4/3/2 m (range cut from PR 25), through E2's and E3's methods | Error vs degradation level per method; the knee where each method breaks | — | — | Sherman |
+| E1 | Delivery demo | Nav2 home → seat → home, 5 runs | Success %, arrival error at checkpoints (tape), time; labelled "rough gains" | 5/5, ≤ 15 cm | 9.2 | Motor teammate |
+| E2 | Odometry configs (RQ2) | Each EKF config loaded live (`ekf_params_file`, or no EKF); timed `cmd_vel` 1 m straight ×3 and 360° spin ×3 per config per condition; `slam_toolbox` localisation on the saved map running alongside for the after-SLAM pose | Distance and heading error vs tape and floor marks, from `/odometry/filtered` (before SLAM) and the map pose (after SLAM) | Compare with [M26]: 60–75 % gain before SLAM, −2.6 to +1.6 % after | 9.4 | Sherman |
+| E3 | Localiser (RQ3) | Nav2 drives the same checkpoint loop, once per localiser (`slam_toolbox` localisation, AMCL with `map_server` on the same map), 3 loops per localiser per condition, rf2o + IMU odometry; wrong starts at 10/20/30/40 cm and 10/20/30/40° per localiser, empty room | Stop error at each checkpoint (tape), pairwise ATE between loops (from bags, [EVO]), lost or not, recovery yes/no | Compare with [K26]: ~0.20–0.23 m pairwise ATE; `slam_toolbox` baseline 30 cm / 20° recovers, 31° not (2026-11-01, hand-pushed) | 9.3 | Sherman |
+| E4 | Step-in safety (RQ4) | One person steps in front of the moving robot at walking pace, 3–5 times; Nav2 collision monitor active | Stop distance, contacts, near-misses | Zero contacts | 9.7 | B |
 | S | Hazard table | 6–8 hazards → mitigation → the test that proves it | Pass / fail | All pass | — | B or C |
-| opt | Echo rate by material | Black, glass, white, fabric at fixed range and angle, `tools/probe_echo_rate.py` | Return % | — | — | Anyone, ~2 h |
+
+**People protocol** (the same every run, so "people" is one condition): 1–2 people walk at
+normal pace on two fixed paths taped on the floor, one crossing the route and one behind the
+robot's start; nobody touches the robot; the walker starts when the robot starts.
+
+**Runs:** E2 4 configs × 2 conditions × 6 = 48 short runs; E3 2 × 2 × 3 = 12 loops plus
+2 × 8 wrong starts; E4 3–5; E1 5. About 4–5 h of robot time with battery swaps.
+
+**Live switches to build first:** `base.launch.py` takes `ekf_params_file` and `ekf:=false`
+(static identity `odom → base_footprint`); `navigation.launch.py` takes `localizer:=slam|amcl`
+(AMCL plus `map_server` on `2026-10-31_room2.yaml`; the driving default stays `slam`); EKF
+variants in `delivery_bot_bringup/config/ekf_variants/`; a run-sheet script that starts one
+cell, records the bag and prints the test_log row. Motor safety fixed first (`TASKS.md` §5.1).
+
+**Dropped to future work:** lidar degradation (old RQ1/E5): simulated cuts are cleaner than a
+real cheap lidar, the runs are expensive, and it tied to nothing we discovered.
 
 **What the papers actually test** (verified in [literature_notes.md](../report/literature_notes.md)):
 [K26] compares AMCL feedback on/off with the IMU fused in both, mostly offline replay of an
-Ouster OS-1 cut to 2D, no ground truth; its "AMCL off" condition is our stack, so E3 is a
-replication. [M26] ablates wheel odometry vs wheel odometry + IMU on the public MIT Stata
-dataset; we have no encoders, so E2 is an analogue. [Y21]: GMapping corridor map error 5.90 cm
-with people filtered vs 80.24 cm unfiltered; E4 is their unfiltered case.
-
-**Why ≥ 3 replays in E2:** on 2026-11-03 three identical replays of one bag read 0.679, 0.592
-and 0.531 m (spread about 12 %, [notes](../notes/notes.md)). A single replay per condition
-cannot separate the two configs; report the mean and the spread, and lean on the live runs.
+Ouster OS-1 cut to 2D, no ground truth; E3 runs live with checkpoint truth. [M26] ablates
+wheel odometry vs wheel odometry + IMU on the public MIT Stata dataset; we have no encoders,
+so E2 is an analogue. [Y21]: GMapping corridor map error 5.90 cm with people filtered vs
+80.24 cm unfiltered; our people condition is their unfiltered case, on localisation.
 
 ### Data status (checked 2026-11-09, `ssh robot@100.83.14.99 'ls -1t ~/bags'`)
 
-| Bags on the Pi | Ground truth | Serves | Can start |
-| --- | --- | --- | --- |
-| `2026-10-31_push_195343`, `2026-10-31_turn_194945` | 1 m tape (0.962 m live), hand-turned 360° | E2, E5 short range | **Now, offline** |
-| `2026-11-01_push_225752`, `_230535` (person behind) | wall-range change (`pushwall.py`) | E4 offline, E2 | **Now, offline** |
-| `2026-11-03_*_push_actrue`, `_acfalse` (nobody in scan) | 1 m tape | E4 control, E2, E5 | **Now, offline** |
-| `2026-10-31_map_200132`, `_200956` | none (map closure only) | E5 mapping, E3 map | Now, closure only |
-| — | — | Driven straights/spins (E2), loops and wrong starts (E3), people loop and step-in (E4), E1 | **Needs one driven session** (motors in, rough gains) |
-| — | — | E1, E4 driven step-in | **Needs motors** and PR 29 merged |
-
-Push bags answer "does odometry hold over 1 m?", not "does localisation hold over a
-route?". The driven session must record the checkpoint loop; those bags then serve E2, E3
-and E5 at route scale. Arrival error in E1 is labelled "rough gains" (motor gains are not
-tuned); the other experiments take truth from the tape and checkpoints, not from the command.
+The bags on the Pi (10-31 to 11-03: hand pushes, a hand turn, two map bags) are **background
+only**: the OI-8 story and the replay-noise caveat (three replays of one bag 0.679 / 0.592 /
+0.531 m). Every plan-H result comes from the driven session, which has not happened yet.
+Every live run is also bagged, so offline replays of the driven bags stay possible later.
 
 ### Shared protocol
 
 | Rule | Detail |
 | --- | --- |
 | Ground truth | 5 tape-measured checkpoints (home + seats), [Stage 9.1](slam_build_path.md#91-survey-floor-checkpoints) |
-| Frozen config | One parameter set for every condition, frozen before **2026-11-06**; commit hash per run ([K26] rule, see [slam.md](slam.md)) |
+| Frozen config | One parameter set per method, frozen before the driven session (2026-11-10); commit hash per run ([K26] rule, see [slam.md](slam.md)) |
 | Bags | `~/bags/YYYY-MM-DD_<exp>_run<N>`; one `test_log.md` row per run with command and hash |
-| Metrics | `evo` APE/RPE [EVO]; map IoU per [K26] |
+| Metrics | Primary: tape-measured error at checkpoints and on the 1 m line; secondary: `evo` APE/RPE from the bags [EVO] |
 | Power | Charged battery every run; check `vcgencmd get_throttled` is `0x0` first |
 | Safety | Motors only through the motor node watchdog; first live test with wheels raised; kill switch in reach |
 
@@ -141,10 +141,10 @@ tuned); the other experiments take truth from the tape and checkpoints, not from
 
 | Person | Owns | Presents | Own "Our take" |
 | --- | --- | --- | --- |
-| Sherman | SLAM stack, replay matrix, E2, E3, E5, analysis with `evo` | Comparison block | RQ1, RQ2, RQ3 |
+| Sherman | SLAM stack, live switches, run sheet, E2, E3, analysis | Odometry and localiser block | RQ1, RQ2, RQ3 |
 | Motor teammate (TBD) | Motors, calibration, Nav2, delivery script, E1 | System + mission block | E1 |
 | A (TBD) | Background, product table, trends, roadmap | Opening and closing | Industry comparison |
-| B (TBD) | E4, hazard table (uses `reports/MPC planners for dynamic humans.md`: stop wedge vs step-in) | People + safety block, "Our position" | RQ4 |
+| B (TBD) | People protocol, E4, hazard table (uses `reports/MPC planners for dynamic humans.md`) | OI-8, safety block, "Our position" | RQ4 |
 | C (TBD, if any) | Hazard table, report editing, references | Shared with B | Safety |
 
 Each person owns at least one experiment or section and writes one "Our take" (peer
@@ -152,25 +152,25 @@ assessment is 15 %).
 
 ## 6. Schedule
 
-**Reset 2026-11-09.** The 2026-11-03 schedule (kept below for the record) slipped: no
-E1–E4 bags exist and PR 29 (Nav2 glue) and PR 30 (explore) are open. Replays run near real
-time on the Pi, so the matrix is a compute job: start it first and let it run.
+**Reset 2026-11-09 (plan H).** Results come from one driven session; everything before it
+is build and safety work.
 
-| Day | Robot / compute | Others |
+| Day | Robot | Others |
 | --- | --- | --- |
-| Mon 9 Nov | Build the replay matrix (E2 configs, E5 degradation, AMCL offline config) and start it on the existing bags | Slide skeleton on the new storyline; product table |
-| Tue 10 | **One driven session**, charged battery. First wheels raised, then one 1 m straight with the motor switch in reach. Then: driven 1 m straights and 360° spins (E2), checkpoint loop ×3 and wrong starts (E3), loop with people walking and one step-in (E4), E1 runs. If driving fails: hand-pushed with a stick, nobody behind the robot (fallback) | Background, hazard table drafts |
-| Wed 11 | Replay the new bags; `evo`; figures; Our take per RQ; rehearsal 1 | Report sections 1–3; rehearsal 1 |
+| Mon 9 Nov | Motor safety fixes (dry run back, lidar stop, `/cmd_vel` type); live switches (`ekf_params_file`, `ekf:=false`, `localizer:=amcl`); run sheet; tape checkpoints and people paths | Report §1–4, product table, hazard table draft, slide skeleton |
+| Tue 10 | **Driven session.** Wheels raised, then a 1 m straight with the switch in reach. Freeze config. E2 (48 short runs), E3 (12 loops + 16 wrong starts), E4 step-ins, E1, video clips | People for the people condition |
+| Wed 11 | Morning: re-runs of failed cells. Then tape numbers into tables, `evo` on bags, figures, Our take per RQ; rehearsal 1 | Rehearsal 1 and 2 |
 | Thu 12 | Present (morning) | — |
-| End of Week 13 | Report finished with the full matrix; submit report, slides, peer assessment | — |
+| End of Week 13 | Report with the full results; submit report, slides, peer assessment | — |
 
-| Risk (2026-11-09) | Fallback |
+| Risk (plan H) | Fallback |
 | --- | --- |
-| Driving fails on Tue (first floor run of the motors) | Fall back to hand-pushing with a stick, nobody behind the robot; E1 partial with the named blocker. If no live session at all: E2, E4-offline and E5 on existing bags only; E3 becomes "baseline wrong-start result + AMCL as future work" |
-| Driven IMU data differs from hand-pushed (motor vibration) | Compare driven with driven only; list it in "differences from the paper" |
-| Nav2 steers with `slam_toolbox`, biasing E3 | Replay both localisers offline on the same recorded loops, or drive the loop by teleop |
-| Motors not in | E1 reported as partial with the named blocker; E4 driven step-in dropped, stop-wedge argument stays as analysis |
-| Replays too slow on the Pi | Cut replays per cell to 3 and degradation levels to 2 per axis; or run them on the Mac in Docker |
+| Motor safety not fixed by Tue | No driven runs; E2 by stick-pushing (nobody behind the robot except in people runs); E3 and E1 reported as partial with the named blocker |
+| Driving fails on the floor | Same fallback; the existing bags and OI-8 carry RQ1 and RQ2 qualitatively |
+| AMCL bring-up not ready | E3 becomes `slam_toolbox` empty vs people only; AMCL to future work |
+| 4–5 h of robot time does not fit | Cut E2 spins in the people condition first, then E3 wrong starts to 10/20/30°, then E2's "none" config |
+| Motor vibration reaches the IMU | Compare driven with driven only; list it in "differences from the paper" |
+| Under-voltage, lidar start hang (OI-6) | Charged battery, spare; wait 20 s before a lidar restart |
 
 Original schedule (2026-11-03):
 
@@ -202,14 +202,15 @@ Hypotheses until the data decides. Never present one as a finding before its exp
 
 | Insight | Confirmed by | Killed by |
 | --- | --- | --- |
-| The [K26]/[M26] results transfer (or do not) to a lidar with a much lower echo rate | E3 spread close to (or far from) K26; E2 gain close to (or far from) M26 | — (either way is a result; name the reason) |
-| "The customer is the obstacle": people degrade localisation and are the main safety hazard | E4 arrival error and failures clearly above E1. Early evidence: OI-8, rf2o read 0.242 of 0.862 m and 0.307 of 1.222 m with a person behind (measured, 2026-11-03) | E4 ≈ E1 on driven runs |
-| Redundancy earns its cost | E2 shows the IMU lowers error after SLAM, not only before | E2 gain vanishes after SLAM, as in [M26]: then "SLAM hides odometry quality; the IMU matters only when the map can't correct", also a take |
+| "The customer is the obstacle": people degrade localisation and are the main safety hazard | RQ1: checkpoint error and failures clearly larger with people for every method. Early evidence: OI-8, rf2o read 0.242 of 0.862 m and 0.307 of 1.222 m with a person behind (measured, 2026-11-03) | Error with people ≈ empty for most methods |
+| The IMU matters most when the scan is worst | RQ2: the IMU's gain (rf2o + IMU vs rf2o only) larger with people than empty, after SLAM too | Gain the same in both conditions; or none, as [M26] found after SLAM |
+| SLAM hides bad odometry, until people arrive | RQ2: after-SLAM error equal across configs when empty, spread apart with people | Configs differ after SLAM even when empty |
+| Graph matching and a particle filter fail differently among people | RQ3: different failure modes (drift vs jump) or error sizes for `slam_toolbox` and AMCL with people | Both behave the same |
+| The stop zone, not the localiser, is the safety-critical part | RQ4: step-in stop distance close to or under the 0.20 m zone, while localisation error stays small | Stops with a wide margin |
+| The [K26]/[M26] results transfer (or do not) to a cheap lidar, live | E3 loop spread close to (or far from) K26; E2 gain close to (or far from) M26 | — (either way is a result; name the reason) |
 | Delivery robots win by simplifying their world | Product table (markers, mapped rooms, slow speed) + E1 success | E1 fails for reasons a simpler world would not fix |
-| Published 2D SLAM evaluation misses what matters for deployment (no ground truth in [K26]; covariances fitted on test data in [M26]; replay not live) | Our checkpoint error disagrees with what pairwise ATE alone suggests, or live differs from replay | Checkpoint error and pairwise ATE tell the same story |
-| A cheap lidar sets a hard floor, and the localiser choice moves it (2026-11-09) | E5 shows a clear knee, at a different level for AMCL and `slam_toolbox` | No knee within the tested range, or both methods break at the same level |
-| The IMU matters most when the scan is worst (2026-11-09) | E2 gain from the IMU larger with people (E4) or degraded scans (E5) than in the empty room | Gain the same in every condition |
-| Integration, not algorithms, was the hard part | Failure log: OI-8, lidar start hang (OI-6), power | Most failures trace to the algorithms themselves |
+| Published 2D SLAM evaluation misses what matters for deployment (no ground truth and no people in [K26]; replay not live) | Our live checkpoint error with people disagrees with what empty-room or replay numbers suggest | They tell the same story |
+| Integration, not algorithms, was the hard part | Failure log: OI-8, lidar start hang (OI-6), power, motor safety | Most failures trace to the algorithms themselves |
 
 ## 8. Deliverables
 

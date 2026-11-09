@@ -31,10 +31,10 @@ A checkpoint is a state the project can be in, checked by one observable test.
 | CP0 | Platform up | `/scan`, `/imu/data` and TF stream on the Pi; robot built and measured into the URDF | 2026-10-31 | **done** 2026-10-31 | [`evidence/lidar/2026-10-21_composite_20revs.png`](evidence/lidar/2026-10-21_composite_20revs.png) · test_log 2026-10-30 "IMU at rest" · notes 2026-10-31 "robot built: mounting, rf2o hand tests, variances, first room map" |
 | CP1 | Map and localisation | Room map saved; `slam_toolbox` localisation recovers a 30 cm / 20° wrong start | 2026-11-01 | **done** 2026-11-01 | [`results/maps/2026-10-31_room2.png`](results/maps/2026-10-31_room2.png), [`results/maps/2026-11-01_room2_home_pose.png`](results/maps/2026-11-01_room2_home_pose.png) · test_log 2026-11-01 "6.4 wrong start, 30 cm / 20 deg" · notes 2026-11-01 "base/mapping/localisation launch files, 6.2 localisation on the room graph" |
 | CP2 | OI-8 explained | Cause of rf2o reading 24 % of a push found by a live test | 2026-11-03 | **done** 2026-11-03 (a person behind the robot) | [`evidence/lidar/2026-11-03_oi8_live_push.txt`](evidence/lidar/2026-11-03_oi8_live_push.txt), [`evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`](evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt) · test_log 2026-11-03 "OI-8 live push A", "OI-8 bad bags of 2026-11-01 re-read" · notes 2026-11-03 "OI-8: live push, nobody in the scan" |
-| CP3 | Plan G agreed | Method × condition matrix in `docs/report_plan.md`, outlines rewritten | 2026-11-09 | [~] PR 31 open | PR 31 · notes 2026-11-09 "CA3 plan widened to a method × condition matrix" |
-| CP4 | Offline matrix on existing bags | 216 replay runs with both TUM files; two CSVs in `results/matrix/` | 2026-11-10 | [ ] → `delegate-replay-matrix.md` | will be `results/matrix/2026-11-09_e2_e5_*.csv`, `evidence/lidar/<date>_matrix_runs.txt` |
+| CP3 | Plan H agreed | People as the axis, every method live, empty vs people, in `docs/report_plan.md`; outlines rewritten | 2026-11-09 | [~] PR 31 open | PR 31 · notes 2026-11-09 "CA3 plan widened to a method × condition matrix" (evening addendum) |
+| CP4 | Ready to drive the matrix | Motor safety fixed and merged; live switches (`ekf_params_file`, `ekf:=false`, `localizer:=amcl`) and the run sheet tested; checkpoints and people paths taped | 2026-11-09 | [ ] | test_log rows for each switch; `TASKS.md` §3.1 |
 | CP5 | Robot drives | Wheels raised, then a 1 m straight on the floor with the switch in reach | 2026-11-10 | [ ] motors on `feat/motors`, not merged; review findings in §5.1 | needs a test_log row (none on `feat/motors`) |
-| CP6 | Driven data recorded | Driven straights/spins, 3 checkpoint loops, wrong starts, people loop, E1 runs, all bagged | 2026-11-10 | [ ] | will be `~/bags/2026-11-10_<exp>_run<N>`, one test_log row per run |
+| CP6 | Driven data recorded | E2 48 runs, E3 12 loops + 16 wrong starts, E4 step-ins, E1 5 runs, all live and bagged, tape numbers written down | 2026-11-10 | [ ] | will be `~/bags/2026-11-10_<exp>_<cell>_run<N>`, one test_log row per run |
 | CP7 | Results and slides | Every RQ has a figure and an Our take; no `[if ...]` text left on slides; rehearsal 1 done | 2026-11-11 | [ ] | `report/figures/`, `report/slides_outline.md` |
 | CP8 | Presentation | Delivered | Thu 2026-11-12 | [ ] | — |
 | CP9 | Report submitted | Report, slides, peer assessment in | end of Week 13 | [ ] | — |
@@ -45,8 +45,8 @@ A checkpoint is a state the project can be in, checked by one observable test.
 - [ ] Slide skeleton on the storyline (15 slides) — **all**
 - [ ] Product table, slides 2–3 — **A**
 - [ ] System and demo slides 4–5 — **MT**
-- [ ] Matrix and RQ1–RQ3 slides 6–9 — **S** (needs CP4, CP6)
-- [ ] OI-8, people, hazards, position slides 10–13 — **B**
+- [ ] OI-8, design, RQ1–RQ3 slides 6–10 — **S** (needs CP6)
+- [ ] Step-in, hazards, position slides 11–13 — **B**
 - [ ] Roadmap and verdict slides 14–15 — **A**
 - [ ] Video clips ≤ 120 s, offline copies on two USB sticks (V1–V4) — **MT**, **B**
 - [ ] Q&A answers (10 questions) drafted and drilled — **all**
@@ -63,38 +63,49 @@ A checkpoint is a state the project can be in, checked by one observable test.
 - [ ] §6 Discussion, one Our take per RQ — owners per RQ
 - [ ] §7 Our position, §8 conclusions and costed roadmap — **all**, **A** drafts
 - [ ] References checked against [`report/literature_notes.md`](report/literature_notes.md) — **A**
-- [ ] Final title chosen after E2, E3, E5 — **all**
+- [ ] Final title chosen after E2, E3 — **all**
 - [ ] Peer assessment submitted — **each member**
 
-## 3. Experiments (the matrix) → [`docs/report_plan.md`](docs/report_plan.md) §3–4
+## 3. Experiments (plan H: every method live, empty vs people) → [`docs/report_plan.md`](docs/report_plan.md) §3–4
 
-### 3.1 Offline, on existing bags (CP4) — **S**
-- [ ] Replay harness: EKF variants, `ekf:=false`, `scan_degrade.py`, `matrix_run.sh`, `matrix_an.py` → `delegate-replay-matrix.md` steps 0–4
-- [ ] E2 odometry: 4 configs × 6 bags × 3 replays (72 runs)
-- [ ] E5 lidar degradation: 2 configs × 3 bags × 8 levels × 3 replays (144 runs)
-- [ ] E4 offline: person-behind vs nobody bags through E2's configs (comes out of the E2 run)
-- [ ] Results CSVs, evidence log, test_log rows, notes block, PR
-
-### 3.2 Driven session, Tue 2026-11-10 (CP5, CP6) — **MT** drives, **S** records, **B** people
-- [ ] Charged battery, `vcgencmd get_throttled` = `0x0`
-- [ ] Wheels raised, then one 1 m straight with the switch in reach
+### 3.1 Build before the driven session (CP4) — **S** unless marked
+- [ ] Motor safety on `feat/motors` fixed and merged (§5.1) — **MT**
+- [ ] EKF variants in `delivery_bot_bringup/config/ekf_variants/` (rf2o_imu, rf2o_only, imu_only) with config tests
+- [ ] `base.launch.py`: `ekf_params_file` and `ekf:=false` (static identity `odom → base_footprint`), with launch tests
+- [ ] `navigation.launch.py`: `localizer:=slam|amcl` (AMCL + `map_server` on `2026-10-31_room2.yaml`; default `slam`), with launch tests; AMCL config in `nav2_params.yaml` or a separate file
+- [ ] Run sheet: one command per cell that starts the configuration, records `~/bags/2026-11-10_<exp>_<cell>_run<N>`, and prints the test_log row
+- [ ] Timed `cmd_vel` script for the 1 m straight and 360° spin (E2)
 - [ ] Tape the checkpoints (home + seats) and measure them → build path 9.1
-- [ ] E2: driven 1 m straights ×3 and 360° spins ×3, timed `cmd_vel`, nobody nearby
-- [ ] E3: checkpoint loop ×3 (Nav2 waypoints or teleop); wrong starts at 10/20/30/40 cm and 10/20/30/40°, recovered by a short drive
-- [ ] E4: the loop with 1–2 people walking; one person stepping in front (stop distance, contacts)
-- [ ] E1: home → seat → home runs (arrival error labelled "rough gains")
-- [ ] Video clips V1–V4 during the runs
-- [ ] Fallback if driving fails: the same runs hand-pushed with a stick, nobody behind the robot
+- [ ] Tape the two people paths (one crossing the route, one behind the start) — **B**
+- [ ] Shelve `delegate-replay-matrix.md` (offline replay of old bags; superseded by plan H)
 
-### 3.3 Offline, on the driven bags (after CP6) — **S**
-- [ ] Phase 2: AMCL offline config; replay `slam_toolbox` localisation and AMCL on the same loop bags (E3)
-- [ ] Phase 3: E2 and E5 on the driven bags; compare driven only with driven (motor vibration)
-- [ ] `evo` installed somewhere (Mac Docker or Pi) for ATE/RPE → build path 9.3
+### 3.2 Driven session, Tue 2026-11-10 (CP5, CP6) — **MT** drives, **S** runs the sheet, **B** people
+- [ ] Charged battery and a spare, `vcgencmd get_throttled` = `0x0`
+- [ ] Wheels raised, then one 1 m straight with the switch in reach (CP5)
+- [ ] Freeze config; record the commit
+- [ ] E2: 4 configs × {empty, people} × (1 m straight ×3 + 360° spin ×3) = 48 runs; tape distance and floor-mark heading per run
+- [ ] E3: 2 localisers × {empty, people} × 3 Nav2 loops = 12 loops; stop error at each checkpoint by tape
+- [ ] E3: wrong starts at 10/20/30/40 cm and 10/20/30/40° per localiser, empty room
+- [ ] E4: 3–5 step-ins at walking pace; stop distance, contacts
+- [ ] E1: 5 delivery runs (arrival error labelled "rough gains")
+- [ ] On every run: failure onset (drift, jump, lost), recovery after people leave, failure position
+- [ ] Video clips V1–V4
+- [ ] Fallback if driving fails: E2 by stick-pushing (nobody behind the robot except in people runs); E3 and E1 partial
+
+### 3.3 After the session — **S**
+- [ ] Tape numbers into the RQ1–RQ3 tables; one test_log row per run
+- [ ] `evo` on the bags (Mac Docker or Pi) for pairwise ATE between E3 loops → build path 9.3
+- [ ] Room figure: failure positions against the people paths
 - [ ] Figures with commit and bag in each caption; one Our take per RQ
+- [ ] Back up the bags to `../delivery_bot_pi_backup/`
 
 ### 3.4 Safety — **B**
 - [ ] Hazard table, 6–8 rows: hazard, mitigation, test, pass/fail
-- [ ] Stop wedge vs a person stepping in at walking pace → [`reports/MPC planners for dynamic humans.md`](reports/MPC%20planners%20for%20dynamic%20humans.md) (untracked, commit it)
+- [ ] Stop zone vs a person stepping in at walking pace → [`reports/MPC planners for dynamic humans.md`](reports/MPC%20planners%20for%20dynamic%20humans.md) (untracked, commit it)
+
+### 3.5 Dropped (future work)
+- Lidar degradation (old RQ1/E5): simulated, expensive, tied to nothing we discovered
+- Offline replay matrix on the 10-31 to 11-03 bags: those bags stay background (OI-8, replay noise)
 
 ## 4. SLAM build path (learning track) → [`docs/slam_build_path.md`](docs/slam_build_path.md)
 
@@ -110,7 +121,7 @@ experiments also need.
 - **Stage 6 Localisation:** [ ] 6.1 mapping vs localisation · [x] 6.2 · [x] 6.3 · [x] 6.4 wrong start ⇢ E3
 - **Stage 7 Foxglove:** [x] 7.1 trajectory recorder · [ ] 7.2 layout (navigation layout merged in PR 27; SLAM layout to confirm) · [ ] 7.3 control SLAM from Foxglove (buttons run; owner steps left, §5)
 - **Stage 8 Autonomous mapping:** [ ] 8.1 frontier theory · [x] 8.2 build explore_lite · [~] 8.3 explore.launch.py (PR 30) · [ ] 8.4 first supervised run (needs motors) · [ ] 8.5 compare with manual mapping
-- **Stage 9 Evaluation:** [ ] 9.1 checkpoints ⇢ E3 · [ ] 9.2 evaluation runs ⇢ CP6 · [ ] 9.3 metrics script ⇢ 3.1, 3.3 · [ ] 9.4 IMU ablation ⇢ E2 · [ ] 9.5 Pi load · [ ] 9.6 SLAM section ⇢ report §5 · [ ] 9.7 people, driven ⇢ E4
+- **Stage 9 Evaluation:** [ ] 9.1 checkpoints ⇢ E3 · [ ] 9.2 evaluation runs ⇢ CP6 · [ ] 9.3 metrics script ⇢ 3.3 · [ ] 9.4 IMU ablation ⇢ E2 · [ ] 9.5 Pi load · [ ] 9.6 SLAM section ⇢ report §5 · [ ] 9.7 people, driven ⇢ E4
 - **Stage X Extensions:** [ ] X.1 deskew · [ ] X.2 people filtering · [ ] X.3 map quality without truth (future work in the report)
 
 ## 5. Robot, integration and housekeeping
@@ -135,7 +146,7 @@ experiments also need.
 
 ### 5.3 Repo
 - [~] Merge PR 31 (this plan) — **S**
-- [ ] Commit or delete the untracked files in the Mac checkout: `delegate-navigation-phase1.md`, `delegate-oi8-live-push.md` (both done), `delegate-replay-matrix.md`, `reports/`, `research_notes/`
+- [ ] Commit or delete the untracked files in the Mac checkout: `delegate-navigation-phase1.md`, `delegate-oi8-live-push.md` (both done), `delegate-replay-matrix.md` (shelved by plan H), `reports/`, `research_notes/`
 - [ ] Two sessions share the Mac checkout and switch its branches: use a worktree per session
 - [ ] Back up `~/bags` and `~/maps` to `../delivery_bot_pi_backup/` after the driven session
 
@@ -154,7 +165,7 @@ Only measured results, each with its date and source. Hypotheses live in
 
 | Date | Finding | Number | Evidence · log | Feeds |
 | --- | --- | --- | --- | --- | 
-| 2026-10-21 | Lidar rate and echo rate | A1M8 7.05 Hz; 26–29 % of pings return nothing; gaps follow the room, not the lidar | [`evidence/lidar/2026-10-21_composite_20revs.png`](evidence/lidar/2026-10-21_composite_20revs.png), [`evidence/lidar/2026-10-21_scan_run1.png`](evidence/lidar/2026-10-21_scan_run1.png) · OI-4 in `docs/CA3.md` · notes 2026-10-20/21 "P1 lidar bring-up on the old Pi", 2026-10-30 "3.4 startup race, near-return ring is the room" | Report §5.1, RQ1 context |
+| 2026-10-21 | Lidar rate and echo rate | A1M8 7.05 Hz; 26–29 % of pings return nothing; gaps follow the room, not the lidar | [`evidence/lidar/2026-10-21_composite_20revs.png`](evidence/lidar/2026-10-21_composite_20revs.png), [`evidence/lidar/2026-10-21_scan_run1.png`](evidence/lidar/2026-10-21_scan_run1.png) · OI-4 in `docs/CA3.md` · notes 2026-10-20/21 "P1 lidar bring-up on the old Pi", 2026-10-30 "3.4 startup race, near-return ring is the room" | Report §5.1 |
 | 2026-10-30 | IMU at rest | 100 Hz, gyro z std 0.00175 rad/s | test_log 2026-10-30 "IMU at rest" | §5.1 |
 | 2026-10-31 | Gyro on a hand-turned full turn | 360.2° for 360° | `~/bags/2026-10-31_turn_194945` · test_log 2026-10-31 "3.2 spin only" | RQ2 |
 | 2026-10-31 | rf2o by hand, nobody behind | turn 352.9° (−2 %); 1 m push 0.962 m (−3.8 %, window 39–50 s) | `~/bags/2026-10-31_turn_194945`, `~/bags/2026-10-31_push_195343` · test_log 2026-10-31 "3.2 spin only", "3.2 forward move"; 2026-11-02 "live push on the good bag by window" | RQ2 baseline |
@@ -164,8 +175,8 @@ Only measured results, each with its date and source. Hypotheses live in
 | 2026-11-01 | Wrong-start basin, `slam_toolbox` localisation | 30 cm / 20° recovers after a push; 31° does not (one case per angle) | [`results/maps/2026-11-01_room2_home_pose.png`](results/maps/2026-11-01_room2_home_pose.png) · test_log 2026-11-01 "6.4 wrong start, 30 cm / 20 deg", "6.4 wrong start, 30 cm / 31 deg" | RQ3 baseline |
 | 2026-11-01 | Lidar start hang | `RPLIDAR running` with no S/N, several retries | OI-6 · `docs/system/06_troubleshooting.md` · test_log 2026-11-01 "6.4 wrong start, 30 cm / 31 deg" (first start hung) | Hazard table, Ops |
 | 2026-11-02 | Pi under-voltage | `throttled=0x50005` on 2026-11-02 and 2026-11-03 | test_log 2026-11-02 "replay, control" · notes 2026-11-02 "OI-8: offline rig fixed, format still undecided; Pi is under-voltage" | Protocol: charged battery |
-| 2026-11-03 | Replay is not repeatable | 3 replays of one bag: 0.679 / 0.592 / 0.531 m (~12 %); good-bag replay 71 % of live | test_log 2026-11-02 "replay, control"; 2026-11-03 "replay repeatability, good bag" · notes 2026-11-03 "OI-8: replay repeatability and rate" | ≥ 3 replays per cell |
-| 2026-11-03 | **OI-8: a person behind the robot** | rf2o read 0.242 of 0.862 m and 0.307 of 1.222 m (25–28 %); nobody in the scan reads correctly; scan format cleared | [`evidence/lidar/2026-11-03_oi8_live_push.txt`](evidence/lidar/2026-11-03_oi8_live_push.txt), [`evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`](evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt), `~/bags/2026-11-01_push_225752`, `_230535`, `2026-11-03_*_push_ac*` · test_log 2026-11-03 "OI-8 live push A/B", "OI-8 bad bags of 2026-11-01 re-read" · notes 2026-11-03 "OI-8: live push, nobody in the scan" | RQ4, signature slide |
+| 2026-11-03 | Replay is not repeatable | 3 replays of one bag: 0.679 / 0.592 / 0.531 m (~12 %); good-bag replay 71 % of live | test_log 2026-11-02 "replay, control"; 2026-11-03 "replay repeatability, good bag" · notes 2026-11-03 "OI-8: replay repeatability and rate" | Why plan H uses live runs, not replays |
+| 2026-11-03 | **OI-8: a person behind the robot** | rf2o read 0.242 of 0.862 m and 0.307 of 1.222 m (25–28 %); nobody in the scan reads correctly; scan format cleared | [`evidence/lidar/2026-11-03_oi8_live_push.txt`](evidence/lidar/2026-11-03_oi8_live_push.txt), [`evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`](evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt), `~/bags/2026-11-01_push_225752`, `_230535`, `2026-11-03_*_push_ac*` · test_log 2026-11-03 "OI-8 live push A/B", "OI-8 bad bags of 2026-11-01 re-read" · notes 2026-11-03 "OI-8: live push, nobody in the scan" | RQ1, RQ2; the discovery slide |
 | 2026-11-08 | Nav2 planner on the room map (PR 29, unmerged) | 5/5 reachable goals planned, 1.18–2.70 m, 1–5 ms | `results/maps/2026-11-08_planner_paths.png` (on PR 29) · PR 29 test_log row | E1, system slide |
 
 ## 7. Open decisions
