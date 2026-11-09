@@ -213,11 +213,4 @@ Hypotheses until the data decides. Never present one as a finding before its exp
 
 ## 8. Deliverables
 
-- [ ] Slides (claim headlines, "Our take" marker, paper keys in footers)
-- [ ] Video clips ≤ 120 s total, offline copies
-- [ ] Report in the NTULearn template (download it)
-- [ ] References checked against [literature_notes.md](../report/literature_notes.md)
-- [ ] Q&A answers (8 questions) drafted and drilled
-- [ ] Two full rehearsals with timing per presenter
-- [ ] Peer assessment submitted by each member
-- [ ] Final title chosen after the matrix results (E2, E3, E5)
+The deliverables checklist moved to [`../TASKS.md`](../TASKS.md) §2 on 2026-11-09.

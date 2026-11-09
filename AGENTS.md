@@ -76,29 +76,13 @@ Known blockers live in [`docs/CA3.md`](docs/CA3.md) as OI-1…OI-5. OI-3 and OI-
 resolved and OI-4 (the 33 % echo rate) is mitigated: the first map is made and gaps
 follow the room, not the lidar. The open risks now are in the next-actions list.
 
-## Next actions, in order
+## Next actions
 
-Done and recorded in `docs/test_log.md`: P0 install and rf2o build, `/dev/rplidar`,
-`i2c-tools`, echo-rate probe, hand-push rf2o/SLAM runs (3.2, 4.4, 5.4), 5.5 sweep with
-`slam_mapping.yaml` frozen. Build path progress (stages 0–9) is in
-`docs/slam_build_path.md`.
-
-0. **CA3 report and presentation (presentation est. Thu 2026-11-12, report end of Week 13).** Plan G of 2026-11-09 in [`docs/report_plan.md`](docs/report_plan.md) (D8a): a method × condition matrix answering RQ1 lidar spec, RQ2 odometry, RQ3 localiser, RQ4 people, with E1 as the delivery demo. Outline in `report/CA3_report.md`, slides in `report/slides_outline.md`, sources in `report/literature_notes.md`. In order:
-   - **a. Replay matrix on existing bags (now, offline, Sherman).** E2: 4 EKF configs (rf2o only, rf2o + IMU, IMU heading only, none). E5: scans cut in beams, rate and range (extend the range-cut replay from PR 25). An offline AMCL config for E3 (do not add AMCL to the driving `nav2_params.yaml`). ≥ 3 replays per cell; bags listed in the plan's data-status table.
-   - **b. One driven session (Tue 2026-11-10, charged battery, motors in, rough gains).** Wheels raised first, then one 1 m straight with the motor switch in reach. Then driven 1 m straights and 360° spins (E2), the checkpoint loop ×3 by Nav2 waypoints or teleop plus wrong starts recovered by a short drive (E3), the loop with 1–2 people walking and one step-in (E4), E1 runs. Fallback if driving fails: hand-push with a stick, nobody behind the robot.
-   - **c. Replay the new bags, then `evo`, figures and one Our take per RQ.** Each number gets a `docs/test_log.md` row with its command.
-   - **d. Offline E3:** replay `slam_toolbox` localisation and AMCL on the same driven loop bags. Compare driven bags only with driven bags (motor vibration reaches the IMU). E1 arrival error is labelled "rough gains".
-   - **e. Report and slides:** product table and background (A), hazard table (B, uses `reports/MPC planners for dynamic humans.md`), rehearsals Wed 2026-11-11.
-1. Stage 6 is done by hand (6.2 to 6.4, 2026-11-01). Left from it: the second tape gap on the map (5.4); the new home mark is taped at the old position (the original tape was lost), so `goals.yaml` home stays 0, 0, 0.
-2. **OI-8 closed 2026-11-03.** rf2o read 24 % of a push on 2026-11-01 because a person walked behind the robot (live pushes with nobody in the scan cleared the scan format). It is now the first data point for RQ4. Rule kept: during every odometry run, nobody behind the robot unless the run is a people run.
-3. Keep the camera off while mapping, or accept EKF `Failed to meet update rate`
-   (`frequency` is now 20). The 20 Hz late-update count is still unconfirmed on a quiet Pi (closure 0.115 m against 0.109 m); rerun the check with nothing else running.
-4. Still waiting on the robot: 3.3 failure tests, 4.5 fusion comparison (now E2 in the matrix), stages 8.4
-   and 9. Motor-driven work (P2, P6–P8) waits on the teammate.
-5. Foxglove buttons (`tools/robot_control.py`, 2026-11-02) run on the Pi and are logged in `notes/notes.md` and `docs/test_log.md`. Still open: the owner steps in the README (sudoers rule, linger and the systemd unit), `/imu_node/recalibrate` with the robot nudged, `/stack/localisation`, and confirming the cockpit tiles change in Foxglove after re-importing `docs/foxglove/cockpit_layout.json`. Never pass `dry_run:=false` from it.
-6. Analysis scripts that produced the logged numbers are in `tools/analysis/`; bags
-   and maps live only on the Pi (`~/bags`, `~/maps`), backed up by hand to
-   `../delivery_bot_pi_backup/` on the Mac.
+All open tasks, checkpoints and measured findings live in **[`TASKS.md`](TASKS.md)**, the one
+task tree. Add and tick tasks there, not here. In short (2026-11-09): CA3 presentation Thu
+2026-11-12 on plan G ([`docs/report_plan.md`](docs/report_plan.md)); offline replay matrix on
+existing bags (CP4, `delegate-replay-matrix.md`); driven session Tue 2026-11-10 (CP5, CP6);
+then results, slides and rehearsals.
 
 ## Conventions
 
@@ -159,6 +143,7 @@ One repo, three copies. The GitHub repo (public as of 2026-11-01, see OI-7) is t
 ```
 README.md          what the robot is, hardware, stack, common commands
 AGENTS.md          this file — how to work here
+TASKS.md           the task tree: every open task, checkpoint and measured finding
 notes/notes.md     dated lab notebook, newest first, append-only
 docs/CA3.md        assessed-project record: decisions D1–D6, phases, open issues
 docs/design-plan.md  the Oct 8 design plan (superseded where docs/CA3.md says so)
