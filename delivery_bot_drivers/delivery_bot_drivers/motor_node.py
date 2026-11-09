@@ -7,7 +7,8 @@ What it does:
   * A 20 Hz timer (_control_step) splits v and w into wheel speeds,
     v_left/right = v -/+ w * wheel_base / 2, and turns each one into a PWM duty
     and a direction: duty = min_duty + gain * |speed|, clamped to max_duty.
-    A wheel slower than min_wheel_speed gets duty 0. Direction is +1 (forward)
+    A wheel slower than min_wheel_speed gets duty 0. A wheel starting from rest
+    (or reversing) gets at least kick_duty for kick_s. Direction is +1 (forward)
     or -1 (backward), never 0; direction pins are set before the duty.
 
 Safety contract (do not weaken):
@@ -32,7 +33,7 @@ gpiozero is imported inside ``__init__``, so the module imports without it.
 
 Parameters read (see config/drivers.yaml): dry_run, ena_pin, in1_pin, in2_pin,
 enb_pin, in3_pin, in4_pin, pwm_hz, wheel_base, max_duty, min_duty, gain_left,
-gain_right, min_wheel_speed, watchdog_s, stop_dist_m, stop_half_angle_deg,
+gain_right, min_wheel_speed, kick_duty, kick_s, watchdog_s, stop_dist_m, stop_half_angle_deg,
 scan_timeout_s, laser_forward_rad. use_gyro_loop, kp_omega and ki_omega are in
 the YAML but not read (the gyro loop in _on_imu is not implemented).
 """
@@ -61,6 +62,25 @@ def duty_for(speed: float, gain: float, min_duty: float, max_duty: float,
         return 0.0, direction  # dont spin
     duty = min_duty + gain * speed
     return max(0.0, min(duty, max_duty)), direction  # clamp to max_duty
+
+
+def kick(duty: float, direction: int, prev: tuple[float, int],
+         started: float, now: float, kick_duty: float,
+         kick_s: float) -> tuple[float, float]:
+    """
+    Kick-start a wheel from rest: (duty to write, start time).
+
+    A wheel that was at duty 0 (or turned round) starts now; for kick_s
+    seconds it gets at least kick_duty, then the fitted duty. Static friction
+    needs about 0.20 duty, a rolling wheel much less (test_log 2026-11-09).
+    """
+    if duty <= 0:
+        return duty, started
+    if prev[0] <= 0 or prev[1] != direction:
+        started = now
+    if now - started < kick_s:
+        duty = max(duty, kick_duty)
+    return duty, started
 
 
 def blocked(ranges, angle_min: float, angle_increment: float,
@@ -113,6 +133,11 @@ class MotorNode(Node):
                                                      0.5).value
         self.forward_angle = self.declare_parameter('laser_forward_rad',
                                                     0.0).value
+        # kick-start from rest, clamped to max_duty
+        self.kick_duty = min(
+            self.declare_parameter('kick_duty', 0.30).value, self.max_duty)
+        self.kick_s = self.declare_parameter('kick_s', 0.15).value
+        self.kick_start = {'l': -math.inf, 'r': -math.inf}
         # last duty and direction per wheel, what dry run "drives"
         self.last = {'l': (0.0, 1), 'r': (0.0, 1)}
         self._driving = False  # edge-triggers the watchdog log line
@@ -230,8 +255,13 @@ class MotorNode(Node):
                 'linear zeroed', throttle_duration_sec=1.0)
         # differential drive
         self.v_left, self.v_right = wheel_speeds(v, self.w, self.wheel_base)
-        self.set_wheel(*self._duty_for('l', self.v_left))
-        self.set_wheel(*self._duty_for('r', self.v_right))
+        t = now.nanoseconds * 1e-9
+        for side, speed in (('l', self.v_left), ('r', self.v_right)):
+            _, duty, direction = self._duty_for(side, speed)
+            duty, self.kick_start[side] = kick(
+                duty, direction, self.last[side], self.kick_start[side], t,
+                self.kick_duty, self.kick_s)
+            self.set_wheel(side, duty, direction)
         if self.dry_run:
             self.get_logger().info(
                 f'dry run duty/dir: l={self.last["l"]} r={self.last["r"]}',

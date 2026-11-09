@@ -20,6 +20,8 @@ motor_node:
     gain_left: 0.44       # duty per m/s, fitted 2026-11-09: direct sweep speed = 2.25 x (duty - 0.11); live check 0.30 m/s -> 0.75 m in 2.6 s (test_log)
     gain_right: 0.44      # fitted 2026-11-09, wheels matched (3-8 cm left drift per 0.6-0.85 m)
     min_wheel_speed: 0.01 #min calculated wheel speed
+    kick_duty: 0.30      # kick-start from rest: static friction needs ~0.20 duty, 0.15 m/s maps to 0.176 and stalls (test_log 2026-11-09); 0.30 moved 0.85 m in 2 s
+    kick_s: 0.15         # kick length, brief default, not measured
     watchdog_s: 0.5
     # lidar stop, brief default (docs/system/05_config_reference.md)
     stop_dist_m: 0.20
