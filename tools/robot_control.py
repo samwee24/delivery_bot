@@ -10,7 +10,7 @@ Entries that share a group are mutually exclusive. Never passes dry_run:=false a
 touches /cmd_vel or GPIO: motors stay the safety node's business (AGENTS.md rule 1).
 
 Services (all std_srvs/Trigger unless noted), request {} in Foxglove's Call Service panel:
-    /stack/base  /stack/mapping  /stack/localisation  /stack/stop
+    /stack/base  /stack/mapping  /stack/localisation  /stack/navigation  /stack/stop
     /camera/start  /camera/stop  /stream/start  /stream/audio  /stream/stop
     /bag/start  /bag/stop      parameters bag_label, bag_topics (Parameters panel)
     /stream/start              parameters stream_size, stream_fps (default 640x480 at 15 fps)
@@ -19,7 +19,7 @@ Services (all std_srvs/Trigger unless noted), request {} in Foxglove's Call Serv
 Creates /marker without publishing on it, so the recorder subscribes before the first
 Foxglove "push start" message.
 Status, 1 Hz (the cockpit layout's indicators read these; a missing source gives a safe value):
-    /robot/status/stack         String   base|mapping|localisation|none (stacks started here)
+    /robot/status/stack         String   base|mapping|localisation|navigation|none (stacks started here)
     /robot/status/video         String   camera|stream|audio|off
     /robot/status/bag           String   bag directory name, or off
     /robot/status/bag_s         Float32  seconds recording, 0 when off
@@ -56,7 +56,8 @@ LAUNCH = 'ros2 launch delivery_bot_bringup '
 PROCS = {
     'base': (LAUNCH + 'base.launch.py bridge:=false', 'stack'),
     'mapping': (LAUNCH + 'mapping.launch.py bridge:=false', 'stack'),
-    'localisation': (LAUNCH + 'navigation.launch.py bridge:=false', 'stack'),
+    'localisation': (LAUNCH + 'navigation.launch.py bridge:=false nav:=false', 'stack'),
+    'navigation': (LAUNCH + 'navigation.launch.py bridge:=false nav:=true', 'stack'),
     'camera': (LAUNCH + 'camera.launch.py', 'video0'),
     'stream': (f'python3 {HERE}/streams/audio_stream.py --video', 'video0'),
     'audio': (f'python3 {HERE}/streams/audio_stream.py', 'video0'),
@@ -128,7 +129,7 @@ def _running(procs: dict, name: str) -> bool:
 
 
 def stack_state(procs: dict) -> str:
-    return next((n for n in ('base', 'mapping', 'localisation') if _running(procs, n)), 'none')
+    return next((n for n in ('base', 'mapping', 'localisation', 'navigation') if _running(procs, n)), 'none')
 
 
 def video_state(procs: dict) -> str:
@@ -181,6 +182,7 @@ class RobotControl(Node):
         routes = {'/stack/base': lambda: self.stack('base'),
                   '/stack/mapping': lambda: self.stack('mapping'),
                   '/stack/localisation': lambda: self.stack('localisation'),
+                  '/stack/navigation': lambda: self.stack('navigation'),
                   '/stack/stop': self.stack_stop,
                   '/camera/start': lambda: self.start('camera'),
                   '/camera/stop': lambda: self.stop('camera'),
