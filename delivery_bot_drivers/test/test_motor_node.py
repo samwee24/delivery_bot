@@ -8,10 +8,10 @@ from delivery_bot_drivers.motor_node import blocked, duty_for, MotorNode, wheel_
 import pytest
 import rclpy
 
-DUTY = dict(gain=2.0, min_duty=0.11, max_duty=0.85, min_wheel_speed=0.01)
+DUTY = {'gain': 2.0, 'min_duty': 0.11, 'max_duty': 0.85, 'min_wheel_speed': 0.01}
 # 360 beams, 1 degree apart, angle 0 at index 0
-SCAN = dict(angle_min=0.0, angle_increment=radians(1), range_min=0.15,
-            stop_dist=0.20, half_angle=radians(35))
+SCAN = {'angle_min': 0.0, 'angle_increment': radians(1), 'range_min': 0.15,
+        'stop_dist': 0.20, 'half_angle': radians(35)}
 
 
 def free_scan(**close):
@@ -95,7 +95,7 @@ def test_respects_forward_angle() -> None:
 
 @pytest.fixture
 def dry_node(monkeypatch):
-    """A MotorNode in dry run; gpiozero is made unimportable to prove it."""
+    """Build a MotorNode in dry run; gpiozero is made unimportable to prove it."""
     monkeypatch.setitem(sys.modules, 'gpiozero', None)
     rclpy.init()
     node = MotorNode()
