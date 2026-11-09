@@ -5,7 +5,8 @@ Order of ownership for tf matters:
   false), because two publishers of one transform make the map spin.
 
 Motors default to dry_run: the launch argument exists so live testing is a
-deliberate act, never a default.
+deliberate act, never a default. motor_node in dry run never touches GPIO. The
+motor battery switch is the kill switch.
 
 What this file is expected to start (see docs/07_ros_stack.md):
 
@@ -13,13 +14,15 @@ What this file is expected to start (see docs/07_ros_stack.md):
   rplidar_node                   /scan, on /dev/rplidar at 115200
   rf2o_laser_odometry            /scan -> /odom_rf2o, publish_tf false
   imu_node                       /imu/data, from delivery_bot_drivers
-  odom_covariance_relay          /odom_rf2o -> /odom_rf2o_cov (delivery_bot_slam)
+  odom_covariance_relay          /odom_rf2o ->
+                                 /odom_rf2o_cov (delivery_bot_slam)
   ekf_filter_node                robot_localization, config/ekf.yaml
-  motor_node                     NOT started yet (not written); dry_run is declared
-                                 now so callers and mapping.launch.py can pass it
+  motor_node                     /cmd_vel -> L298N GPIO, config/drivers.yaml,
+                                 20 Hz control, 0.5 s watchdog, lidar stop
   foxglove_bridge                port 8765
 
-Launch arguments to declare: dry_run (default true), use_sim_time (false),
+Launch arguments: dry_run (default true), bridge (true), use_sim_time
+(false), serial_port (/dev/rplidar), rf2o_delay (2.0 s),
 ekf_params_file (default: installed config/ekf.yaml), ekf (default true).
 ekf:=false starts an identity static odom -> base_footprint instead of the EKF, so
 slam_toolbox does pure scan matching (E2 "none" config). The E2 variants are in
@@ -43,8 +46,9 @@ def generate_launch_description() -> LaunchDescription:
     bringup = get_package_share_directory('delivery_bot_bringup')
     drivers = get_package_share_directory('delivery_bot_drivers')
     slam_pkg = get_package_share_directory('delivery_bot_slam')
-    urdf = os.path.join(get_package_share_directory('delivery_bot_description'),
-                        'urdf', 'delivery_bot.urdf.xacro')
+    urdf = os.path.join(
+                    get_package_share_directory('delivery_bot_description'),
+                    'urdf', 'delivery_bot.urdf.xacro')
     sim = LaunchConfiguration('use_sim_time')
 
     return LaunchDescription([
@@ -65,11 +69,13 @@ def generate_launch_description() -> LaunchDescription:
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(bringup, 'launch', 'lidar.launch.py')),
-            launch_arguments={'serial_port': LaunchConfiguration('serial_port')}.items()),
+            launch_arguments={'serial_port':
+                              LaunchConfiguration('serial_port')}.items()),
         TimerAction(
             period=LaunchConfiguration('rf2o_delay'),
             actions=[Node(
-                package='rf2o_laser_odometry', executable='rf2o_laser_odometry_node',
+                package='rf2o_laser_odometry',
+                executable='rf2o_laser_odometry_node',
                 name='rf2o_laser_odometry', output='screen',
                 parameters=[{
                     'laser_scan_topic': '/scan', 'odom_topic': '/odom_rf2o',
@@ -79,12 +85,20 @@ def generate_launch_description() -> LaunchDescription:
                     'use_sim_time': sim}])]),
         Node(package='delivery_bot_slam', executable='odom_covariance_relay',
              name='odom_covariance_relay', output='screen',
-             parameters=[os.path.join(slam_pkg, 'config', 'odom_covariance.yaml'),
+             parameters=[os.path.join(slam_pkg, 'config',
+                                      'odom_covariance.yaml'),
                          {'use_sim_time': sim}]),
         Node(package='delivery_bot_drivers', executable='imu_node',
              name='imu_node', output='screen',
              parameters=[os.path.join(drivers, 'config', 'drivers.yaml'),
                          {'use_sim_time': sim}]),
+        Node(package='delivery_bot_drivers', executable='motor_node',
+             name='motor_node', output='screen',
+             parameters=[os.path.join(drivers, 'config', 'drivers.yaml'),
+                         {'dry_run': ParameterValue(
+                             LaunchConfiguration('dry_run'),
+                             value_type=bool),
+                         'use_sim_time': sim}]),
         Node(package='robot_localization', executable='ekf_node',
              name='ekf_filter_node', output='screen',
              parameters=[LaunchConfiguration('ekf_params_file'),
@@ -98,5 +112,5 @@ def generate_launch_description() -> LaunchDescription:
              condition=UnlessCondition(LaunchConfiguration('ekf'))),
         Node(package='foxglove_bridge', executable='foxglove_bridge',
              parameters=[{'use_sim_time': sim}],
-             condition=IfCondition(LaunchConfiguration('bridge'))),
+             condition=IfCondition(LaunchConfiguration('bridge')))
     ])

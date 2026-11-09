@@ -50,7 +50,7 @@ touching any filter.
 | `rf2o_laser_odometry` | built from source | `/odom_rf2o` (velocity) | `/scan` | `publish_tf: false`, `base_frame_id: base_footprint`, `odom_frame_id: odom`, `freq: 10.0` |
 | `imu_node` | `delivery_bot_drivers` | `/imu/data` | — | `bus 1`, `address 104` (0x68), `rate_hz 100`, 3 s bias calibration, `calib_max_std 0.01` |
 | `ekf_filter_node` | `robot_localization` | `odometry/filtered`, **`odom → base_footprint`** | `/odom_rf2o_cov` (rf2o via `odom_covariance_relay`, test_log 2026-10-30, 4.3), `/imu/data` | `two_d_mode`, `20 Hz` (lowered from 30, `ekf.yaml`; 19.93 Hz measured, test_log 2026-11-01), `world_frame: odom` |
-| `motor_node` | `delivery_bot_drivers` | — | `/cmd_vel` (`TwistStamped`) | pins 12/5/6/13/20/21, `max_duty 0.85`, `watchdog_s 0.5`, **`dry_run` overridden to `true` by the launch file** |
+| `motor_node` | `delivery_bot_drivers` | — | `/cmd_vel` (`TwistStamped`) | pins 12/5/6/13/26/16, `pwm_hz 1000`, 20 Hz control, duty = `min_duty 0.11` + `gain` × \|wheel speed\| clamped to `max_duty 0.85`, `watchdog_s 0.5`, lidar stop (`stop_dist_m 0.20`, ±35°), stale-scan stop (`scan_timeout_s 0.5`); **`dry_run` default true, the launch file passes it; live needs `dry_run:=false` on the command line** |
 | `foxglove_bridge` | `foxglove_bridge` | — | — | `port 8765`, `address 0.0.0.0` |
 | `robot_state_publisher` | — | `tf`, `robot_description` | — | URDF via `xacro` |
 | `run_save` | `delivery_bot_slam` (started by `mapping.launch.py`) | service `/run/save` | calls `/slam_toolbox/save_map`, `/slam_toolbox/serialize_map` | `maps_dir ~/maps`; map, pose graph and config YAMLs under one dated name |
@@ -59,7 +59,7 @@ touching any filter.
 `imu_node` also serves `/imu_node/recalibrate` (`Trigger`: re-measure gyro bias, fails if the board moves).
 
 Launches: `base.launch.py` (everything above), `lidar.launch.py`, `mapping.launch.py`,
-`navigation.launch.py`. `base.launch.py` declares `dry_run:=true`, `use_sim_time:=false` and `bridge:=true`;
+`navigation.launch.py`. `base.launch.py` starts `motor_node` and declares `dry_run:=true` (passed to `motor_node`), `use_sim_time:=false` and `bridge:=true`;
 `mapping` and `navigation` pass `bridge` through. For the experiments `base.launch.py` also takes `ekf` (`false` = identity `odom -> base_footprint`, no EKF) and `ekf_params_file` (`config/ekf_variants/`), and `navigation.launch.py` forwards both and adds `localizer:=slam|amcl` (AMCL: `map_server` on `map_yaml`, `amcl` from `config/amcl.yaml`, Nav2 5 s later); defaults keep the old behaviour. `robot_control` starts stacks with `bridge:=false` because it owns the one
 Foxglove bridge on port 8765 (two bridges fight for the port). The buttons are tabulated in the README.
 
@@ -83,7 +83,7 @@ plan — just inside `robot_localization` instead of our own filter.
 | Parameter | Placeholder | Filled in by |
 | --- | --- | --- |
 | `wheel_base` | 0.156 (measured 2026-10-31) | tape measure |
-| `dead_zone_left/right` | 0.35 | P6 calibration |
+| `min_duty` | 0.11, one value for both wheels; replaces `dead_zone_left/right` (commented out in the YAML). The teammate's 12 V test, no `test_log` row yet | P6 calibration, logged |
 | `gain_left/right` | 2.0 duty per m/s | P6 calibration |
 | `gyro_scale_z` | 1.0 (measured 2026-10-31, one hand turn, -360.2° for 360°; test_log 2026-10-31) | 5-spin test still to do |
 | `ekf.yaml` covariances | defaults; the rf2o twist variances (`vx_variance` 1e-4, `vyaw_variance` 5e-3) and `gyro_var` 1e-4 are fitted 2026-10-31 from two hand-moved bags (test_log 2026-10-31, 4.4) | recheck with motors running |
@@ -92,11 +92,12 @@ plan — just inside `robot_localization` instead of our own filter.
 
 1. **`dry_run` defaults to `true`.** `motor_node` computes and logs duties but never
    touches GPIO until you pass `dry_run:=false`. Good default; surprising if forgotten.
+   Live, it also stops linear motion at 0.20 m (±35°) and stops on a stale scan.
 2. **Jazzy publishes `TwistStamped`.** Nav2 does; `teleop_twist_keyboard` needs
    `-p stamped:=true`, otherwise the robot ignores commands and looks dead.
 3. **`twist_mux`/safety layer is not in the launch file yet.** The plan's "safety node
    owns the motors" rule is not yet enforced — `motor_node` subscribes to `/cmd_vel`
-   directly. Until a mux exists, the watchdog (`0.5 s`) is the only protection.
+   directly. Until a mux exists, the watchdog (`0.5 s`) and the lidar stop in `motor_node` are the protection.
 4. **Stale Foxglove bridge holds 8765**: `sudo fuser -k 8765/tcp` before relaunching.
 5. **Non-interactive SSH does not source `.bashrc`** — always `source /opt/ros/jazzy/setup.bash`
    and `source ~/ros2_ws/install/setup.bash` explicitly in the command.

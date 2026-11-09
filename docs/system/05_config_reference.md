@@ -40,10 +40,11 @@ imu:
   rate_hz: 100
   calib_seconds: 3          # refuse to start if the robot moves during this
 motors:
-  pins: {ena: 12, in1: 5, in2: 6, enb: 13, in3: 20, in4: 21}
+  pins: {ena: 12, in1: 5, in2: 6, enb: 13, in3: 26, in4: 16}   # rewired 2026-11-08
   pwm_hz: 1000
   max_duty: 0.85
-  dead_zone: {left: 0.35, right: 0.35}   # FITTED in P6
+  min_duty: 0.11            # both wheels; replaces dead_zone. Teammate's 12 V test, not yet logged
+  min_wheel_speed: 0.01     # m/s, slower wheel commands give duty 0
   gain: {left: 2.0, right: 2.0}          # duty per m/s, FITTED in P6
 control:
   v_max: 0.15               # m/s cap — safety, do not raise casually
