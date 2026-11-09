@@ -128,9 +128,10 @@ experiments also need.
 
 ### 5.1 Motors and navigation — **MT** unless marked
 - [~] Motors and rough gains on `feat/motors` (3d295f7, 3fed2ff); open a PR to `main`. Review of 2026-11-09 (not yet sent to MT):
+  - [ ] Fixes for the items below are a worker prompt, `delegate-motor-safety.md` (PR into `feat/motors` for MT to review)
   - [ ] Dry run removed: `base.launch.py` always starts `motor_node` live, so the mapping, localisation and navigation stacks, the Foxglove stack buttons and PR 30's explore all drive the wheels whenever anything publishes `/cmd_vel`. Restore `dry_run` (default `true`) in the node; the test `test_base_declares_dry_run_true_by_default` was edited to expect `false` and should go back
   - [ ] No lidar stop (`stop_dist_m`): only the 0.5 s watchdog and Nav2's collision monitor; teleop has no obstacle stop (AGENTS rule 1)
-  - [ ] `motor_node` subscribes `TwistStamped` only; `nav2_params.yaml` sets no `enable_stamped_cmd_vel`. Check `ros2 topic info /cmd_vel -v` shows one type with Nav2 up, or Nav2 and the motors will not talk
+  - [~] `/cmd_vel` type: Nav2 Jazzy defaulted to plain `Twist`, `motor_node` takes `TwistStamped` only. Fixed in PR 32 (`enable_stamped_cmd_vel: true` on 5 Nav2 nodes), checked on the Pi 2026-11-09: all `/cmd_vel*` endpoints TwistStamped · test_log 2026-11-09 "Nav2 `/cmd_vel` message type" · notes 2026-11-09 "Nav2 now publishes TwistStamped". Merge PR 32
   - [ ] No tests for `_duty_for` and the wheel split (definition of done); no test_log row for the first drive
   - [ ] Gains left 3.0 vs right 1.0 ("rough"): label E1 arrival error accordingly; calibrate with a 1 m straight
 - [~] Nav2 glue: navigation button, `save_goal`, `deliver`, planner check (PR 29); live test of `save_goal` and `deliver` still to do
@@ -177,6 +178,8 @@ Only measured results, each with its date and source. Hypotheses live in
 | 2026-11-02 | Pi under-voltage | `throttled=0x50005` on 2026-11-02 and 2026-11-03 | test_log 2026-11-02 "replay, control" · notes 2026-11-02 "OI-8: offline rig fixed, format still undecided; Pi is under-voltage" | Protocol: charged battery |
 | 2026-11-03 | Replay is not repeatable | 3 replays of one bag: 0.679 / 0.592 / 0.531 m (~12 %); good-bag replay 71 % of live | test_log 2026-11-02 "replay, control"; 2026-11-03 "replay repeatability, good bag" · notes 2026-11-03 "OI-8: replay repeatability and rate" | Why plan H uses live runs, not replays |
 | 2026-11-03 | **OI-8: a person behind the robot** | rf2o read 0.242 of 0.862 m and 0.307 of 1.222 m (25–28 %); nobody in the scan reads correctly; scan format cleared | [`evidence/lidar/2026-11-03_oi8_live_push.txt`](evidence/lidar/2026-11-03_oi8_live_push.txt), [`evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt`](evidence/lidar/2026-11-03_oi8_bad_bags_pushwall.txt), `~/bags/2026-11-01_push_225752`, `_230535`, `2026-11-03_*_push_ac*` · test_log 2026-11-03 "OI-8 live push A/B", "OI-8 bad bags of 2026-11-01 re-read" · notes 2026-11-03 "OI-8: live push, nobody in the scan" | RQ1, RQ2; the discovery slide |
+| 2026-11-09 | Nav2 Jazzy sends plain `Twist` unless `enable_stamped_cmd_vel: true`; with it, every `/cmd_vel*` endpoint is TwistStamped | 5 nodes set, all endpoints TwistStamped (PR 32) | `/opt/ros/jazzy/include/nav2_util/nav2_util/twist_subscriber.hpp:93` · test_log 2026-11-09 "Nav2 `/cmd_vel` message type" | E1, E3, system slide |
+| 2026-11-09 | IMU start calibration can fail if the robot is not still | gyro z std 0.0257 rad/s vs limit 0.01; `imu_node` exits | `/tmp/stamped_nav.log` on the Pi · test_log 2026-11-09 "Nav2 `/cmd_vel` message type" (Notes) | Run sheet: keep the robot still for 3 s at start |
 | 2026-11-08 | Nav2 planner on the room map (PR 29, unmerged) | 5/5 reachable goals planned, 1.18–2.70 m, 1–5 ms | `results/maps/2026-11-08_planner_paths.png` (on PR 29) · PR 29 test_log row | E1, system slide |
 
 ## 7. Open decisions
