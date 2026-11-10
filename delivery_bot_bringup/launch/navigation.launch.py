@@ -129,6 +129,7 @@ def generate_launch_description() -> LaunchDescription:
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('nav', default_value='true'),
         DeclareLaunchArgument('bridge', default_value='true'),
+        DeclareLaunchArgument('dry_run', default_value='true'),   # motors; base.launch.py
         DeclareLaunchArgument('include_base', default_value='true'),
         DeclareLaunchArgument('localizer', default_value='slam'),   # slam | amcl
         DeclareLaunchArgument('ekf', default_value='true'),
@@ -143,6 +144,7 @@ def generate_launch_description() -> LaunchDescription:
                 os.path.join(bringup, 'launch', 'base.launch.py')),
             launch_arguments={'use_sim_time': use_sim_time,
                               'bridge': LaunchConfiguration('bridge'),
+                              'dry_run': LaunchConfiguration('dry_run'),
                               'ekf': LaunchConfiguration('ekf'),
                               'ekf_params_file': LaunchConfiguration(
                                   'ekf_params_file')}.items(),
