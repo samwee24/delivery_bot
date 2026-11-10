@@ -1,100 +1,148 @@
-# CA3 presentation: slide outline (tentative)
+# CA3 presentation: slide outline (low-cost SLAM robot)
 
-Status: **tentative**, plan "H" (people as the axis, live runs) of 2026-11-09 evening, replacing "G" of the same morning and "C+" of 2026-11-03. Slot: 15 min + 5 min Q&A, videos 2 min in total, each student presents their own contribution. Date and slot to confirm on NTULearn (estimated Thu 2026-11-12).
+Status: **rewritten 2026-11-10 (night), v3**, structured on the group's section list: sensors → literature → the robot → pipeline → components → challenges overcome → why (analysis) → unexpected challenges → future work and learnings. Only work that ran on the robot goes on a slide. The delivery mission is dropped (not achieved).
 
-Companions, both being written in parallel (links may not resolve yet):
-- Research plan: [`../docs/report_plan.md`](../docs/report_plan.md)
-- Written report: [`CA3_report.md`](CA3_report.md)
+Brief (NTULearn): 10-15 min + 5 min Q&A, Thu Week 13 9:30-12:30; overview, state of the art, product/paper comparison, brief technical information, future trends; **most importantly our insights**; videos/animations ≤ 2 min in total; slides and report due end of Week 13; peer assessment confidential.
 
-Rules that bind this file (AGENTS.md): no value is shown as a result until measured on the robot; each number carries its command and provenance; no live motor commands on slides; nothing about products or papers that is not sourced (write "to check"). Presenters: **A**, **B**, **MT** (motor teammate), **S** (Sherman). Names to fill in.
+Presenters: **A**, **B**, **MT** (motor teammate), **S** (Sherman). Names to fill in.
 
-Claims written as `[if E2 shows X] ... / otherwise ...` are placeholders until the data exists (E1 to E4 and RQ1 to RQ4 as defined in the plan §3–4; all results from the driven session Tue 2026-11-10).
+Rules (AGENTS.md): every number is *measured*, *fitted* or *brief default* and points to its test_log row or notes block; papers only from [`literature_notes.md`](literature_notes.md) (verified), products only with a source ("to check"); no live demo.
 
-**Storyline:** gap (hook) → field and products → what we built → the discovery (OI-8) → four findings, each *empty vs people → paper → gap → why → Our take* → our position → future work → verdict.
+**Title:** *A Low-Cost Autonomous SLAM Robot: What It Took to Map a Room and Navigate It*
+**Main claim:** the SLAM and navigation software came as packages and worked. Almost every lost day was integration: cheap sensors, a loaded computer, power, motors, and a person standing behind the robot.
 
 ## 1. Slide table
 
-| # | Time | Who | Claim headline | Visual | Speaker notes | Handoff |
+| # | Section | Time | Who | Headline (the claim) | Visual | Speaker notes (numbers with source) |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 0:00-0:45 | A | Published 2D SLAM results were measured in empty rooms. Our robot's customers walk around it. What breaks? | Clip V1 (20 s): robot leaves home mark, stops at a seat, returns (or hand-pushed loop if motors slip). Title text only | - State the main question, then the answer in one line at the end (slide 15)<br>- What we built: Raspberry Pi 4B, RPLidar A1M8, MPU6050, no wheel encoders<br>- The four questions, one line each: how much people hurt, which part breaks, which localiser holds, does it stay safe | "To judge a cheap robot we first need to know what the real ones do." |
-| 2 | 0:45-1:15 | A | Indoor delivery is an AV problem in miniature: localise, plan, avoid people | Three-box diagram (localise / plan / avoid). Style of [`../docs/img/pipeline-simple.png`](../docs/img/pipeline-simple.png) | - Why a room is a fair scale model of a road problem<br>- Scope: one mapped room, 0.15 m/s, home mark | "Who is already doing this, and what do they simplify?" |
-| 3 | 1:15-2:30 | A | Delivery robots that ship today succeed by simplifying their world | Product table: Pudu, Keenon, Aethon TUG, Starship, Amazon Scout (shut down 2022), ours. Sourced cells only, rest "to check" | - Two patterns: mapped indoor space, low speed, human-run exceptions<br>- Sidewalk delivery is harder (Scout as cautionary case; source to check)<br>- **Our take:** [if sources confirm] "indoor ships because the world is made simpler, not because the robots are smarter" | "We copied that simplification on a student budget. Here is the machine." |
-| 4 | 2:30-3:30 | MT | Our robot is a scaled AV with one safety rule: motors only move through a watchdog | Hardware photo plus stack diagram; stream frame [`../results/2026-11-02_av_stream_frame.jpg`](../results/2026-11-02_av_stream_frame.jpg) if usable | - Hardware list, v_max 0.15 m/s (brief default)<br>- Safety is structural: `stop_dist_m`, `watchdog_s`, SIGINT zeroes PWM; kill switch is the motor switch<br>- Standard ROS 2 packages; we wrote only motor node, IMU node, URDF, delivery script (D7) | "Does it do the job?" |
-| 5 | 3:30-4:30 | MT | [if E1 passes] It completed N of 5 deliveries within 15 cm. / [else] It completed N of 5; the blocker was X | Clip V2 (40 s): one delivery run. Table: success, arrival error, time | - Home to seat to home, config frozen, commit hash per run<br>- Report misses plainly<br>- **Our take:** what the count proves and what it does not | "It works, in an empty room. Then we found what happens when someone walks behind it." |
-| 6 | 4:30-5:15 | S | A person walking behind the robot made its odometry read a quarter of the real distance | Chart: 0.962 m of 1.000 m with nobody near (2026-10-31) against 25-28 % of the push with a person behind (2026-11-01; closed 2026-11-03). Source [`../docs/test_log.md`](../docs/test_log.md) | - OI-8: four days of debugging; scan format cleared by live pushes with nobody in the scan<br>- rf2o assumes the scene is static; a person is a moving wall<br>- **Our take:** integration faults look like broken sensors | "So we tested every part of the stack twice: empty, and with people." |
-| 7 | 5:15-5:45 | S | Every method ran live on the robot, once in an empty room and once with people walking | The test design: rows odometry configs and localisers, columns empty / people; photo of the taped people paths | - Live closed loop, 3 runs per cell, tape ground truth; [K26] used replay without ground truth<br>- People protocol: 1-2 walkers on two taped paths, same every run | "First: how much do people cost?" |
-| 8 | 5:45-7:00 | S | [if RQ1 shows a gap] People cost every method X cm of accuracy and caused N losses. / [if not] With people walking, localisation held | Empty vs people bars per method; room figure with failure positions against the people's paths. Clip V3 (30 s): robot passes a walking person | - Extends [Y21] (5.90 vs 80.24 cm map error, filtered vs unfiltered) from mapping to localisation<br>- How failures start: drift, jump or lost<br>- **Our take:** "the customer is the obstacle" only if data supports it | "Which part breaks?" |
-| 9 | 7:00-8:15 | S | [if E2 shows the IMU gain only with people] The IMU is invisible in an empty room and decisive with people. / [if not] The IMU behaves as [M26] found: big gain before SLAM, gone after | E2 bars: 4 configs × (empty, people), before and after SLAM, with spread | - Timed 1 m straights and 360° spins, each config loaded live; hand-turn context: gyro 360.2°, rf2o 352.9° (measured)<br>- [M26]: 60-75 % gain before SLAM, about zero after<br>- **Our take:** when redundancy earns its cost | "Which localiser should a cheap robot ship?" |
-| 10 | 8:15-9:30 | S | [if E3 rankings flip] The localiser that wins in an empty room loses among people. / [else] X wins in both conditions | Left: checkpoint error per localiser × condition, [K26] value as a line. Right: wrong-start grid, recovered yes/no | - Each localiser steered its own Nav2 loop; baseline `slam_toolbox` recovers 30 cm / 20°, not 31° (2026-11-01)<br>- **Our take:** benchmark among people, not in empty rooms | "Localisation is one failure. Safety is the other." |
-| 11 | 9:30-10:30 | B | [if E4 stops are tight] A person stepping in gets within X cm: the stop zone, not the localiser, is the weak part. / [else] It stopped with a wide margin every time | Step-in table: speed, stop distance, contact, against the 0.20 m zone. Clip V4 (20 s): person steps in, robot stops | - Zone sizing at walking pace from `reports/MPC planners for dynamic humans.md` (inference)<br>- **Our take:** what the stop zone should be | "Here is everything that can go wrong, and what we did about it." |
-| 12 | 10:30-11:30 | B | Every hazard we listed has a mitigation, and we tested the ones we could | Hazard table (6-8 rows) | - SOTIF (ISO 21448), ISO 13482: check clauses before showing<br>- 2D lidar sees one plane only<br>- **Our take:** what is still unmitigated | "Putting that together, here is what we think." |
-| 13 | 11:30-12:45 | B | Our position: three data-backed opinions | Three cards, each pointing to its evidence slide: (1) the customer is the obstacle, (2) empty-room benchmarks pick the wrong method for delivery, (3) cheap robots win by simplifying their world | - Each card cites a result slide; drop any the data does not support<br>- Contradicting a paper is allowed and valued | "And where does this go next?" |
-| 14 | 12:45-13:30 | A | The roadmap is ordered by what the data exposed, not by what is fashionable | Costed list: people filtering in the scan [Y21], a larger or predictive stop zone, wheel encoders, camera fusion, de-skew [S23], lidar-degradation study | - Camera vs lidar was the best idea but needs a new build<br>- Trends: sourced items only<br>- Limits: one room, 3 runs per cell, people paths repeatable only roughly | "Last: the verdict." |
-| 15 | 13:30-14:15 | A | Verdict: [one sentence answering the main question, from the data] | One sentence, large type; RQ1-RQ4 answers as ✓ / ✗ / partial | - Answer each question in a breath<br>- Close on the claim, not a thank-you | Thank you; questions. |
-| 16 | Q&A | all | Backup: stack, config and the matrix in full | TF tree, frozen YAML with provenance, every cell's numbers | Used only if asked | n/a |
-| 17 | Q&A | all | Backup: raw numbers | All runs with commands and commit hashes | Used only if asked | n/a |
+| 1 | Intro | 0:00-0:40 | A | We built a low-cost robot that maps a room and then drives itself around a box | Clip V1 (20 s) | - Pi 4B, RPLidar A1M8, MPU6050 IMU, two DC motors, **no wheel encoders**<br>- Roadmap of the talk in one line |
+| 2 | Intro | 0:40-1:30 | A | SLAM: build a map and know where you are on it, at the same time | `map_build.gif` (8 s) then `odom_vs_slam.png` | - Odometry (how far did I move) drifts; scan matching against the map corrects it [R25], [MJ21]<br>- Left panel: odometry alone doubles walls where it drifts; right: slam_toolbox keeps them single<br>- Same loop as any autonomous vehicle: sense → localise → plan → act |
+| 3 | Sensors | 1:30-2:20 | A | Two sensors: a spinning 2D lidar sees the room, an IMU feels the turns | Two cards: how each works, strengths, weaknesses | - Lidar: one plane, 360°, distance per ping; sees walls and legs, not tables above the plane; misses glass and dark surfaces<br>- IMU (gyro + accelerometer): fast (100 Hz) and good at turns, drifts over time; no position on its own<br>- Why both: lidar odometry is accurate but slow and fooled by moving things; gyro is fast and immune to the scene |
+| 4 | Sensors vs literature | 2:20-3:20 | S | Our sensors are an order of magnitude cheaper and slower than the ones in the papers | Table: K26 / M26 / Y21 / ours: lidar, scan rate, IMU, wheel encoders, computer | - K26: Ouster OS-1 (3D, cut to 2D), Jetson on board but all results replayed on a desktop; **no wheel encoders**, rf2o + robot_localization + SLAM Toolbox: the same stack as ours<br>- M26: Hokuyo UTM-30LX, MicroStrain IMU, wheel encoders, PR2 dataset<br>- Y21: Hokuyo UTM-30LX at 40 Hz<br>- Ours (measured): A1M8 7.05 Hz, 26-29 % no-echo (C1); MPU6050 100 Hz, gyro z std 0.00175 rad/s at rest; Pi 4 at load 13-22 |
+| 5 | Literature | 3:20-4:30 | S | What the papers found, and what our robot showed | Three rows, paper → our result; small `turn_gyro_vs_rf2o.png` | - M26: fusing the IMU cut odometry error 60-75 % before SLAM, ≈0 after. Ours: gyro reads a hand turn as 360.2°, lidar odometry 352.9° (2 % short), so the IMU carries the heading<br>- K26: SLAM Toolbox runs repeat within 0.20-0.23 m, measured by offline replay. Ours: replaying one recording three times gave 0.68 / 0.59 / 0.53 m on the Pi (C7), so we tested live<br>- Y21: people in the scan raise map error from 5.9 to 80 cm. Ours: a person behind the robot cut odometry to 25 % (C6)<br>- **Our take:** published numbers come from good sensors and desktop replays; a cheap robot has to be measured live |
+| 6 | The robot | 4:30-5:15 | MT | The robot: off-the-shelf parts on a two-wheel base | Robot photo, labelled | - Pi 4B, A1M8 on top (2 cm ahead of centre, in the URDF), MPU6050, motor driver + 2 DC motors, motor battery, Pi power bank, USB camera (Foxglove only), motor switch = kill switch<br>- Cost: sum the BOM (to check) |
+| 7 | Pipeline | 5:15-6:30 | MT | The pipeline: laser pings in, wheel commands out, and a watchdog in between | Block diagram with rates | - rplidar 7 Hz → rf2o lidar odometry → EKF (robot_localization, 20 Hz, + IMU 100 Hz) → slam_toolbox (map → odom) → Nav2 (planner, RPP controller, velocity smoother, collision monitor) → motor_node → PWM 100 Hz<br>- We wrote only motor node, IMU node, URDF, launch files and tools (D5)<br>- Safety: 0.5 s watchdog, lidar stop 0.20 m (tested at 0.155 m), stale-scan stop, motor switch<br>- Foxglove to watch, rosbag2 to record |
+| 8 | Challenges | 6:30-6:55 | S | Three weeks, nine checkpoints, and the challenges that blocked them | `challenge_timeline.png` | - Left to right in one breath; the next three slides zoom into SLAM, then one into the robot<br>- Full evidence for every SLAM challenge: [`slam_challenges.md`](slam_challenges.md) |
+| 9 | SLAM challenges I: a usable map | 6:55-7:55 | S | Our first map was a fan; loop closure is what made the second one usable | Left: `results/maps/2026-10-31_room2.png`; right: sweep table | - S1: one third of pings returned; the gaps follow glass and dark surfaces, so we mapped anyway; scan scale within 3.5 cm of tape<br>- S2: `LaserRangeScan contains 1041 range readings, expected 931`, 223 scans rejected, a 184 x 112 fan; `angle_compensate` on → 720 fixed beams → 317 x 233 room map, 0 rejections<br>- S3: no ground truth, so the gap between start and end of the lap on the taped mark became the metric: 0.109 m over 42 m with loop closure, **0.658 m without** (6x); froze that set<br>- S4: slam_toolbox stuck unconfigured (launch order), and a leftover process faked a pass: configure delayed 5 s, stale processes checked first |
+| 10 | SLAM challenges II: odometry fooled | 7:55-9:10 | S | A person walking behind the robot made its odometry read a quarter of the distance | `oi8_person_behind.gif` (15 s); the 7-step table from `slam_challenges.md` S7 | - S7, three days, five hypotheses: broken odometry? scale bug (24 % in two places)? beam count (720 vs 1046)? CPU (replay at 0.25x reads the same)? Then counted points behind the robot: 127-152 at 0.35-0.9 m in bad bags vs 16-18 with a stick<br>- Fix shown offline: drop returns < 0.6 m → 99.5 %<br>- S8 on the way: three replays of one recording gave 0.68 / 0.59 / 0.53 m vs 0.96 m live → from then on, live tests only<br>- **Our take:** without encoders the lidar is the odometry, and anything moving with the robot fools it |
+| 11 | SLAM challenges III: localisation in the loop | 9:10-10:00 | S | Localisation holds within 20° of the truth, and SLAM's timing, not its accuracy, broke navigation | Wrong-start table; small `turn_gyro_vs_rf2o.png` | - S5: `Starting localization at first node (dock) is correctly not supported` → `map_start_pose`<br>- S6: wrong start 30 cm / 20° recovers after a push, 31° never (matcher searches ±20°, matches only after 0.1 m of travel) → taped home mark; on the mark 2.6 cm scan-to-map<br>- S9: rf2o reports zero uncertainty → covariance relay and fitted variances; turn: gyro 360.2°, rf2o 352.9°<br>- S10: `Transform data too old when converting from map to odom` (0.37 s): slam_toolbox stamps by last scan, ≥ 0.5 s apart at Pi load 13-22 → `restamp_tf`, tolerance 0.5 s → `Goal succeeded`<br>- S11: home 0.21 m from an obstacle on the map → moved to 0.67 m clearance |
+| 12 | Robot challenges | 10:00-11:00 | MT | Off the SLAM side: the wheels stall below 0.10 m/s, the battery lasts one run, and Nav2 failed until both were respected | `motor_curve.png` + `straights.png` | - C9: fit speed = 2.46 x (duty - 0.078); duty 0.10 stalls; kick 0.30 for 0.35 s; 1 kHz software PWM ran 2-3x fast under load → 100 Hz<br>- C13: 0.74 then 0.38 m on a fading battery; good runs 1.06 and 1.16 m<br>- C11: Pi under-voltage 67.5 % of samples → power bank 0 %<br>- C14 (non-SLAM rungs): server timeout 20 → 1000 ms; slowdown 0.045 m/s below the stall floor removed; turn and approach ≥ 0.10 m/s; reversing off |
+| 13 | Why + unexpected | 11:00-11:50 | B | Why it was hard: almost every challenge was integration, and most were surprises | Root-cause bar (sections 7 and S-table) | - SLAM side (S1-S11): 2 algorithm limits (matcher window, rf2o still-world), the rest configuration, launch order, data format, timing, method<br>- Robot side (C8-C14): cheap hardware, a loaded Pi, silent mismatches (`Twist` vs `TwistStamped`, `dry_run` never passed on)<br>- Unexpected: the person (S7), the replays (S8), the silent failures, PWM under CPU load<br>- **Our take:** package defaults assume better hardware (K26 replayed on a desktop, M26 on a PR2), so every default had to be re-earned |
+| 14 | Result | 11:50-12:50 | MT | It works: a goal 1.5 m away reached on its own, and a box driven around | Clip V2 (45 s, 2x) | - `Goal succeeded` after 93 s, (-1.35, -0.29) → (-2.67, 0.42) (`bt_navigator` log)<br>- Box about 1 m ahead, path about 3.0 m (**by eye, tape TBD**)<br>- 1 success of 6 goals that evening; the others cancelled by hand<br>- **Our take:** one success proves the loop closes, not that it is reliable |
+| 15 | Future work + learnings | 12:50-13:50 | A | What we would do next, and what we learned | Two columns | **Future:** wheel encoders; a live range filter for people (`laser_filters`); hardware PWM; offload Nav2 or a faster computer; repeat runs, slam_toolbox vs AMCL; tests with people walking; camera + lidar fusion (trends: sourced only)<br>**Learnings:** design a ground truth when you have none (the taped loop); test live, not on replays; a test that can pass on a leftover process is not a test; measure physical limits (stall floor, power, CPU) on day one; make silent failures loud |
+| 16 | Verdict | 13:50-14:15 | A | A low-cost robot can map a room with SLAM and navigate it on its own, once every physical limit is measured and designed around | One sentence, large type | Close on the claim; thank you; questions |
+| B1 | Backup | Q&A | all | Stack, TF tree, frozen config | TF tree, key YAML values | If asked |
+| B2 | Backup | Q&A | all | Every number with its command | Table from test_log | If asked |
+| B3 | Backup | Q&A | S | OI-8 and replay in numbers | `oi8_and_replay_bars.png` | If asked |
+| B4 | Backup | Q&A | S | Planner paths on the saved map | `results/maps/2026-11-08_planner_paths.png` | If asked |
 
-Timing check: slides 1-15 end at 14:15, leaving 45 s of slack. Per presenter: A 0:00-2:30 plus 12:45-14:15 (4 min), MT 2:30-4:30 (2 min), S 4:30-9:30 (5 min), B 9:30-12:45 (3 min 15 s). B owns the people protocol and can co-present slide 8. Rebalance if a fifth member joins. Slides 16 and 17 do not count toward the 15 min.
+Timing: 16 slides end at 14:15 (45 s slack). Per presenter: A 0:00-2:20 + 12:50-14:15 (3 min 45 s); S 2:20-4:30 + 6:30-10:00 (5 min 40 s); MT 4:30-6:30 + 10:00-11:00 + 11:50-12:50 (4 min); B 11:00-11:50 (50 s). S is heavy and B light: B can take slide 11 or 12 if B worked on it.
 
-## 2. Video budget (total <= 120 s)
+## 2. Video and animation budget (≤ 120 s)
 
-| Clip | Slide | Seconds | Source (film on) |
+| Clip | Slide | Seconds | Source |
 | --- | --- | --- | --- |
-| V1 hook: robot leaves home, serves a seat, returns | 1 | 20 | Tue 2026-11-10, cut from an E1 run (stick-pushed loop if driving fails) |
-| V2 delivery run | 5 | 40 | Tue 2026-11-10 (E1 runs; screen-record Foxglove side by side if clean) |
-| V3 robot passes walking people | 8 | 30 | Tue 2026-11-10 (E3 people loop) |
-| V4 step-in stop | 11 | 20 | Tue 2026-11-10 (E4 step-in) |
-| **Total** | | **110** | 10 s spare |
+| V1 around the box, best 20 s | 1 | 20 | 2026-11-10 box video |
+| `map_build.gif` | 2 | 8 | `tools/analysis/slide_figs.py` |
+| `oi8_person_behind.gif` | 10 | 15 | same |
+| V2 full box run at 2x | 14 | 45 | box video |
+| **Total** | | **88** | 32 s spare |
 
-All clips are pre-recorded, muted or with voiceover by the presenter, stored as local files. Only record live motion under the existing safety rules; the clips are not shown from a live run.
+Local files, muted, captioned. No live demo.
 
-## 3. "Our take" markers
+## 3. Our take lines (≤ 20 words, fixed box at the bottom)
 
-Format: every result slide ends with one line in a fixed box at the bottom, accent colour, prefix "Our take:". Never more than 20 words. Wording below is a draft and depends on data.
-
-| Slide | Our take (draft) |
+| Slide | Our take |
 | --- | --- |
-| 3 | Indoor ships because the world is simplified. [pending sources] |
-| 5 | [pending E1] What the count of runs proves, and what it does not. |
-| 6 | Integration faults look like broken sensors. (OI-8, measured) |
-| 8 | [pending RQ1] People are the obstacle, or they are not. |
-| 9 | [pending E2] The IMU earns its cost when people are around, or it does not. |
-| 10 | [pending E3] Benchmark localisers among people, not in empty rooms. |
-| 11 | [pending E4] What the stop zone should be. |
-| 12 | What the lidar cannot see is the main residual hazard. |
+| 5 | Published numbers come from good sensors and desktop replays; a cheap robot has to be measured live. |
+| 10 | Without encoders the lidar is the odometry, and anything moving with the robot fools it. |
+| 13 | Package defaults assume better hardware, so every default had to be re-earned. |
+| 14 | One success proves the loop closes, not that it is reliable. |
 
-## 4. Q&A prep (draft answers use repo facts only)
+## 4. Gaps to close before rehearsal 1 (Wed 2026-11-11)
 
-| # | Question | Draft answer | Depends on pending result |
-| --- | --- | --- | --- |
-| 1 | Why no camera? | The brief and budget gave us a 2D lidar and a Pi 4, and a camera localisation stack would have been a new build with nine days left; the USB camera only streams to Foxglove (1280x720, 10 fps). Lidar against camera is the best extension and is in the roadmap. | No |
-| 2 | Is five runs enough? | No, a few runs show whether a failure exists, not its rate; we report spread and ranges, not significance, and replay each bag ≥ 3 times because replay itself varies about 12 %. Config is frozen and the commit hash recorded per run so the study can be repeated. | Yes, run counts |
-| 3 | How does this compare to Waymo? | We do not claim comparability: a room at 0.15 m/s with a map and a home mark, against open roads with 3D sensing, which we have not measured. What transfers is the structure: localise against a prior map, plan, and stop for people. | No (Waymo specifics: do not quote without a source) |
-| 4 | Why use packages, not your own code? | Decision D7 (2026-10-22) supersedes D4: the brief permits packages, and we only wrote motor node, IMU node, URDF and the delivery script. Our own EKF and planner remain a documented fallback in `docs/system/07_ros_stack.md`. | No |
-| 5 | What if your results contradicted the paper? | That is a finding, not a failure: we would report the gap and name the differences (26-29 % no-echo pings, 7.05 Hz, no encoders, Pi 4) we can support with data. We would not tune until the numbers match. | Yes, E2 and E3 |
-| 9 | Were your people runs repeatable? | Roughly: the same 1-2 walkers on the same two taped paths at normal pace, starting with the robot; we report the spread over 3 runs per cell and treat "people" as one condition, not a controlled trajectory. | Yes, run spread |
-| 10 | Each localiser steered its own run: isn't that unfair? | It is the real comparison: a product drives on its own localiser, so closed-loop error is what a customer sees. The bags also let us replay both localisers on the same run afterwards. | Yes, E3 |
-| 6 | What would you do differently? | Keep people out of the scan during every odometry test from day one (OI-8 cost four days and turned out to be a person behind the robot), tape the checkpoints on day one, and fix the bag-recording protocol earlier, because replay was not repeatable. Pick the comparison questions before building, not after. | No |
-| 7 | Is a 2D lidar safe around people? | Not on its own: it sees one plane, so low and overhanging objects are invisible, and its no-echo rate is 26-29 % on this unit. Our mitigations are 0.15 m/s, `stop_dist_m`, watchdog and a physical kill switch, and the hazard table lists what remains. | Yes, safety test |
-| 8 | What does it cost? | Cost per part is in the hardware docs (`docs/system/01_hardware`) and should be summed from our own bill of materials, not from catalogue guesses. We do not compare against commercial robots until their prices are sourced. | Yes, BOM total to check |
+- [ ] Tape numbers for the box run (distance, sideways drift, box position and size); which launch it was
+- [ ] Add the 2026-11-10 evening Nav2 runs to `docs/test_log.md` and a notes entry (slides 11, 14 cite them)
+- [ ] Robot photo, labelled (slide 6); BOM cost (slide 6)
+- [ ] Pipeline diagram (slide 7); base: [`../docs/img/pipeline-flow.png`](../docs/img/pipeline-flow.png)
+- [ ] Root-cause bar for slide 13 (section 7 and `slam_challenges.md`)
+- [ ] Sweep table and S7 step table as slide graphics (slides 9, 10)
+- [ ] Sensor specs from datasheets (A1M8, MPU6050) if slide 3 quotes any; else measured values only
+- [ ] Presenter names
 
-## 5. Rehearsal checklist
+## 5. Q&A prep
 
-- Timing: 3 full run-throughs (Tue 10, Wed 11, one extra before the slot). Targets: A about 4 min 15 s, MT about 2 min 15 s, S about 4 min 30 s, B about 3 min 30 s; total <= 14 min 30 s with a stopwatch per presenter.
-- Handoffs: say the handoff sentence from the table verbatim; no silence over 3 s.
-- Clicker with spare batteries; one person owns advancing slides, or each presenter owns their own slides (decide and keep).
-- Backup video files on two USB sticks and a laptop, offline, played from local disk, not from a link; test the room projector audio.
-- **No live demo.** Recommendation: pre-recorded only, because the robot needs a taped room, a charged battery (the Pi read `throttled=0x50005` on 2026-11-02) and a lidar that sometimes hangs at start (OI-6).
-- Fallback if a clip fails: freeze frame on the slide and continue with the speaker note; the run table carries the numbers.
-- Q&A drill: each presenter answers the questions in section 4 that touch their slides; the rest stays short.
-- Pending numbers: every bracketed claim is replaced or deleted before rehearsal 2; no `[if ...]` text may reach the final slides.
+| # | Question | Draft answer |
+| --- | --- | --- |
+| 1 | Why only one successful goal? | The evening went on finding and fixing faults (slides 11, 12); once the loop closed we had a video and the battery gave about one run per charge. We claim the loop works, not a success rate. |
+| 2 | Why no wheel encoders? | The kit did not have them; lidar odometry plus the IMU stood in, as in [K26]. OI-8 shows the cost, and encoders are first on the roadmap. |
+| 3 | Why packages, not your own code? | D5: the brief allows them, and the hard part turned out to be integration anyway. Our own EKF and planner stay a documented fallback (`docs/system/07_ros_stack.md`). |
+| 4 | Is a 2D lidar safe around people? | Not on its own: one plane only, 26-29 % no-echo on this unit. Mitigations: 0.15 m/s cap, 0.20 m lidar stop (tested), watchdog, physical kill switch. |
+| 5 | How does this compare to a road AV? | Same SLAM loop, far smaller world: a mapped room at 0.15 m/s, 2D instead of 3D lidar. What transfers is the structure and the integration lessons. |
+| 6 | What would you do differently? | Measure the motors' stall floor and the power supply on day one, and keep people out of the scan in odometry tests. Both cost days later. |
+| 7 | Why did replay differ from live? | The Pi is CPU-bound; rf2o's work lands at different times on each replay (spread -12 %, about 71 % of live); slowing playback did not fix it. |
+| 8 | Wasn't this meant to be a delivery robot? | It started as one. A delivery loop needs repeated goals and we reached one goal on the last evening, so we report what works: mapping, localisation and one navigation goal around an obstacle. |
+| 9 | Did you replicate the papers? | No: our hardware and setup differ too much (slide 4). We compare directions: M26's IMU gain, K26's replay method, Y21's people effect, each against something we measured. |
 
 ## 6. Design notes
 
-- One idea per slide; the headline is the claim, the visual is its evidence, notes carry the rest.
-- Headlines are sentences that state a point. Max two lines at 32 pt or larger; body text at 20 pt or larger.
-- Fixed "Our take" box on every result slide (accent colour, same position) so the audience sees where the insight is.
-- Figures show spread and n, with the command and commit in a small line under the figure.
-- Provenance tags on every number: *measured*, *fitted*, *brief default* or *target*.
-- Cite on the slide footer by key, as listed in [`../docs/slam.md`](../docs/slam.md) References: [R25] 2D lidar SLAM review, [K26] repeatability benchmark, [M26] IMU ablation, [Y21] people in scans, [S23] de-skew. Slide 7 cites K26, slide 8 Y21, slide 9 M26, slide 10 K26, slide 14 Y21 and S23, slide 3 any product source.
-- Colour-blind-safe palette; no sound-only information in clips (captions on every clip).
+- One idea per slide; the headline is the claim, the figure its evidence, notes the rest.
+- Figures carry no titles or source lines: the slide headline is the title, the source goes in one small footer line on the slide.
+- Every number carries a provenance tag (*measured*, *fitted*, *brief default*, *by eye*).
+- Fixed "Our take" box, same place on every slide that has one. Colour-blind-safe palette; captions on clips.
+
+## 7. Key challenges and checkpoints
+
+From `notes/notes.md`, `docs/test_log.md`, `docs/CA3.md` (OI-n) and `docs/system/06_troubleshooting.md`.
+
+### Checkpoints reached
+
+| Date | Checkpoint | Proof |
+| --- | --- | --- |
+| 2026-10-21 | Lidar bring-up on the first Pi | notes 2026-10-20/21 |
+| 2026-10-22 | Stack decided: ROS 2 packages, not our own maths (D5); stack installed on the new Pi | notes 2026-10-22 "D5" |
+| 2026-10-31 | CP0 platform up: robot built, lidar and IMU measured into the URDF | test_log 2026-10-30/31 |
+| 2026-10-31 | First room map saved, SLAM settings frozen | `results/maps/2026-10-31_room2.png` |
+| 2026-11-01 | CP1 localisation on the map, wrong start 30 cm / 20° recovers | test_log 2026-11-01 "6.4" |
+| 2026-11-03 | CP2 OI-8 explained (person behind the robot) | `evidence/lidar/2026-11-03_oi8_*.txt` |
+| 2026-11-09 | Motors live, lidar stop tested, first 1 m straight (0.96 m) | test_log 2026-11-09 |
+| 2026-11-10 | CP5 robot drives: 2 of 3 straights; Pi power stable | test_log 2026-11-10 CP5 rows |
+| 2026-11-10 | Nav2 goal succeeded (1.5 m, 93 s); robot drives around a box | `bt_navigator` log, video (test_log row to add) |
+
+### Challenges
+
+Root cause groups (slide 11): **HW** cheap hardware, **CPU** loaded computer, **IF** silent interface mismatch, **ENV** environment/algorithm assumption, **PL** platform/process. Expected = we planned for something like it; unexpected = slide 12.
+
+| # | Date | Symptom | Root cause | How we found it | Fix / status | Group | Expected? | Slide |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| C1 | 10-21 | Lidar returns a distance for only a third of pings | Room surfaces (glass, dark): gaps move with the scene | White box test; near-return bins move between bags (OI-4) | Accepted; mapped anyway (26-29 % no-echo) | HW | yes | 4 |
+| C2 | 10-22 | Brief's Pi offline; new Pi stopped answering SSH | Old box gone; new one set up from scratch | `tailscale status`, `nc -z` | Moved to `sherm-raspi` over Tailscale | PL | no | 8 |
+| C3 | 10-22 | Plan said write our own EKF, A*, pure pursuit | Too much maths for the time | Decision review | D5: ROS 2 packages, our code is glue | PL | yes | 7 |
+| C4 | 10-30 | slam_toolbox dropped every scan: `LaserRangeScan contains 1041 range readings, expected 931` | Varying beam count with `angle_compensate` off | Error text, beam counts per bag | `angle_compensate` true (720 beams) | IF | no | 11 |
+| C5 | 11-01 | Launch looks up but no `/scan` | Lidar restarted too soon, or two launches overlapped | Repeated starts; process list | Wait 20 s, one launch at a time (OI-6) | HW | no | 8 |
+| C6 | 11-01 to 11-03 | Odometry read 24-28 % of a hand push | A person behind the robot moved with it; rf2o assumes a still scene | Ruled out format, rate, CPU; counted points behind the robot | Explained; 0.6 m range cut fixes it offline (99.5 %) | ENV | no | 12 |
+| C7 | 11-02 to 11-03 | Three replays of one recording: 0.679 / 0.592 / 0.531 m | Replay timing on a loaded Pi varies | Repeat replays at rates 1.0, 0.5, 0.25 | Test live; bags as evidence only | CPU | no | 5, 12 |
+| C8 | 11-09 | Wheels would never move under Nav2, no error | Nav2 sent `Twist`, motor node expects `TwistStamped` | Nav2 source (`twist_subscriber.hpp`), `ros2 topic info -v` | `enable_stamped_cmd_vel: true` | IF | no | 12 |
+| C9 | 11-09 | Curved 35-40°, would not start slowly, overshot 2-3x under load | Per-wheel gains; static friction; 1 kHz software PWM late under CPU load | Duty sweeps with the stack off, then loaded | PWM 100 Hz, refit, kick-start | HW, CPU | partly (PWM part no) | 9, 12 |
+| C10 | 11-09 | Pi rebooted twice mid-run; wheels dead | Loose motor wire; battery sag | Uptime 1 min after each fault | Wire fixed; battery cycled (OI-9) | HW | yes | 9 |
+| C11 | 11-09 to 11-10 | Nav2 shut down (`IS DOWN after not receiving a heartbeat`) | Pi under-voltage 67.5 % of samples, CPU throttled | `vcgencmd get_throttled` every 2 s | Power bank: 60 of 60 `0x0` (OI-10, OI-11) | HW, CPU | no | 9 |
+| C12 | 11-10 | "Live" Nav2 runs drove nothing | `dry_run` not passed on; YAML default won | `ros2 param get /motor_node dry_run` = True | PR 42 | IF | no | 12 |
+| C13 | 11-10 | Same command drove 0.84, 0.74, 0.38 m | Motor battery fades after one run | Successive runs | Cycle the battery each run | HW | yes | 9 |
+| C14 | 11-10 | Nav2 goals aborted or crept, seven ways | Timeouts too short for the Pi, stale transforms, home near obstacles, speeds below the stall floor, reversing | Nav2 logs per goal, clearance map | Seven config fixes, then `Goal succeeded` | CPU, HW | partly | 10 |
+
+Pattern: 1 of 14 is an algorithm assumption (C6); 13 are hardware, computer load, interfaces or process. 9 of 14 were unexpected. The SLAM challenges in full detail, with logs and step-by-step investigations: [`slam_challenges.md`](slam_challenges.md) (S1-S11).
+
+## 8. Figures (no robot needed)
+
+`.venv/bin/python tools/analysis/slide_figs.py` (bags in `../delivery_bot_pi_backup/bags`). Figures have no titles or source lines; sources below go in the slide footer. Bag-derived values match test_log: turn 360.2° / 352.9°, OI-8 wall 1.222 m vs rf2o 0.290 m, straights rf2o 0.741 / 0.386 / 1.088 / 1.175 m.
+
+| Slide | File (`figures/2026-11-10_…`) | Footer source |
+| --- | --- | --- |
+| 2 | `map_build.gif`, `odom_vs_slam.png` | bag 2026-10-31_map_200956 |
+| 5, 11 | `turn_gyro_vs_rf2o.png` | bag 2026-10-31_turn_194945; test_log 2026-10-31 "3.2 spin only" |
+| 8 | `challenge_timeline.png` | notes, test_log, CA3.md OI list |
+| 12 | `motor_curve.png`, `straights.png`, `power.png` | notes 2026-11-09 (late), PR 38; test_log 2026-11-10 CP5 rows, power sampler and gate |
+| 10 | `oi8_person_behind.gif` (still `_last.png`) | bag 2026-11-01_push_230535; test_log 2026-11-03 |
+| B3 | `oi8_and_replay_bars.png` | test_log 2026-11-03 OI-8 and replay rows |
+
+Existing, reuse: `results/maps/2026-11-10_home_clearance.png` (slide 11), `results/maps/2026-10-31_room2.png` (slide 9), `results/maps/2026-11-08_planner_paths.png` (B4), `evidence/lidar/2026-10-21_composite_20revs.png` (slide 3 or 4).
