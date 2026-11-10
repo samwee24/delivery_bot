@@ -82,18 +82,17 @@ def test_costmap_radius_matches_urdf(nav2, urdf) -> None:
 
 def test_collision_monitor_zones(nav2) -> None:
     cm = nav2['collision_monitor']['ros__parameters']
-    assert {'stop', 'slowdown', 'approach'} <= set(cm['polygons'])
+    assert {'stop', 'approach'} <= set(cm['polygons'])
+    # slowdown x 0.15 m/s fell under the 0.10 m/s wheel stall floor (2026-11-10)
+    assert 'slowdown' not in cm['polygons']
     stop_reach = max(x for x, _ in ast.literal_eval(cm['stop']['points']))
-    slow_reach = max(x for x, _ in ast.literal_eval(cm['slowdown']['points']))
     assert stop_reach == 0.20          # E4 baseline, not re-tuned
-    assert slow_reach > stop_reach
-    assert 0 < cm['slowdown']['slowdown_ratio'] < 1
     local = nav2['local_costmap']['local_costmap']['ros__parameters']['robot_radius']
     assert cm['approach']['radius'] == local
     assert cm['approach']['time_before_collision'] > 0
     assert all(cm[name]['enabled'] is True for name in cm['polygons'])
     # Jazzy's string parser rejects fewer than 4 vertices (`vvf.size() <= 3`).
-    for name in ('stop', 'slowdown'):
+    for name in ('stop',):
         assert len(ast.literal_eval(cm[name]['points'])) >= 4
 
 

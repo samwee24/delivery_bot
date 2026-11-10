@@ -305,7 +305,9 @@ collision_monitor:
     stop_pub_timeout: 2.0
     # Polygons represent zone around the robot for "stop", "slowdown" and "limit" action types,
     # and robot footprint for "approach" action type.
-    polygons: ["stop", "slowdown", "approach"]
+    # slowdown removed 2026-11-10: 0.3 x 0.15 = 0.045 m/s is under the 0.10 m/s wheel stall floor;
+    # a box 0.5 m ahead stalled a goal (12 x Failed to make progress). Block kept below, unlisted.
+    polygons: ["stop", "approach"]
     stop:
       type: "polygon"
       action_type: "stop"
