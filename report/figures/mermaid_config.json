@@ -1,0 +1,5 @@
+{"theme": "base", "fontFamily": "Arial, Helvetica, sans-serif",
+ "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 40, "padding": 14},
+ "themeVariables": {"fontFamily": "Arial, Helvetica, sans-serif", "fontSize": "22px", "lineColor": "#5a6372",
+  "primaryTextColor": "#14213d", "clusterBkg": "#fbfbf8", "clusterBorder": "#c9ccd1",
+  "edgeLabelBackground": "#fbfbf8", "titleColor": "#14213d"}}

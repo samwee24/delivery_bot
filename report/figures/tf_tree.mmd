@@ -1,0 +1,17 @@
+%%{init: {"theme": "base", "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 70}, "themeVariables": {"fontFamily": "Arial, Helvetica, sans-serif", "fontSize": "20px", "lineColor": "#5a6372", "primaryTextColor": "#14213d"}}}%%
+flowchart LR
+    MAP["map<br/>fixed to the room"]
+    ODOM["odom<br/>smooth, drifts"]
+    BASE["base_footprint<br/>the robot"]
+    LASER["laser<br/>+0.02 m, z 0.12 m"]
+    IMU["imu_link<br/>+0.023 m, -0.055 m"]
+
+    MAP -->|"slam_toolbox<br/>scan matching, 50 Hz restamped"| ODOM
+    ODOM -->|"EKF only<br/>rf2o + gyro, 20 Hz"| BASE
+    BASE -->|"URDF<br/>static, measured"| LASER
+    BASE -->|"URDF<br/>static, measured"| IMU
+
+    classDef frame fill:#e3eef8,stroke:#1f6fb2,stroke-width:2px,color:#14213d
+    classDef sensor fill:#eceef1,stroke:#5a6372,stroke-width:2px,color:#14213d
+    class MAP,ODOM,BASE frame
+    class LASER,IMU sensor

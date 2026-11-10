@@ -139,6 +139,7 @@ The longest SLAM bug: three days, five hypotheses.
   `report/figures/2026-11-10_oi8_person_behind.gif`.
 - **Status.** Explained; the live fix (`laser_filters` range filter) is future work. Cost of the cut: no odometry
   from anything nearer than 0.6 m.
+- **Why, from the method paper.** rf2o is range-flow planar odometry [J16]: one rigid motion is fitted to the whole scan, so a part of the scene that moves with the robot pulls the estimate toward zero.
 - **Lesson.** Without wheel encoders, the lidar is the odometry, and anything moving with the robot fools it.
   Literature link: [Y21] measured people raising 2D-lidar map error from 5.9 to 80 cm; we saw the same effect one
   stage earlier, in odometry.
@@ -166,6 +167,7 @@ The longest SLAM bug: three days, five hypotheses.
 - **Rule.** `odom → base_footprint` comes from the EKF alone (rf2o `publish_tf: false`); two publishers of one
   transform make the map spin. *(AGENTS.md)*
 - **Result.** One hand turn: gyro 360.2°, rf2o 352.9° (-2 %); the IMU carries heading.
+- **Possible cause of rf2o's under-read on fast turns (hypothesis, not tested).** [S23]: low-frequency 2D lidars skew each scan while the robot moves; at 7 Hz and 1 rad/s ours turns about 8° within one scan.
   `report/figures/2026-11-10_turn_gyro_vs_rf2o.png`. Literature link: [M26] found fusing the IMU cut
   odometry error 60-75 % before SLAM.
 

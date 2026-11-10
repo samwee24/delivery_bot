@@ -14,6 +14,9 @@ All six DOIs in `docs/slam.md` resolve to the paper named there. None failed. Me
 | [R25] | 10.3390/rs17071214 | Yes. Ran, Xu, Tan, Luo; *Remote Sensing* 17(7); 2025-03-28 | [Crossref](https://api.crossref.org/works/10.3390/rs17071214) |
 | [J16] | 10.1109/ICRA.2016.7487647 | Yes. Jaimez, Monroy, Gonzalez-Jimenez; ICRA 2016 | [Crossref](https://api.crossref.org/works/10.1109/ICRA.2016.7487647) |
 | [MJ21] | 10.21105/joss.02783 | Yes. Macenski, Jambrecic; JOSS 6(61); 2021 | [Crossref](https://api.crossref.org/works/10.21105/joss.02783) |
+| [S23] | arXiv 2303.07312 | Yes (2026-11-11). Salem, Giacomini, Brizi, Di Giammarino, Grisetti; arXiv preprint (cs.RO), 2023, v3 Oct 2023; no venue listed | [arXiv](https://arxiv.org/abs/2303.07312) |
+| [F17] | arXiv 1708.02354 | Yes (2026-11-11), but **five** authors: A. Filatov, A. Filatov, Krinkin, Chen, Molodan; arXiv preprint, 2017; `docs/slam.md` lists three | [arXiv](https://arxiv.org/abs/1708.02354) |
+| [H22] | 10.1007/s13320-022-0657-6 | Yes (2026-11-11). S. Huang, H.-Z. Huang, Zeng, P. Huang; *Photonic Sensors* 12(4), 220416, online 2022-04-25, CC BY 4.0 | [Crossref](https://api.crossref.org/works/10.1007/s13320-022-0657-6) |
 
 Three things in `docs/slam.md` and the plan need correcting or softening, because the papers say something different from how we use them:
 
@@ -127,6 +130,15 @@ Our numbers are targets until measured on the robot (AGENTS.md rule 4). Our-side
 | E4 people in room: 5 runs with 1 to 2 people walking, plus a step-in | [Y21] | Mean ADNN map error versus empty-room map: GMapping 5.9 cm filtered versus 80.24 cm unfiltered with 2 people (corridor); Cartographer 1.36 versus 2.16 cm ([arXiv PDF](https://arxiv.org/pdf/2204.08163)) | Map ADNN (or IoU) against our empty-room map from the same config, plus arrival error versus E1; no people filtering in v1, so we measure the unfiltered case only | They: GMapping and Cartographer, we use SLAM Toolbox; they filter people, we do not (our case matches their "unfiltered" bars); Hokuyo 40 Hz versus A1M8 7 Hz; their reference map is also robot-made; we add delivery and safety metrics they do not have |
 
 ---
+
+### Brief entries added 2026-11-11: [S23], [F17], [H22] (abstracts only, full texts not read)
+
+- [S23] Most commercial 2D lidars sample ranges one after another, so robot motion during a revolution skews the scan; usual de-skewing needs an IMU or wheel odometry. They estimate the robot's velocity from the ranges alone and de-skew with it, at negligible compute cost, and say it suits low-frequency lidars where skew is most visible. No numbers in the abstract; RPLidar is not named in it. ([arXiv](https://arxiv.org/abs/2303.07312))
+  **Use:** our A1M8 turns at 7.05 Hz, so at 0.15 m/s the robot moves about 2 cm and at 1 rad/s turns about 8° within one scan (our arithmetic, not from the paper). A plausible contributor to rf2o under-reading fast rotation by 9-15 % (test_log 2026-10-31 "4.4 variances"); a hypothesis, not tested.
+- [F17] Proposes three metrics for comparing the 2D maps that SLAM algorithms produce, to pick the most accurate one. The abstract does not name the metrics or say they need no ground truth; the list in `docs/slam.md` (occupied-cell proportion, corners, enclosed areas) is unconfirmed until the full text is read. ([arXiv](https://arxiv.org/abs/1708.02354))
+  **Use:** Q&A only, as precedent for judging maps without ground truth (our start-end gap on the taped mark, `report/slam_challenges.md` S3).
+- [H22] A 2D lidar SLAM for ambiguous environments: degeneration analysis, line-landmark tracking and coverage analysis in scan matching, max-clique selection and odometer checks, and a factor graph fusing lidar, wheel odometry and IMU. Claims front-end error 3.8 % of the existing method's, and a map of more than 250,000 m². The abstract does not mention wrong loop closures, which `docs/slam.md` attributes to it. ([Crossref](https://api.crossref.org/works/10.1007/s13320-022-0657-6))
+  **Use:** not on the main slides; we never met degeneracy in one room. At most a future-work pointer for corridors.
 
 ## Part 2: indoor and last-metre delivery robot products
 
