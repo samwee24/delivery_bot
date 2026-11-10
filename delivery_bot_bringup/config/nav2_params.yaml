@@ -76,18 +76,18 @@ controller_server:
       lookahead_time: 1.5
       transform_tolerance: 0.5            # 0.1 gave TF_ERROR (extrapolation into the future) at load 12-18, 2026-11-10
       use_velocity_scaled_lookahead_dist: false
-      min_approach_linear_velocity: 0.05
+      min_approach_linear_velocity: 0.10  # wheel floor 0.10 m/s (duty 0.12), 2026-11-10
       approach_velocity_scaling_dist: 0.6
       use_collision_detection: true
       max_allowed_time_to_collision_up_to_carrot: 1.0
       use_regulated_linear_velocity_scaling: true
       use_cost_regulated_linear_velocity_scaling: false
       regulated_linear_scaling_min_radius: 0.9
-      regulated_linear_scaling_min_speed: 0.05
+      regulated_linear_scaling_min_speed: 0.10  # wheel floor 0.10 m/s (duty 0.12), 2026-11-10
       use_rotate_to_heading: true
-      rotate_to_heading_angular_vel: 1.0
+      rotate_to_heading_angular_vel: 1.6  # x 0.078 m half-track = 0.125 m/s per wheel; 1.0 (0.078) stalled turning in place, 2026-11-10
       rotate_to_heading_min_angle: 1.05   # 60 deg: bigger errors turn in place
-      max_angular_accel: 1.0
+      max_angular_accel: 3.2  # 1.0 ramped through the stall band
       allow_reversing: false
 
 local_costmap:
@@ -227,8 +227,8 @@ behavior_server:
     robot_base_frame: base_footprint
     transform_tolerance: 0.5  # was 0.1; map->odom runs 0.37 s late under load (2026-11-10)
     simulate_ahead_time: 2.0
-    max_rotational_vel: 1.0
-    min_rotational_vel: 0.4
+    max_rotational_vel: 1.6
+    min_rotational_vel: 1.4  # 0.4 (0.03 m/s per wheel) spin recovery timed out, 2026-11-10
     rotational_acc_lim: 3.2
 
 waypoint_follower:
@@ -281,8 +281,8 @@ velocity_smoother:
     stamp_smoothed_velocity_with_smoothing_time: False
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.15, 0.0, 1.0]
-    min_velocity: [-0.05, 0.0, -1.0]
+    max_velocity: [0.15, 0.0, 1.6]
+    min_velocity: [-0.05, 0.0, -1.6]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "/odometry/filtered"

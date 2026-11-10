@@ -225,3 +225,16 @@ def test_localization_restamps_map_to_odom() -> None:
     """Scans are processed >=0.5 s apart; scan-stamped map->odom goes stale mid-goal (TF_ERROR 102)."""
     p = params('delivery_bot_bringup', 'slam_localization.yaml', 'slam_toolbox')
     assert p['restamp_tf'] is True
+
+
+def test_nav2_commands_clear_wheel_stall_floor(nav2) -> None:
+    """Wheels stall below ~0.10 m/s (duty 0.12, test_log 2026-11-09); 2026-11-10 goals stalled turning and approaching."""
+    floor = 0.10
+    half_track = 0.156 / 2
+    rpp = nav2['controller_server']['ros__parameters']['FollowPath']
+    assert rpp['min_approach_linear_velocity'] >= floor
+    assert rpp['regulated_linear_scaling_min_speed'] >= floor
+    assert rpp['rotate_to_heading_angular_vel'] * half_track >= floor
+    assert nav2['behavior_server']['ros__parameters']['min_rotational_vel'] * half_track >= floor
+    smoother = nav2['velocity_smoother']['ros__parameters']
+    assert smoother['max_velocity'][2] >= rpp['rotate_to_heading_angular_vel']
