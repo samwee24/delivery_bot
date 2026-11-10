@@ -223,13 +223,19 @@ def test_nav2_transform_tolerances_cover_slam_lag() -> None:
 
 
 def test_localization_restamps_map_to_odom() -> None:
-    """Scans are processed >=0.5 s apart; scan-stamped map->odom goes stale mid-goal (TF_ERROR 102)."""
+    """Scans are processed >=0.5 s apart.
+
+    Scan-stamped map->odom goes stale mid-goal (TF_ERROR 102).
+    """
     p = params('delivery_bot_bringup', 'slam_localization.yaml', 'slam_toolbox')
     assert p['restamp_tf'] is True
 
 
 def test_nav2_commands_clear_wheel_stall_floor(nav2) -> None:
-    """Wheels stall below ~0.10 m/s (duty 0.12, test_log 2026-11-09); 2026-11-10 goals stalled turning and approaching."""
+    """Wheels stall below ~0.10 m/s (duty 0.12, test_log 2026-11-09).
+
+    2026-11-10 goals stalled turning and approaching.
+    """
     floor = 0.10
     half_track = 0.156 / 2
     rpp = nav2['controller_server']['ros__parameters']['FollowPath']
@@ -242,13 +248,19 @@ def test_nav2_commands_clear_wheel_stall_floor(nav2) -> None:
 
 
 def test_nav2_reverse_clears_wheel_stall_floor(nav2) -> None:
-    """The BackUp recovery reverses; the smoother must let it go faster than the 0.10 m/s stall floor."""
+    """The BackUp recovery reverses.
+
+    The smoother must let it go faster than the 0.10 m/s stall floor.
+    """
     smoother = nav2['velocity_smoother']['ros__parameters']
     assert -MAX_SPEED <= smoother['min_velocity'][0] <= -0.10
 
 
 def test_nav2_goal_accepts_any_heading(nav2) -> None:
-    """The final turn to the goal heading stalled and aborted goals (2026-11-10); arrival is position only."""
+    """The final turn to the goal heading stalled and aborted goals (2026-11-10).
+
+    Arrival is position only.
+    """
     checker = nav2['controller_server']['ros__parameters']['general_goal_checker']
     assert checker['yaw_goal_tolerance'] >= 3.14
     assert checker['xy_goal_tolerance'] <= 0.10
