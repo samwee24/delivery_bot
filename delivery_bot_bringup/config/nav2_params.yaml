@@ -299,7 +299,7 @@ collision_monitor:
     cmd_vel_in_topic: "cmd_vel_smoothed"
     cmd_vel_out_topic: "cmd_vel"
     state_topic: "collision_monitor_state"
-    transform_tolerance: 0.2
+    transform_tolerance: 0.5  # 0.2 gave "invalid source" stops (laser->base_footprint too new) at load 30, 2026-11-10
     source_timeout: 1.0
     base_shift_correction: True
     stop_pub_timeout: 2.0

@@ -216,6 +216,7 @@ def test_nav2_transform_tolerances_cover_slam_lag() -> None:
         'global_costmap': n['global_costmap']['global_costmap']['ros__parameters'],
         'behavior_server': n['behavior_server']['ros__parameters'],
         'FollowPath': n['controller_server']['ros__parameters']['FollowPath'],
+        'collision_monitor': n['collision_monitor']['ros__parameters'],
     }
     for name, p in tol.items():
         assert p.get('transform_tolerance', 0.3) >= 0.5, name
