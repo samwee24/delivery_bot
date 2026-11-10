@@ -12,7 +12,7 @@ X=${GOAL_X:-1.5}
 tmux has-session -t "$S" 2>/dev/null && exec tmux attach -t "$S"
 
 LAUNCH="ros2 launch delivery_bot_bringup navigation.launch.py bridge:=false $*"
-GOAL="ros2 action send_goal --feedback /navigate_to_pose nav2_msgs/action/NavigateToPose \"{pose: {header: {frame_id: base_footprint}, pose: {position: {x: $X, y: 0.0}, orientation: {w: 1.0}}}}\" | grep --line-buffered -E '^  sec|distance_remaining|number_of_recoveries|error_code|status' | uniq"
+GOAL="ros2 action send_goal --feedback /navigate_to_pose nav2_msgs/action/NavigateToPose \"{pose: {header: {frame_id: base_footprint}, pose: {position: {x: $X, y: 0.0}, orientation: {w: 1.0}}}}\" | grep --line-buffered -E '^  sec|distance_remaining|number_of_recoveries|error_code|status|Goal' | uniq"
 POSE="ros2 run tf2_ros tf2_echo map base_footprint 2>&1 | grep --line-buffered -A3 Translation"
 
 # pane ids, not indexes: the Pi's tmux config starts indexes at 1
