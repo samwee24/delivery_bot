@@ -220,3 +220,9 @@ def test_nav2_transform_tolerances_cover_slam_lag() -> None:
     }
     for name, p in tol.items():
         assert p.get('transform_tolerance', 0.3) >= 0.5, name
+
+
+def test_localization_restamps_map_to_odom() -> None:
+    """Scans are processed >=0.5 s apart; scan-stamped map->odom goes stale mid-goal (TF_ERROR 102)."""
+    p = params('delivery_bot_bringup', 'slam_localization.yaml', 'slam_toolbox')
+    assert p['restamp_tf'] is True
