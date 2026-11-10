@@ -74,7 +74,7 @@ controller_server:
       min_lookahead_dist: 0.2
       max_lookahead_dist: 0.4
       lookahead_time: 1.5
-      transform_tolerance: 0.1
+      transform_tolerance: 0.5            # 0.1 gave TF_ERROR (extrapolation into the future) at load 12-18, 2026-11-10
       use_velocity_scaled_lookahead_dist: false
       min_approach_linear_velocity: 0.05
       approach_velocity_scaling_dist: 0.6
