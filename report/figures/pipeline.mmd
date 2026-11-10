@@ -1,0 +1,39 @@
+flowchart LR
+    subgraph B1["1 · Sense"]
+        direction TB
+        LIDAR["RPLidar A1M8<br/>2D scan · 7 Hz"]
+        IMU["imu_node<br/>MPU6050 · 100 Hz"]
+    end
+    subgraph B2["2 · Odometry + fusion"]
+        direction TB
+        RF2O["rf2o<br/>lidar odometry"] --> EKF["EKF<br/>robot_localization"]
+    end
+    subgraph B3["3 · Map (built once)"]
+        direction TB
+        MAPPING["slam_toolbox<br/>mapping mode"] --> MAP[("saved<br/>room map")]
+    end
+    subgraph B4["4 · Localise"]
+        direction TB
+        LOC["slam_toolbox<br/>localisation mode"]
+    end
+    subgraph B5["5 · Navigate (Nav2)"]
+        direction TB
+        PLAN["planner"] --> CTRL["RPP controller<br/>+ smoother"] --> CM["collision<br/>monitor"]
+    end
+    subgraph B6["6 · Act"]
+        direction TB
+        MOTOR["motor_node<br/>watchdog · lidar stop"] --> WHEELS["2 DC motors<br/>PWM 100 Hz"]
+    end
+
+    B1 -->|"scan · turn rate"| B2
+    B2 -->|odometry| B3
+    B3 -->|map| B4
+    B4 -->|pose on map| B5
+    B5 -->|cmd_vel| B6
+
+    classDef ours fill:#fde8d2,stroke:#e07a1f,stroke-width:2px,color:#14213d
+    classDef pkg fill:#e3eef8,stroke:#1f6fb2,stroke-width:2px,color:#14213d
+    classDef hw fill:#eceef1,stroke:#5a6372,stroke-width:2px,color:#14213d
+    class LIDAR,WHEELS,MAP hw
+    class IMU,MOTOR ours
+    class RF2O,EKF,MAPPING,LOC,PLAN,CTRL,CM pkg
