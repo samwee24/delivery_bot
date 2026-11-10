@@ -5,6 +5,16 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-10 (Pi, lab) · driven session phase 1: power, CP5, dry_run bug, Nav2 goal not yet reaching
+
+- Power: Pi on a power bank held `get_throttled=0x0` in 60 of 60 samples under Nav2 (load peak 10.9); OI-11 supply check passes for now. Motor check 0.84 m.
+- CP5 on `base.launch.py`: run 4 1.06 m / 1 cm left pass, run 5 1.16 m / 6 cm left fail (overshoot); runs 2 and 3 invalid (battery fading, 0.74 then 0.38 m). Recorded as 2 of 3 passes with a 10 cm run-to-run spread; no more straights.
+- Bug (PR 42): `navigation.launch.py` never forwarded `dry_run`, then `drivers.yaml` `dry_run: true` beat the launch value, so every earlier "live" Nav2 run and `run_cell.py ... dry_run:=false` cell drove nothing. Two 2026-11-09 rows marked invalid. First real live Nav2 straight: 1.06 m, CRITICAL 0.
+- Nav2 goal to (1, 0) failed three ways, two fixed: server timeout 20 ms (now 1000), `FollowPath` `transform_tolerance` 0.1 (now 0.5). **Open:** with both fixed the robot did not move; `collision_monitor` logs `Failed to get "laser"->"base_footprint" ... extrapolation into the future` and stops on "invalid source" (OI-12). Pi load 13-18 under Nav2.
+- Handover: next step is `collision_monitor` `transform_tolerance` and the `odom`->`base_footprint` latency under load (see `docs/slam_build_path.md` 9.3), then goal to (1, 0) and back. E2 cells on `base.launch.py` are ready; E3/E1 wait for a Nav2 goal. Motor battery needs charging first.
+
+---
+
 ## 2026-11-10 (Mac) · Mac analysis setup, Pi supply recorded as OI-11
 
 - Set up `.venv` (evo, rosbags, pytest); `tools/analysis/bag_summary.py` now reads bags on the Mac via `rosbags`; `evo_traj bag2` and `evo_ape tum` run on the backup bags (docs/run_order.md §8).
