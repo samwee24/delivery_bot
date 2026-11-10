@@ -79,9 +79,10 @@ def generate_launch_description() -> LaunchDescription:
             os.path.join(bringup, 'config', 'slam_localization.yaml'),
             {'use_lifecycle_manager': False, 'use_sim_time': use_sim_time,
              'map_file_name': LaunchConfiguration('map'),
-             # map origin = the taped home mark (first pose of the 5.4 run);
-             # map_start_at_dock is rejected in localisation mode
-             'map_start_pose': [0.0, 0.0, 0.0]}])
+             # = home in goals.yaml, the taped mark. Moved 2026-11-10 from the map
+             # origin (0.21 m clearance) to 0.67 m clearance; map_start_at_dock is
+             # rejected in localisation mode. Yaw 2.635 = 151 deg, parallel to the walls either side
+             'map_start_pose': [-1.3, -0.3, 2.635]}])
     configure = EmitEvent(event=ChangeState(
         lifecycle_node_matcher=launch.events.matches_action(slam),
         transition_id=lifecycle_msgs.msg.Transition.TRANSITION_CONFIGURE),

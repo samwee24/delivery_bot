@@ -5,6 +5,13 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-10 (Mac) · home mark moved off the obstacles
+
+Why: the first live Nav2 goal crept 0.21 -> 0.34 m in about 3 min and aborted (`Failed to make progress`). A clearance map of `2026-10-31_room2` (distance transform, `results/maps/2026-11-10_home_clearance.png`) gives 0.21 m from the old home (0, 0) to the nearest obstacle and 0.16 m from goal (1, 0): both inside the 0.25 m inflation and the 0.5 m slowdown box (0.3 x = 0.045 m/s, below the ~0.10 m/s rolling floor of the motors). New home (-1.3, -0.3), 0.67 m clearance, yaw 2.635 rad (151 deg, fitted parallel to the walls either side, 148-151 deg over 1-2.5 m windows); `results/maps/2026-11-10_new_home.png`. Set in `navigation.launch.py` `map_start_pose`, `amcl.yaml` `initial_pose`, `goals.yaml` `home`; a config test now checks all three agree. Runs before this used (0, 0, 0).
+Not done: tape the new mark on the floor (push from the old mark until `tf2_echo map base_footprint` reads -1.3, -0.3, yaw ~2.6); the stall floor itself (Nav2 minimum speeds below 0.10 m/s) is still open.
+
+---
+
 ## 2026-11-10 (Pi, lab) · driven session phase 1: power, CP5, dry_run bug, Nav2 goal not yet reaching
 
 - Power: Pi on a power bank held `get_throttled=0x0` in 60 of 60 samples under Nav2 (load peak 10.9); OI-11 supply check passes for now. Motor check 0.84 m.

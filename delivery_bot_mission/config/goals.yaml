@@ -8,8 +8,11 @@
 #     seat_1
 #
 # home is the taped start mark and the return target of every delivery.
+# Moved 2026-11-10 from (0, 0) (0.21 m to the nearest obstacle) to 0.67 m clearance
+# (results/maps/2026-11-10_home_clearance.png). Keep in step with amcl.yaml
+# initial_pose and navigation.launch.py map_start_pose (test_config_consistency).
 
 home:
-  x: 0.0
-  y: 0.0
-  yaw: 0.0
+  x: -1.3
+  y: -0.3
+  yaw: 2.635  # 151 deg from map +x, parallel to the walls either side (map fit)

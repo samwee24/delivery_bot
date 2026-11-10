@@ -82,18 +82,17 @@ def test_costmap_radius_matches_urdf(nav2, urdf) -> None:
 
 def test_collision_monitor_zones(nav2) -> None:
     cm = nav2['collision_monitor']['ros__parameters']
-    assert {'stop', 'slowdown', 'approach'} <= set(cm['polygons'])
+    assert {'stop', 'approach'} <= set(cm['polygons'])
+    # slowdown x 0.15 m/s fell under the 0.10 m/s wheel stall floor (2026-11-10)
+    assert 'slowdown' not in cm['polygons']
     stop_reach = max(x for x, _ in ast.literal_eval(cm['stop']['points']))
-    slow_reach = max(x for x, _ in ast.literal_eval(cm['slowdown']['points']))
     assert stop_reach == 0.20          # E4 baseline, not re-tuned
-    assert slow_reach > stop_reach
-    assert 0 < cm['slowdown']['slowdown_ratio'] < 1
     local = nav2['local_costmap']['local_costmap']['ros__parameters']['robot_radius']
     assert cm['approach']['radius'] == local
     assert cm['approach']['time_before_collision'] > 0
     assert all(cm[name]['enabled'] is True for name in cm['polygons'])
     # Jazzy's string parser rejects fewer than 4 vertices (`vvf.size() <= 3`).
-    for name in ('stop', 'slowdown'):
+    for name in ('stop',):
         assert len(ast.literal_eval(cm[name]['points'])) >= 4
 
 
@@ -197,5 +196,61 @@ def test_amcl_frames_and_initial_pose() -> None:
     assert (a['base_frame_id'], a['odom_frame_id'], a['global_frame_id']) == \
         ('base_footprint', 'odom', 'map')
     assert a['set_initial_pose'] is True
-    assert {k: float(v) for k, v in a['initial_pose'].items()} == \
-        {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0}
+    home = yaml.safe_load((share('delivery_bot_mission') / 'config' / 'goals.yaml')
+                          .read_text())['home']
+    launch = (share('delivery_bot_bringup') / 'launch' / 'navigation.launch.py').read_text()
+    start = [float(v) for v in
+             re.search(r"'map_start_pose': \[([^\]]*)\]", launch).group(1).split(',')]
+    want = [float(home['x']), float(home['y']), float(home.get('yaw', 0.0))]
+    ip = a['initial_pose']
+    assert [float(ip['x']), float(ip['y']), float(ip['yaw'])] == want  # AMCL = home
+    assert float(ip['z']) == 0.0
+    assert start == want  # slam_toolbox start = home
+
+
+def test_nav2_transform_tolerances_cover_slam_lag() -> None:
+    """map->odom ran 0.37 s old at load 16 (2026-11-10); every TF user must accept 0.5 s."""
+    n = yaml.safe_load((share('delivery_bot_bringup') / 'config' / 'nav2_params.yaml').read_text())
+    tol = {
+        'local_costmap': n['local_costmap']['local_costmap']['ros__parameters'],
+        'global_costmap': n['global_costmap']['global_costmap']['ros__parameters'],
+        'behavior_server': n['behavior_server']['ros__parameters'],
+        'FollowPath': n['controller_server']['ros__parameters']['FollowPath'],
+        'collision_monitor': n['collision_monitor']['ros__parameters'],
+    }
+    for name, p in tol.items():
+        assert p.get('transform_tolerance', 0.3) >= 0.5, name
+
+
+def test_localization_restamps_map_to_odom() -> None:
+    """Scan-stamped map->odom goes stale mid-goal (TF_ERROR 102)."""
+    # scans are processed >=0.5 s apart under load
+    p = params('delivery_bot_bringup', 'slam_localization.yaml', 'slam_toolbox')
+    assert p['restamp_tf'] is True
+
+
+def test_nav2_commands_clear_wheel_stall_floor(nav2) -> None:
+    """Wheels stall below ~0.10 m/s (duty 0.12, test_log 2026-11-09)."""
+    # 2026-11-10 goals stalled turning and approaching
+    floor = 0.10
+    half_track = 0.156 / 2
+    rpp = nav2['controller_server']['ros__parameters']['FollowPath']
+    assert rpp['min_approach_linear_velocity'] >= floor
+    assert rpp['regulated_linear_scaling_min_speed'] >= floor
+    assert rpp['rotate_to_heading_angular_vel'] * half_track >= floor
+    assert nav2['behavior_server']['ros__parameters']['min_rotational_vel'] * half_track >= floor
+    smoother = nav2['velocity_smoother']['ros__parameters']
+    assert smoother['max_velocity'][2] >= rpp['rotate_to_heading_angular_vel']
+
+
+def test_nav2_reverse_clears_wheel_stall_floor(nav2) -> None:
+    """The smoother must let BackUp reverse faster than the 0.10 m/s stall floor."""
+    smoother = nav2['velocity_smoother']['ros__parameters']
+    assert -MAX_SPEED <= smoother['min_velocity'][0] <= -0.10
+
+
+def test_nav2_goal_accepts_any_heading(nav2) -> None:
+    """Arrival is position only: the final turn stalled and aborted goals (2026-11-10)."""
+    checker = nav2['controller_server']['ros__parameters']['general_goal_checker']
+    assert checker['yaw_goal_tolerance'] >= 3.14
+    assert checker['xy_goal_tolerance'] <= 0.10
