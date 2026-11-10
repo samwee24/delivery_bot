@@ -207,3 +207,16 @@ def test_amcl_frames_and_initial_pose() -> None:
     assert [float(ip['x']), float(ip['y']), float(ip['yaw'])] == want  # AMCL = home
     assert float(ip['z']) == 0.0
     assert start == want  # slam_toolbox start = home
+
+
+def test_nav2_transform_tolerances_cover_slam_lag() -> None:
+    """map->odom ran 0.37 s old at load 16 (2026-11-10); every TF user must accept 0.5 s."""
+    n = yaml.safe_load((share('delivery_bot_bringup') / 'config' / 'nav2_params.yaml').read_text())
+    tol = {
+        'local_costmap': n['local_costmap']['local_costmap']['ros__parameters'],
+        'global_costmap': n['global_costmap']['global_costmap']['ros__parameters'],
+        'behavior_server': n['behavior_server']['ros__parameters'],
+        'FollowPath': n['controller_server']['ros__parameters']['FollowPath'],
+    }
+    for name, p in tol.items():
+        assert p.get('transform_tolerance', 0.3) >= 0.5, name
