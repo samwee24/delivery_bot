@@ -45,3 +45,22 @@ def test_displacement_is_projected_on_the_start_heading():
     assert s[R]['along'] == pytest.approx(1.0)
     assert s[R]['side'] == pytest.approx(0.0, abs=1e-9)
     assert s['cmd_s'] is None
+
+
+_PUSH_BAG = os.path.join(os.path.dirname(__file__), '..', '..', '..',
+                         'delivery_bot_pi_backup', 'bags', '2026-10-31_push_195343')
+try:
+    import rosbags  # noqa: F401
+    _HAVE_ROSBAGS = True
+except ImportError:
+    _HAVE_ROSBAGS = False
+
+
+@pytest.mark.skipif(not (os.path.isdir(_PUSH_BAG) and _HAVE_ROSBAGS),
+                    reason='needs the Pi bag backup and rosbags (Mac .venv)')
+def test_push_bag_reads_about_one_metre_via_rosbags():
+    # Peak distance from the start, not end-to-end "along": this bag also wanders back.
+    _, odom = bsum.read_bag(_PUSH_BAG)
+    rows = odom[R]
+    peak = max(math.hypot(x - rows[0][1], y - rows[0][2]) for _, x, y, _ in rows)
+    assert 0.85 <= peak <= 1.10
