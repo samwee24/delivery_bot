@@ -42,6 +42,7 @@ import os
 
 import launch
 import lifecycle_msgs.msg
+import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, EmitEvent,
@@ -50,7 +51,7 @@ from launch.actions import (DeclareLaunchArgument, EmitEvent,
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
-from launch_ros.actions import LifecycleNode, Node
+from launch_ros.actions import LifecycleNode, Node, SetParameter
 from launch_ros.event_handlers import OnStateTransition
 from launch_ros.events.lifecycle import ChangeState
 
@@ -61,8 +62,12 @@ def generate_launch_description() -> LaunchDescription:
     localizer = LaunchConfiguration('localizer')
     is_slam = IfCondition(PythonExpression(["'", localizer, "' == 'slam'"]))
     is_amcl = IfCondition(PythonExpression(["'", localizer, "' == 'amcl'"]))
+    nav2_params = os.path.join(bringup, 'config', 'nav2_params.yaml')
+    with open(nav2_params) as f:
+        bond_timeout = yaml.safe_load(f)['lifecycle_manager_navigation'][
+            'ros__parameters']['bond_timeout']
     nav2_args = {
-        'params_file': os.path.join(bringup, 'config', 'nav2_params.yaml'),
+        'params_file': nav2_params,
         'use_sim_time': use_sim_time,
         'autostart': 'true',
         'use_composition': 'False'}
@@ -119,6 +124,8 @@ def generate_launch_description() -> LaunchDescription:
     ]
 
     return LaunchDescription([
+        # navigation_launch.py does not pass params_file to its lifecycle manager
+        SetParameter(name='bond_timeout', value=float(bond_timeout)),
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('nav', default_value='true'),
         DeclareLaunchArgument('bridge', default_value='true'),

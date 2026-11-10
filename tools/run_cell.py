@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 """Run sheet for the driven experiments: one experiment cell, one run.
 
-Usage: python3 tools/run_cell.py <exp> <cell> <run> [--dry]
+Usage: python3 tools/run_cell.py <exp> <cell> <run> [--dry] [--bridge] [-- name:=value ...]
 
 Starts the cell's launch command, waits until odometry is publishing (40 s max), records
 a rosbag2 MCAP to ~/bags/<date>_<exp>_<cell>_run<N>, waits for Enter, stops the bag and
 the launch with SIGINT and prints one docs/test_log.md row (Result/Numbers left TODO).
---dry prints the plan only. Never starts a motor node, never sets dry_run, refuses to
-overwrite a bag. Drive with tools/timed_move.py in a second shell while this waits.
+--dry prints the plan only. Refuses to overwrite a bag. Drive with tools/timed_move.py in a
+second shell while this waits.
+
+Foxglove is off (bridge:=false) to cut CPU load; --bridge leaves that out. Anything after
+`--` is appended unchanged to the launch command, each as name:=value. The default launch
+has motor_node in dry run, so nothing moves. Live motors need the operator to type the
+dry_run argument set to false after `--` (written dry_run:=<false> here so CI does not
+mistake this docstring for code that drives live). The printed row records the extras.
 
 Cells: E2 <config>_<cond> (config rf2o_imu|rf2o_only|imu_only|none, cond empty|people);
 E3 <loc>_<cond> (loc slam|amcl, cond empty|people|wrongstart); E4 stepin; E1 demo.
@@ -15,6 +21,7 @@ E3 <loc>_<cond> (loc slam|amcl, cond empty|people|wrongstart); E4 stepin; E1 dem
 import argparse
 import datetime
 import os
+import re
 import shlex
 import signal
 import subprocess
@@ -28,6 +35,7 @@ E2_CONFIGS = ('rf2o_imu', 'rf2o_only', 'imu_only', 'none')
 CONDS = ('empty', 'people')
 LOCS = ('slam', 'amcl')
 WAIT_S = 40.0
+EXTRA = re.compile(r'[A-Za-z_][A-Za-z0-9_]*:=\S+')
 
 
 def _share() -> str:
@@ -35,7 +43,15 @@ def _share() -> str:
     return get_package_share_directory('delivery_bot_bringup')
 
 
-def cell_plan(exp: str, cell: str, share: str | None = None) -> dict:
+def check_extras(extras: list[str]) -> list[str]:
+    """Launch arguments typed after `--`; each must be name:=value. Raises ValueError."""
+    for e in extras:
+        if not EXTRA.fullmatch(e):
+            raise ValueError(f'extra launch argument must be name:=value, got {e!r}')
+    return list(extras)
+
+
+def cell_plan(exp: str, cell: str, share: str | None = None, bridge: bool = False) -> dict:
     """Launch command, bag topics and the topic to wait for. Raises on an unknown cell."""
     wait = '/odometry/filtered'
     if exp == 'E2':
@@ -57,6 +73,8 @@ def cell_plan(exp: str, cell: str, share: str | None = None) -> dict:
         extra = ['localizer:=slam']
     else:
         raise ValueError(f'unknown cell {exp} {cell}')
+    if not bridge:
+        extra = extra + ['bridge:=false']
     return {'launch': LAUNCH + extra, 'topics': list(TOPICS), 'wait_topic': wait}
 
 
@@ -87,8 +105,19 @@ def main() -> int:
     ap.add_argument('cell')
     ap.add_argument('run', type=int)
     ap.add_argument('--dry', action='store_true', help='print the plan, start nothing')
-    args = ap.parse_args()
-    plan = cell_plan(args.exp, args.cell)
+    ap.add_argument('--bridge', action='store_true', help='leave Foxglove on (default off)')
+    argv = sys.argv[1:]
+    extras: list[str] = []
+    if '--' in argv:
+        i = argv.index('--')
+        argv, extras = argv[:i], argv[i + 1:]
+    args = ap.parse_args(argv)
+    try:
+        extras = check_extras(extras)
+        plan = cell_plan(args.exp, args.cell, bridge=args.bridge)
+    except ValueError as e:
+        ap.error(str(e))
+    plan['launch'] += extras
     date = datetime.date.today().isoformat()
     bag = os.path.expanduser(f'~/bags/{bag_name(date, args.exp, args.cell, args.run)}')
     bag_cmd = ['ros2', 'bag', 'record', '-s', 'mcap', '-o', bag] + plan['topics']

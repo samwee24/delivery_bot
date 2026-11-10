@@ -263,6 +263,14 @@ route_server:
     CostmapScorer:
       plugin: "nav2_route::CostmapScorer"
 
+lifecycle_manager_navigation:
+  ros__parameters:
+    # 2026-11-09: default 4.0 s tripped at load 20-30 ("SERVER smoother_server IS DOWN
+    # after not receiving a heartbeat for 4000 ms"), Nav2 went down mid-run. Brief value,
+    # not yet measured. nav2_bringup does not pass this file to its lifecycle manager, so
+    # navigation.launch.py and explore.launch.py read it and apply it with SetParameter.
+    bond_timeout: 10.0
+
 velocity_smoother:
   ros__parameters:
     # Jazzy defaults to plain Twist; motor_node subscribes TwistStamped (2026-11-09)

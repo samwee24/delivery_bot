@@ -198,3 +198,24 @@ def test_explore_nav2_and_explorer_start_on_slam_active() -> None:
     assert "package='explore_lite'" in body
     assert "'use_composition': 'False'" in body
     assert "bringup_launch.py'" not in text  # no AMCL / map_server: slam owns /map
+
+
+NAV2_PARAMS = (Path(get_package_share_directory('delivery_bot_bringup'))
+               / 'config' / 'nav2_params.yaml')
+
+
+@pytest.mark.parametrize('path', [NAV, EXPLORE], ids=lambda p: p.name)
+def test_launch_applies_bond_timeout_from_nav2_params(path) -> None:
+    # nav2_bringup does not pass params_file to its lifecycle manager, so the value
+    # is read from YAML and applied with SetParameter. Reads the source (see above).
+    text = path.read_text()
+    assert "SetParameter(name='bond_timeout'" in text
+    assert 'nav2_params.yaml' in text
+
+
+def test_bond_timeout_in_yaml_is_a_float_above_the_jazzy_default() -> None:
+    import yaml
+    value = yaml.safe_load(NAV2_PARAMS.read_text())[
+        'lifecycle_manager_navigation']['ros__parameters']['bond_timeout']
+    assert isinstance(value, float)
+    assert value > 4.0
