@@ -65,7 +65,7 @@ Every open task of the project, in one list. Stages 0–9 are the SLAM build pat
     - [ ] Charged battery and a spare, `vcgencmd get_throttled` = `0x0`; robot still for 3 s at every start (IMU calibration)
     - [~] Wheels raised, then one 1 m straight with the switch in reach (CP5): 1 of 3 passed 2026-11-09 (0.96 m, 3 cm left), PR 38
     - [ ] Motor battery charged and its voltage checked: on 2026-11-09 it gave about one run per power cycle
-    - [ ] Pi supply replaced and checked: `get_throttled` 0x0 after boot, no 0x1 under `navigation.launch.py` (OI-11)
+    - [x] Pi supply replaced and checked: `get_throttled` 0x0 after boot, no 0x1 under `navigation.launch.py` (OI-11) (power bank, 2026-11-10: 0x0 in 60 of 60 samples)
     - [ ] Nav2 `bond_timeout` raised (or camera and Foxglove off): Nav2 shut down 2-3 s into every timed run at load 20-30 (`CRITICAL FAILURE: SERVER ... IS DOWN after not receiving a heartbeat for 4000 ms`)
     - [ ] Freeze config; record the commit
     - [ ] 9.4 runs (48), 9.5 loops (12) and wrong starts (16), 9.7 step-ins (3–5), E1 delivery runs (5)

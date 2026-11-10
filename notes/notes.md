@@ -5,6 +5,16 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-10 (Pi, lab) · power gate, motor check, CP5 straights, Nav2 goal
+
+- Power: Pi on a power bank held `get_throttled=0x0` in 60 of 60 samples under Nav2 (load peak 10.9, OI-11 supply check passes). Motor check 0.84 m.
+- CP5 on `base.launch.py`: run 4 1.06 m / 1 cm left pass, run 5 1.16 m / 6 cm left fail (overshoot), runs 2 and 3 invalid (battery fading, 0.74 then 0.38 m). Not 3 of 3.
+- Found and fixed (PR 42): `navigation.launch.py` never forwarded `dry_run`, and then `drivers.yaml` `dry_run: true` overrode it, so live Nav2 and `run_cell.py` cells never drove the motors. With the fix a live straight under Nav2 went 1.06 m, CRITICAL 0.
+- Nav2 goal to (1, 0) aborted twice (planner action timeout, load 18); not solved. Not ready for E3 cells until a Nav2 goal succeeds.
+- Ready for E2 (`base.launch.py`); Nav2 experiments wait for the goal fix and PR 42 merge.
+
+---
+
 ## 2026-11-10 (Mac) · Mac analysis setup, Pi supply recorded as OI-11
 
 - Set up `.venv` (evo, rosbags, pytest); `tools/analysis/bag_summary.py` now reads bags on the Mac via `rosbags`; `evo_traj bag2` and `evo_ape tum` run on the backup bags (docs/run_order.md §8).
