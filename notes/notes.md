@@ -5,6 +5,13 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-10 (Pi, remote, dry run) · Nav2 heartbeat, load, run_cell smoke, backup
+
+Dry run only, no wheel moved; Pi on `main` at be4473e. With Foxglove off Nav2 came up in about 61 s (the Foxglove-on start never finished in 150 s). It then shut itself down twice on `bond_timeout` 10 s, once at idle and once as move 1 started (`behavior_server`, `smoother_server`), so OI-10 is **not** fixed in dry run. `run_cell.py` failed on its `/odometry/filtered` check (15 s timeout), no run-0 bag. Backup done (bags 153M, maps 37M).
+Power: under-voltage now (0x1) in 193 of 286 samples (67.5 %): 27 of 29 during Nav2 start-up, 21 of 21 during moves, and also at load 3.5 afterwards. The supply should be replaced before the driven session.
+
+---
+
 ## 2026-11-09 (Mac, close) · Pi powered down, docs updated
 
 The owner powered the Pi down after the last straight (it had stopped answering SSH while the stack was being stopped). AGENTS.md (Motors row), `docs/slam_build_path.md` (CP5, 9.3, R.1) and `docs/CA3.md` (P1, OI-9 battery, OI-10 Nav2 heartbeat) updated to the 2026-11-09 motor results. On the next boot: `git pull` on the Pi, then the direct duty test before any driven run.
