@@ -5,6 +5,14 @@ Reference material belongs in `docs/`, raw artefacts in `evidence/`.
 
 ---
 
+## 2026-11-10 (Mac) · Mac analysis setup, Pi supply recorded as OI-11
+
+- Set up `.venv` (evo, rosbags, pytest); `tools/analysis/bag_summary.py` now reads bags on the Mac via `rosbags`; `evo_traj bag2` and `evo_ape tum` run on the backup bags (docs/run_order.md §8).
+- Pi supply recorded as OI-11 and as the root cause of OI-10: under-voltage (0x1) in 67.5 % of `get_throttled` samples on 2026-11-10. Fix: a 5.1 V 3 A Pi 4 supply; check `0x0` after boot and no 0x1 or 0x4 under `navigation.launch.py bridge:=false`.
+- Driven-session rule while the supply is unchanged: CP5 straights on `base.launch.py` only; no E2/E3/E1 runs under `navigation.launch.py`.
+
+---
+
 ## 2026-11-10 (Pi, remote, dry run) · Nav2 heartbeat, load, run_cell smoke, backup
 
 Dry run only, no wheel moved; Pi on `main` at be4473e. With Foxglove off Nav2 came up in about 61 s (the Foxglove-on start never finished in 150 s). It then shut itself down twice on `bond_timeout` 10 s, once at idle and once as move 1 started (`behavior_server`, `smoother_server`), so OI-10 is **not** fixed in dry run. `run_cell.py` failed on its `/odometry/filtered` check (15 s timeout), no run-0 bag. Backup done (bags 153M, maps 37M).
