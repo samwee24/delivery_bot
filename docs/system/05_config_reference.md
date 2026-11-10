@@ -91,6 +91,12 @@ values**; they are mapped into the package config files at run time:
 | `safety.approach_ttc_s` | Collision Monitor `approach` polygon (`time_before_collision`) |
 | `map.resolution_m`, `size_m` | `slam_toolbox` `resolution` / map bounds, occupancy grid |
 
+Values that live only in `nav2_params.yaml`:
+
+| Key | Value | Provenance | Applied by |
+| --- | --- | --- | --- |
+| `lifecycle_manager_navigation.bond_timeout` | 10.0 s | brief value 2026-11-10, not yet measured; Jazzy default 4.0 tripped at load 20-30 | `SetParameter` in `navigation.launch.py` and `explore.launch.py` (`nav2_bringup` does not pass this file to its lifecycle manager) |
+
 ## `camera.yaml` (`delivery_bot_bringup/config/`)
 
 `usb_cam` node `camera`, started by `ros2 launch delivery_bot_bringup camera.launch.py`.
