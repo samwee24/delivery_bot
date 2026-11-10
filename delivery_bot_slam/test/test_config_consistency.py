@@ -242,10 +242,8 @@ def test_nav2_commands_clear_wheel_stall_floor(nav2) -> None:
 
 
 def test_nav2_reverse_clears_wheel_stall_floor(nav2) -> None:
-    """Reversing is on (2026-11-10); the smoother must let it reverse faster than the 0.10 m/s stall floor."""
-    rpp = nav2['controller_server']['ros__parameters']['FollowPath']
+    """The BackUp recovery reverses; the smoother must let it go faster than the 0.10 m/s stall floor."""
     smoother = nav2['velocity_smoother']['ros__parameters']
-    assert rpp['allow_reversing'] is True
     assert -MAX_SPEED <= smoother['min_velocity'][0] <= -0.10
 
 

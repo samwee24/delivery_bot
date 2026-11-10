@@ -88,7 +88,7 @@ controller_server:
       rotate_to_heading_angular_vel: 1.6  # x 0.078 m half-track = 0.125 m/s per wheel; 1.0 (0.078) stalled turning in place, 2026-11-10
       rotate_to_heading_min_angle: 1.05   # 60 deg: bigger errors turn in place
       max_angular_accel: 3.2  # 1.0 ramped through the stall band
-      allow_reversing: true  # back up to a goal it passed instead of turning round, 2026-11-10
+      allow_reversing: false  # true (2026-11-10) made it drive backwards to goals; recoveries still back up
 
 local_costmap:
   local_costmap:
