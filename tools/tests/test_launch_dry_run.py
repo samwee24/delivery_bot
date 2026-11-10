@@ -1,6 +1,6 @@
 """navigation.launch.py must forward dry_run to base.launch.py (read by ast, no ROS needed).
 
-On 2026-11-10 `navigation.launch.py dry_run:=false` left motor_node in dry run: the
+On 2026-11-10 a live navigation.launch.py (dry_run set false) left motor_node in dry run: the
 argument was not passed to the base include, so base.launch.py used its default.
 """
 import ast
