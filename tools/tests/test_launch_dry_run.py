@@ -35,3 +35,14 @@ def test_base_include_forwards_dry_run():
     args = next(k.value for k in base[0].keywords if k.arg == 'launch_arguments')
     keys = {k.value for k in args.func.value.keys}   # {...}.items()
     assert 'dry_run' in keys
+
+
+def test_drivers_yaml_leaves_dry_run_to_the_launch():
+    """A node-specific dry_run in drivers.yaml beats the launch's /** value under a global
+    SetParameter (checked on the Pi with rclpy, 2026-11-10), so it must not be there."""
+    import yaml
+    path = os.path.join(os.path.dirname(__file__), '..', '..',
+                        'delivery_bot_drivers', 'config', 'drivers.yaml')
+    with open(path) as f:
+        params = yaml.safe_load(f)['motor_node']['ros__parameters']
+    assert 'dry_run' not in params

@@ -34,7 +34,10 @@ motor_node:
     use_gyro_loop: false
     kp_omega: 0.5
     ki_omega: 1.0
-    dry_run: true        # the launch file decides; live needs the dry_run launch argument set to false
+    # dry_run is deliberately NOT set here. motor_node defaults to True and the launch
+    # argument decides. A node-specific value here beats the launch file's wildcard value
+    # whenever a global SetParameter exists (navigation.launch.py bond_timeout), so the
+    # live setting was silently ignored under navigation.launch.py (2026-11-10).
 
 imu_node:
   ros__parameters:
