@@ -84,16 +84,21 @@ from launch.actions import (DeclareLaunchArgument, EmitEvent,
                             TimerAction)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import LifecycleNode, Node
+from launch_ros.actions import LifecycleNode, Node, SetParameter
 from launch_ros.event_handlers import OnStateTransition
 from launch_ros.events.lifecycle import ChangeState
 import lifecycle_msgs.msg
+import yaml
 
 
 def generate_launch_description() -> LaunchDescription:
     bringup = get_package_share_directory('delivery_bot_bringup')
     slam_pkg = get_package_share_directory('delivery_bot_slam')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    nav2_params = os.path.join(bringup, 'config', 'nav2_params.yaml')
+    with open(nav2_params) as f:
+        bond_timeout = yaml.safe_load(f)['lifecycle_manager_navigation'][
+            'ros__parameters']['bond_timeout']
 
     slam = LifecycleNode(
         package='slam_toolbox', executable='async_slam_toolbox_node',
@@ -121,7 +126,7 @@ def generate_launch_description() -> LaunchDescription:
                     get_package_share_directory('nav2_bringup'),
                     'launch', 'navigation_launch.py')),
                 launch_arguments={
-                    'params_file': os.path.join(bringup, 'config', 'nav2_params.yaml'),
+                    'params_file': nav2_params,
                     'use_sim_time': use_sim_time,
                     'autostart': 'true',
                     'use_composition': 'False'}.items()),
@@ -131,6 +136,8 @@ def generate_launch_description() -> LaunchDescription:
                              {'use_sim_time': use_sim_time}])]))
 
     return LaunchDescription([
+        # navigation_launch.py does not pass params_file to its lifecycle manager
+        SetParameter(name='bond_timeout', value=float(bond_timeout)),
         DeclareLaunchArgument('use_sim_time', default_value='false'),
         DeclareLaunchArgument('dry_run', default_value='true'),
         DeclareLaunchArgument('bridge', default_value='true'),
