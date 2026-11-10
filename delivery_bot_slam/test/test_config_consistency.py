@@ -197,5 +197,13 @@ def test_amcl_frames_and_initial_pose() -> None:
     assert (a['base_frame_id'], a['odom_frame_id'], a['global_frame_id']) == \
         ('base_footprint', 'odom', 'map')
     assert a['set_initial_pose'] is True
-    assert {k: float(v) for k, v in a['initial_pose'].items()} == \
-        {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0}
+    home = yaml.safe_load((share('delivery_bot_mission') / 'config' / 'goals.yaml')
+                          .read_text())['home']
+    launch = (share('delivery_bot_bringup') / 'launch' / 'navigation.launch.py').read_text()
+    start = [float(v) for v in
+             re.search(r"'map_start_pose': \[([^\]]*)\]", launch).group(1).split(',')]
+    want = [float(home['x']), float(home['y']), float(home.get('yaw', 0.0))]
+    ip = a['initial_pose']
+    assert [float(ip['x']), float(ip['y']), float(ip['yaw'])] == want  # AMCL = home
+    assert float(ip['z']) == 0.0
+    assert start == want  # slam_toolbox start = home
