@@ -2,6 +2,7 @@
 
 ## 1. Before power-up
 
+- Pi on a proper 5.1 V 3 A supply (not a power bank, not the motor pack), OI-11.
 - Motor battery charged, voltage measured and written down; a spare if there is one.
 - Wiring and common ground reseated.
 - Floor marks (home, 1 m line) taped.
@@ -10,6 +11,7 @@
 
 1. `cd ~/ros2_ws/src/delivery_bot && git pull`.
 2. `vcgencmd get_throttled` → `0x0`.
+   Start `ros2 launch delivery_bot_bringup navigation.launch.py bridge:=false` and watch `vcgencmd get_throttled` for 60 s: any 0x1 or 0x4 bit means stop and swap the supply. Until then only CP5 straights on `base.launch.py`.
 3. `python3 tools/motor_check.py run 0.30 2` → about 0.9 m. Silent means stop and fix the power first.
 
 ## 3. Every block
@@ -45,3 +47,12 @@ Repeat the motor check after any battery swap or if a run is silent. If a run go
 ## 7. Fallback if driving fails
 
 Push with a stick for E2 (nobody behind the robot except in people runs).
+
+## 8. Analysis on the Mac
+
+Bags are copied from the Pi (`../delivery_bot_pi_backup/bags/`); no ROS needed on the Mac.
+
+- Setup, once: `python3 -m venv .venv && .venv/bin/pip install evo pytest`.
+- E2 distance and heading per bag: `.venv/bin/python tools/analysis/bag_summary.py <bag_dir> [<bag_dir> ...]`.
+- Export odometry to TUM, in a per-bag output folder: `mkdir out && cd out && ../.venv/bin/evo_traj bag2 <bag_dir> /odom_rf2o /odometry/filtered --save_as_tum` (fails with `no messages for topic` if a topic is not in the bag; then list only the topics it has, e.g. `/odom_rf2o`). Writes one `.tum` per topic (e.g. `odom_rf2o.tum`).
+- E3 pairwise APE between two loops: `.venv/bin/evo_ape tum <loop_a>.tum <loop_b>.tum -a`. Smoke-tested on the 2026-10-31 push bag with the same file twice: APE 0.000000.

@@ -9,7 +9,8 @@ command), cmd_dist and cmd_angle (each non-zero command held until the next mess
 capped at 0.5 s, the motor watchdog), then per odom topic along (m, on the start heading)
 and dheading (deg, wrapped to +-180), then side (m). rf2o sideways drift is not a result:
 on 2026-11-09 it said 16 cm right where the tape said 3 cm left, so it is printed as
-"(unreliable, use tape)". Needs ROS (rosbag2_py); the maths in summarise() does not.
+"(unreliable, use tape)". read_bag() reads with rosbag2_py on the Pi and with rosbags on the
+Mac (.venv); the maths in summarise() needs neither.
 """
 import argparse
 import math
@@ -46,10 +47,17 @@ def summarise(cmd: list[tuple[float, float, float]],
     return out
 
 
+def _yaw(q) -> float:
+    return math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))
+
+
 def read_bag(path: str):
-    import rosbag2_py
-    from rclpy.serialization import deserialize_message
-    from rosidl_runtime_py.utilities import get_message
+    try:
+        import rosbag2_py
+        from rclpy.serialization import deserialize_message
+        from rosidl_runtime_py.utilities import get_message
+    except ImportError:
+        return _read_bag_rosbags(path)
     reader = rosbag2_py.SequentialReader()
     reader.open(rosbag2_py.StorageOptions(uri=path, storage_id='mcap'),
                 rosbag2_py.ConverterOptions('cdr', 'cdr'))
@@ -63,8 +71,24 @@ def read_bag(path: str):
         elif topic in odom and topic in types:
             m = deserialize_message(data, types[topic])
             q, p = m.pose.pose.orientation, m.pose.pose.position
-            yaw = math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))
-            odom[topic].append((ts * 1e-9, p.x, p.y, yaw))
+            odom[topic].append((ts * 1e-9, p.x, p.y, _yaw(q)))
+    return cmd, odom
+
+
+def _read_bag_rosbags(path: str):
+    from pathlib import Path
+
+    from rosbags.highlevel import AnyReader
+    cmd, odom = [], {t: [] for t in ODOM_TOPICS}
+    with AnyReader([Path(path)]) as reader:
+        conns = [c for c in reader.connections if c.topic == '/cmd_vel' or c.topic in odom]
+        for conn, ts, raw in reader.messages(connections=conns):
+            m = reader.deserialize(raw, conn.msgtype)
+            if conn.topic == '/cmd_vel':
+                cmd.append((ts * 1e-9, m.twist.linear.x, m.twist.angular.z))
+            else:
+                q, p = m.pose.pose.orientation, m.pose.pose.position
+                odom[conn.topic].append((ts * 1e-9, p.x, p.y, _yaw(q)))
     return cmd, odom
 
 

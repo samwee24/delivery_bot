@@ -60,11 +60,12 @@ Every open task of the project, in one list. Stages 0–9 are the SLAM build pat
     - [x] `localizer:=slam|amcl` in `navigation.launch.py` (AMCL + `map_server`, `amcl.yaml`); AMCL only seen on its initial pose so far
     - [x] `tools/timed_move.py` (publishes on `cmd_vel_smoothed`, through the collision monitor; slowdown zone cuts it to 0.3 x near walls)
     - [x] `tools/run_cell.py` (starts a cell, records the bag, prints the test_log row; use a delay of 75 s or more)
-    - [x] Motor safety on `feat/motors` (R.1): PR 34 merged into `feat/motors`; **MT** to review and open the PR to `main`
+    - [x] Motor safety on `feat/motors` (R.1): PR 34 merged into `feat/motors`; on `main` via PR 37 (2026-11-09), `feat/motors` is stale
   - [ ] 9.3 Driven session, Tue 2026-11-10 (CP5, CP6) — **MT** drives, **S** runs the sheet, **B** people
     - [ ] Charged battery and a spare, `vcgencmd get_throttled` = `0x0`; robot still for 3 s at every start (IMU calibration)
     - [~] Wheels raised, then one 1 m straight with the switch in reach (CP5): 1 of 3 passed 2026-11-09 (0.96 m, 3 cm left), PR 38
     - [ ] Motor battery charged and its voltage checked: on 2026-11-09 it gave about one run per power cycle
+    - [ ] Pi supply replaced and checked: `get_throttled` 0x0 after boot, no 0x1 under `navigation.launch.py` (OI-11)
     - [ ] Nav2 `bond_timeout` raised (or camera and Foxglove off): Nav2 shut down 2-3 s into every timed run at load 20-30 (`CRITICAL FAILURE: SERVER ... IS DOWN after not receiving a heartbeat for 4000 ms`)
     - [ ] Freeze config; record the commit
     - [ ] 9.4 runs (48), 9.5 loops (12) and wrong starts (16), 9.7 step-ins (3–5), E1 delivery runs (5)
@@ -76,6 +77,7 @@ Every open task of the project, in one list. Stages 0–9 are the SLAM build pat
   - [ ] 9.6 What people do (RQ1): empty-vs-people table and room figure
   - [ ] 9.7 Step-in safety (E4, RQ4) — **B**
   - [ ] 9.8 Metrics: tape tables, `evo` on the bags, figures, one Our take per RQ
+    - [x] Mac analysis: `.venv` with evo, `bag_summary.py` reads bags via rosbags (docs/run_order.md §8)
   - [ ] 9.9 Measure the Pi's load (full stack, Nav2 included)
   - [ ] 9.10 Write the SLAM section ⇢ report §5
   - [ ] Back up the bags to `../delivery_bot_pi_backup/`
@@ -112,7 +114,7 @@ Every open task of the project, in one list. Stages 0–9 are the SLAM build pat
 ### R. Robot, integration and housekeeping
 
 #### R.1 Motors and navigation — **MT** unless marked
-- [~] Motors and rough gains on `feat/motors` (3d295f7, 3fed2ff, safety fixes 3b1980e); **MT** reviews, runs wheels raised, opens a PR to `main`. Review of 2026-11-09:
+- [x] Motors and rough gains on `feat/motors` (3d295f7, 3fed2ff, safety fixes 3b1980e); **MT** reviews, runs wheels raised, opens a PR to `main`. Review of 2026-11-09: — on `main` via PR 37, then calibrated in PR 38
   - [x] Fixes for the items below: PR 34 into `feat/motors`, merged 2026-11-09 (dry-run smoke rows in test_log 2026-11-09)
   - [x] Dry run removed: `base.launch.py` always starts `motor_node` live, so the mapping, localisation and navigation stacks, the Foxglove stack buttons and PR 30's explore all drive the wheels whenever anything publishes `/cmd_vel`. Restore `dry_run` (default `true`) in the node; the test `test_base_declares_dry_run_true_by_default` was edited to expect `false` and should go back
   - [x] No lidar stop (`stop_dist_m`): only the 0.5 s watchdog and Nav2's collision monitor; teleop has no obstacle stop (AGENTS rule 1). Fixed in PR 34: linear zeroed inside 0.20 m within ±35° of travel, stale scan stops all

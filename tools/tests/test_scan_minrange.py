@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-pytest.importorskip('rclpy')
+pytest.importorskip('sensor_msgs')
 from sensor_msgs.msg import LaserScan  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location(
