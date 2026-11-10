@@ -148,7 +148,7 @@ def test_motor_safety_limits_do_not_grow() -> None:
     motor = params('delivery_bot_drivers', 'drivers.yaml', 'motor_node')
     assert motor['max_duty'] <= MAX_DUTY
     assert motor['watchdog_s'] <= MAX_WATCHDOG_S
-    assert isinstance(motor['dry_run'], bool)   # launch overrides it to true
+    assert 'dry_run' not in motor   # the launch decides; a yaml value beat the launch value (2026-11-10)
 
 
 STAMPED_NODES = ('controller_server', 'behavior_server', 'velocity_smoother',
