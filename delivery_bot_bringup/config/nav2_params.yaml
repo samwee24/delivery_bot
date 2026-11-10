@@ -88,7 +88,7 @@ controller_server:
       rotate_to_heading_angular_vel: 1.6  # x 0.078 m half-track = 0.125 m/s per wheel; 1.0 (0.078) stalled turning in place, 2026-11-10
       rotate_to_heading_min_angle: 1.05   # 60 deg: bigger errors turn in place
       max_angular_accel: 3.2  # 1.0 ramped through the stall band
-      allow_reversing: false
+      allow_reversing: true  # back up to a goal it passed instead of turning round, 2026-11-10
 
 local_costmap:
   local_costmap:
@@ -282,7 +282,7 @@ velocity_smoother:
     scale_velocities: False
     feedback: "OPEN_LOOP"
     max_velocity: [0.15, 0.0, 1.6]
-    min_velocity: [-0.05, 0.0, -1.6]
+    min_velocity: [-0.12, 0.0, -1.6]  # reverse above the 0.10 m/s wheel stall floor, 2026-11-10
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "/odometry/filtered"

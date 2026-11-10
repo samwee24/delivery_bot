@@ -238,3 +238,11 @@ def test_nav2_commands_clear_wheel_stall_floor(nav2) -> None:
     assert nav2['behavior_server']['ros__parameters']['min_rotational_vel'] * half_track >= floor
     smoother = nav2['velocity_smoother']['ros__parameters']
     assert smoother['max_velocity'][2] >= rpp['rotate_to_heading_angular_vel']
+
+
+def test_nav2_reverse_clears_wheel_stall_floor(nav2) -> None:
+    """Reversing is on (2026-11-10); the smoother must let it reverse faster than the 0.10 m/s stall floor."""
+    rpp = nav2['controller_server']['ros__parameters']['FollowPath']
+    smoother = nav2['velocity_smoother']['ros__parameters']
+    assert rpp['allow_reversing'] is True
+    assert -MAX_SPEED <= smoother['min_velocity'][0] <= -0.10
