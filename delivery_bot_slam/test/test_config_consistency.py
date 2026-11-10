@@ -246,3 +246,10 @@ def test_nav2_reverse_clears_wheel_stall_floor(nav2) -> None:
     smoother = nav2['velocity_smoother']['ros__parameters']
     assert rpp['allow_reversing'] is True
     assert -MAX_SPEED <= smoother['min_velocity'][0] <= -0.10
+
+
+def test_nav2_goal_accepts_any_heading(nav2) -> None:
+    """The final turn to the goal heading stalled and aborted goals (2026-11-10); arrival is position only."""
+    checker = nav2['controller_server']['ros__parameters']['general_goal_checker']
+    assert checker['yaw_goal_tolerance'] >= 3.14
+    assert checker['xy_goal_tolerance'] <= 0.10
