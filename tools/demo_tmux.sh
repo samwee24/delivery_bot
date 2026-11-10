@@ -15,11 +15,12 @@ LAUNCH="ros2 launch delivery_bot_bringup navigation.launch.py bridge:=false $*"
 GOAL="ros2 action send_goal --feedback /navigate_to_pose nav2_msgs/action/NavigateToPose \"{pose: {header: {frame_id: base_footprint}, pose: {position: {x: $X, y: 0.0}, orientation: {w: 1.0}}}}\" | grep --line-buffered -E '^  sec|distance_remaining|number_of_recoveries|error_code|status' | uniq"
 POSE="ros2 run tf2_ros tf2_echo map base_footprint 2>&1 | grep --line-buffered -A3 Translation"
 
-tmux new-session -d -s "$S" -x 220 -y 50
-tmux split-window -h -t "$S"
-tmux split-window -v -t "$S:0.1"
-tmux send-keys -t "$S:0.0" "$LAUNCH"
-tmux send-keys -t "$S:0.1" "$GOAL"
-tmux send-keys -t "$S:0.2" "$POSE"
-tmux select-pane -t "$S:0.0"
+# pane ids, not indexes: the Pi's tmux config starts indexes at 1
+L=$(tmux new-session -d -s "$S" -x 220 -y 50 -P -F '#{pane_id}')
+G=$(tmux split-window -h -t "$L" -P -F '#{pane_id}')
+P=$(tmux split-window -v -t "$G" -P -F '#{pane_id}')
+tmux send-keys -t "$L" "$LAUNCH"
+tmux send-keys -t "$G" "$GOAL"
+tmux send-keys -t "$P" "$POSE"
+tmux select-pane -t "$L"
 exec tmux attach -t "$S"
