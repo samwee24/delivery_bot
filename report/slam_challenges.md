@@ -1,6 +1,6 @@
 # SLAM challenges and how we overcame them (evidence log)
 
-For slides 9-11 and the report's Challenges section. Each challenge goes along the SLAM pipeline:
+For slides 3.1-3.4 (v5) and the report's Challenges section. Each challenge goes along the SLAM pipeline:
 **lidar → odometry → fusion → mapping → localisation → SLAM inside the navigation loop**. Each one gives
 the symptom as it appeared (exact log text), what we tried, the numbers, the fix, how we verified it, and where
 the proof lives. Sources: `docs/test_log.md` (cited as *test_log date "first words"*), `notes/notes.md`
