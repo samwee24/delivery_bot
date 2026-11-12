@@ -1,6 +1,6 @@
 # Implementation, results and logs, block by block
 
-Source for slides 7-13 and the report's Implementation and Results chapters. The robot is described along
+Source for slides 2.1 and 3.1-3.7 (v5, pipeline order) and the report's Implementation and Results chapters. The robot is described along
 its pipeline (`report/figures/pipeline.mmd`):
 
 **0 Infrastructure → 1 Sense → 2 Odometry + fusion → 3 Map → 4 Localise → 5 Navigate → 6 Act**
@@ -21,7 +21,7 @@ robot challenges C1-C14 in [`slides_outline.md`](slides_outline.md) section 7.
 | --- | --- |
 | Computer | Raspberry Pi 4B, Ubuntu 24.04.5, ROS 2 Jazzy; headless, reached over Tailscale |
 | Sensors | RPLidar A1M8 (USB, `/dev/rplidar`), MPU6050 IMU (I2C bus 1, 0x68), USB camera (viewing only) |
-| Actuators | 2 DC motors through an L298N driver, motor battery separate from the Pi's supply |
+| Actuators | 4 DC gear motors (four-wheel skid steer) through an L298N driver, left pair and right pair each wired to one channel, motor battery separate from the Pi's supply |
 | No wheel encoders | Lidar odometry (rf2o) + gyro replace them |
 | Packages (ours) | `delivery_bot_bringup` (launch, config), `delivery_bot_description` (URDF), `delivery_bot_drivers` (`imu_node`, `motor_node`), `delivery_bot_slam` (covariance relay, run/save, trajectory recorder), `delivery_bot_mission` (named goals, deliver script) |
 | Packages (used as is, D5) | `rplidar_ros`, `rf2o_laser_odometry`, `robot_localization`, `slam_toolbox`, Nav2, `foxglove_bridge`, rosbag2 (MCAP) |

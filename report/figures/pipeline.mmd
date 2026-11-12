@@ -22,7 +22,7 @@ flowchart LR
     end
     subgraph B6["6 · Act"]
         direction TB
-        MOTOR["motor_node<br/>watchdog · lidar stop"] --> WHEELS["2 DC motors<br/>PWM 100 Hz"]
+        MOTOR["motor_node<br/>watchdog · lidar stop"] --> WHEELS["4 DC motors<br/>2 channels · PWM 100 Hz"]
     end
 
     B1 -->|"scan · turn rate"| B2
